@@ -1,29 +1,50 @@
 package rearth.oritech.block.entity.reactor;
 
+import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.block.entity.BlockEntityTicker;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.entity.player.PlayerInventory;
+import net.minecraft.screen.ScreenHandler;
+import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.Vec3i;
 import net.minecraft.world.World;
+import org.jetbrains.annotations.Nullable;
 import org.joml.Vector2i;
 import rearth.oritech.block.blocks.reactor.*;
+import rearth.oritech.client.init.ModScreens;
+import rearth.oritech.client.ui.ReactorScreenHandler;
 import rearth.oritech.init.BlockEntitiesContent;
+import rearth.oritech.network.NetworkContent;
+import rearth.oritech.util.energy.EnergyApi;
+import rearth.oritech.util.energy.containers.SimpleEnergyStorage;
 
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
 
-public class ReactorControllerBlockEntity extends BlockEntity implements BlockEntityTicker<ReactorControllerBlockEntity> {
+public class ReactorControllerBlockEntity extends BlockEntity implements BlockEntityTicker<ReactorControllerBlockEntity>, EnergyApi.BlockProvider, ExtendedScreenHandlerFactory {
     
     public static final int MAX_SIZE = 64;
     
-    private int reactorHeat;   // the heat of the entire casing
     private final HashMap<Vector2i, BaseReactorBlock> activeComponents = new HashMap<>();
     private final HashMap<Vector2i, Integer> componentHeats = new HashMap<>();
+    private final HashMap<Vector2i, ComponentStatistics> componentStats = new HashMap<>(); // mainly for client displays
+    
+    public boolean active = false;
+    private int reactorHeat;   // the heat of the entire casing
+    private int reactorStackHeight;
+    private BlockPos areaMin;
+    private BlockPos areaMax;
+    private SimpleEnergyStorage energyStorage = new SimpleEnergyStorage(0, 1_000_000, 10_000_000, this::markDirty);
+    
+    // client only
+    public NetworkContent.ReactorUIDataPacket uiData;
+    public NetworkContent.ReactorUISyncPacket uiSyncData;
     
     public ReactorControllerBlockEntity(BlockPos pos, BlockState state) {
         super(BlockEntitiesContent.REACTOR_CONTROLLER_BLOCK_ENTITY, pos, state);
@@ -36,16 +57,44 @@ public class ReactorControllerBlockEntity extends BlockEntity implements BlockEn
     
     @Override
     public void tick(World world, BlockPos pos, BlockState state, ReactorControllerBlockEntity blockEntity) {
-        if (world.isClient) return;
+        if (world.isClient || activeComponents.isEmpty()) return;
         
         for (var localPos : activeComponents.keySet()) {
             var component = activeComponents.get(localPos);
             var componentHeat = componentHeats.get(localPos);
             if (component instanceof ReactorRodBlock rodBlock) {
                 
-                reactorHeat += 4;
+                var ownRodCount = rodBlock.getRodCount();
+                var receivedPulses = rodBlock.getInternalPulseCount();
+                
+                // check how many pulses are received from neighbors / reflectors
+                for (var neighborPos : getNeighborsInBounds(localPos, activeComponents.keySet())) {
+                    
+                    var neighbor = activeComponents.get(neighborPos);
+                    if (neighbor instanceof ReactorRodBlock neighborRod) {
+                        receivedPulses += neighborRod.getRodCount();
+                    } else if (neighbor instanceof ReactorReflectorBlock reflectorBlock) {
+                        receivedPulses += rodBlock.getRodCount();
+                    }
+                }
+                
+                // generate 5 RF per pulse
+                energyStorage.insertIgnoringLimit(5 * receivedPulses * reactorStackHeight, false);
+                
+                // generate heat per pulse
+                var heatCreated = (receivedPulses / 2 * receivedPulses + 4);
+                componentHeat += heatCreated;
+                
+                // move a base amount of heat to the reactor hull
+                var moved = ownRodCount * 4;
+                componentHeat -= moved;
+                reactorHeat += moved * reactorStackHeight;
+                
+                componentStats.put(localPos, new ComponentStatistics((short) receivedPulses, componentHeat, (short) heatCreated, (short) (moved)));
                 
             } else if (component instanceof ReactorHeatPipeBlock heatPipeBlock) {
+                
+                var sumGainedHeat = 0;
                 
                 // take heat in from neighbors
                 for (var neighbor : getNeighborsInBounds(localPos, activeComponents.keySet())) {
@@ -56,41 +105,35 @@ public class ReactorControllerBlockEntity extends BlockEntity implements BlockEn
                     neighborHeat -= gainedHeat;
                     componentHeats.put(neighbor, neighborHeat);
                     componentHeat += gainedHeat;
+                    sumGainedHeat += gainedHeat;
                 }
                 
                 // move heat to reactor
-                var moveAmount = Math.min(10, componentHeat);
-                reactorHeat += moveAmount;
+                var moveAmount = Math.min(12, componentHeat);
+                reactorHeat += moveAmount * reactorStackHeight;
                 componentHeat -= moveAmount;
+                
+                componentStats.put(localPos, new ComponentStatistics((short) 0, componentHeat, (short) sumGainedHeat, (short) (moveAmount)));
                 
             } else if (component instanceof ReactorHeatVentBlock ventBlock) {
                 
-                reactorHeat = Math.max(reactorHeat - 4, 0);
+                var newHeat = (reactorHeat - 6 * reactorStackHeight);
+                reactorHeat = Math.max(newHeat, 0);
                 
-            } else if (component instanceof ReactorReflectorBlock reflectorBlock) {
-                
-                // do extra ticks on neighboring rods
-                for (var neighborPos : getNeighborsInBounds(localPos, activeComponents.keySet())) {
-                    
-                    var neighbor = activeComponents.get(neighborPos);
-                    if (neighbor instanceof ReactorRodBlock neighborRod) {
-                        var rodHeat = componentHeats.get(neighborPos);
-                        rodHeat += 4;
-                        componentHeats.put(neighborPos, rodHeat);
-                    }
-                }
+                componentStats.put(localPos, new ComponentStatistics((short) 0, componentHeat, (short) 6, (short) 0));
                 
             }
             
             componentHeats.put(localPos, componentHeat);
         }
         
-        System.out.println(reactorHeat);
-        System.out.println(Arrays.toString(componentHeats.entrySet().toArray()));
+        sendUINetworkData();
         
     }
     
     public void init(PlayerEntity player) {
+        
+        active = false;
         
         // find low and high corners of reactor
         var cornerA = pos;
@@ -137,7 +180,9 @@ public class ReactorControllerBlockEntity extends BlockEntity implements BlockEn
         var interiorHeight = cornerB.getY() - cornerA.getY() - 1;
         var cornerAFlat = cornerA.add(1, 1, 1);
         var cornerBFlat = new BlockPos(cornerB.getX() - 1, cornerA.getY() + 1, cornerB.getZ() - 1);
+        
         activeComponents.clear();
+        reactorStackHeight = interiorHeight;
         
         var interiorStackedRight = BlockPos.stream(cornerAFlat, cornerBFlat).allMatch(pos -> {
             
@@ -164,6 +209,10 @@ public class ReactorControllerBlockEntity extends BlockEntity implements BlockEn
             player.sendMessage(Text.translatable("message.oritech.interior_invalid"));
             return;
         }
+        
+        areaMin = finalCornerA;
+        areaMax = finalCornerB;
+        active = true;
         
         System.out.println("walls: " + wallsValid + " interiorStack: " + interiorStackedRight + " height: " + interiorHeight);
         
@@ -224,4 +273,41 @@ public class ReactorControllerBlockEntity extends BlockEntity implements BlockEn
         
     }
     
+    @Override
+    public EnergyApi.EnergyContainer getStorage(Direction direction) {
+        return energyStorage;
+    }
+    
+    private void sendUINetworkData() {
+        
+        if (activeComponents.isEmpty()) return;
+        
+        var positionsFlat = activeComponents.keySet();
+        var positions = positionsFlat.stream().map(pos -> areaMin.add(pos.x + 1, 1, pos.y + 1)).toList();
+        var heats = positionsFlat.stream().map(pos -> componentStats.getOrDefault(pos, ComponentStatistics.EMPTY)).toList();
+        
+        NetworkContent.MACHINE_CHANNEL.serverHandle(this).send(new NetworkContent.ReactorUISyncPacket(pos, positions, heats));
+    }
+    
+    @Override
+    public Object getScreenOpeningData(ServerPlayerEntity player) {
+        var previewMax = new BlockPos(areaMax.getX(), areaMin.getY() + 1, areaMax.getZ());
+        NetworkContent.MACHINE_CHANNEL.serverHandle(this).send(new NetworkContent.ReactorUIDataPacket(pos, areaMin, areaMax, previewMax));
+        return new ModScreens.BasicData(pos);
+    }
+    
+    @Override
+    public Text getDisplayName() {
+        return Text.of("");
+    }
+    
+    @Nullable
+    @Override
+    public ScreenHandler createMenu(int syncId, PlayerInventory playerInventory, PlayerEntity player) {
+        return new ReactorScreenHandler(syncId, playerInventory, this);
+    }
+    
+    public record ComponentStatistics(short receivedPulses, int storedHeat, short heatChanged, short heatToReactor) {
+        public static final ComponentStatistics EMPTY = new ComponentStatistics((short) 0, -1, (short) 0, (short) 0);
+    }
 }

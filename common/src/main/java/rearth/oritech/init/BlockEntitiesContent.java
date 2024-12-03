@@ -147,6 +147,7 @@ public class BlockEntitiesContent implements ArchitecturyRegistryContainer<Block
     
     public static final BlockEntityType<SpawnerControllerBlockEntity> SPAWNER_CONTROLLER_BLOCK_ENTITY = FabricBlockEntityTypeBuilder.create(SpawnerControllerBlockEntity::new, BlockContent.SPAWNER_CONTROLLER_BLOCK).build();
     
+    @AssignSidedEnergy
     public static final BlockEntityType<ReactorControllerBlockEntity> REACTOR_CONTROLLER_BLOCK_ENTITY = FabricBlockEntityTypeBuilder.create(ReactorControllerBlockEntity::new, BlockContent.REACTOR_CONTROLLER).build();
     
     @AssignSidedInventory
@@ -231,7 +232,7 @@ public class BlockEntitiesContent implements ArchitecturyRegistryContainer<Block
     @Override
     public void postProcessField(String namespace, BlockEntityType<?> value, String identifier, Field field, RegistrySupplier<BlockEntityType<?>> supplier) {
         
-        if (field.isAnnotationPresent(AssignSidedEnergy.class))
+        if (EnergyApi.BLOCK != null && field.isAnnotationPresent(AssignSidedEnergy.class))
             EnergyApi.BLOCK.registerBlockEntity(() -> value);
         
         if (field.isAnnotationPresent(AssignSidedFluid.class))
