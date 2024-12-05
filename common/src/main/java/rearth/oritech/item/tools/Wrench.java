@@ -30,16 +30,28 @@ public class Wrench extends Item {
 	}
 
 	public static ToolComponent createToolComponent() {
-		return new ToolComponent(List.of(ToolComponent.Rule.ofAlwaysDropping(List.of(
-				BlockContent.ENERGY_PIPE,
-				BlockContent.SUPERCONDUCTOR,
-				BlockContent.FLUID_PIPE,
-				BlockContent.ITEM_PIPE,
-				BlockContent.ENERGY_PIPE_CONNECTION,
-				BlockContent.SUPERCONDUCTOR_CONNECTION,
-				BlockContent.FLUID_PIPE_CONNECTION,
-				BlockContent.ITEM_PIPE_CONNECTION
-		), 25f)), 1.f, 1);
+		return new ToolComponent(List.of(
+				ToolComponent.Rule.ofAlwaysDropping(List.of(
+						BlockContent.ENERGY_PIPE,
+						BlockContent.SUPERCONDUCTOR,
+						BlockContent.FLUID_PIPE,
+						BlockContent.ITEM_PIPE,
+						BlockContent.ENERGY_PIPE_CONNECTION,
+						BlockContent.SUPERCONDUCTOR_CONNECTION,
+						BlockContent.FLUID_PIPE_CONNECTION,
+						BlockContent.ITEM_PIPE_CONNECTION
+				), 25f),
+				ToolComponent.Rule.ofAlwaysDropping(List.of(
+						BlockContent.FRAMED_ENERGY_PIPE,
+						BlockContent.FRAMED_SUPERCONDUCTOR,
+						BlockContent.FRAMED_FLUID_PIPE,
+						BlockContent.FRAMED_ITEM_PIPE,
+						BlockContent.FRAMED_ENERGY_PIPE_CONNECTION,
+						BlockContent.FRAMED_SUPERCONDUCTOR_CONNECTION,
+						BlockContent.FRAMED_FLUID_PIPE_CONNECTION,
+						BlockContent.FRAMED_ITEM_PIPE_CONNECTION
+				), 12.5f)
+		), 1.f, 1);
 	}
 
 	@Override
