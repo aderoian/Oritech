@@ -2,9 +2,13 @@ package rearth.oritech.block.blocks.pipes.energy;
 
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
+import net.minecraft.block.ShapeContext;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
+import net.minecraft.util.shape.VoxelShape;
+import net.minecraft.util.shape.VoxelShapes;
+import net.minecraft.world.BlockView;
 import net.minecraft.world.World;
 import org.apache.commons.lang3.function.TriFunction;
 import org.jetbrains.annotations.Nullable;
@@ -62,4 +66,31 @@ public class SuperConductorConnectionBlock extends GenericPipeConnectionBlock {
     public GenericPipeInterfaceEntity.PipeNetworkData getNetworkData(World world) {
         return SUPERCONDUCTOR_DATA.computeIfAbsent(world.getRegistryKey().getValue(), data -> new GenericPipeInterfaceEntity.PipeNetworkData());
     }
+
+	public static class FramedSuperConductorConnectionBlock extends SuperConductorConnectionBlock {
+
+		public FramedSuperConductorConnectionBlock(Settings settings) {
+			super(settings);
+		}
+
+		@Override
+		public VoxelShape getOutlineShape(BlockState state, BlockView world, BlockPos pos, ShapeContext context) {
+			return VoxelShapes.fullCube();
+		}
+
+		@Override
+		public VoxelShape getCollisionShape(BlockState state, BlockView world, BlockPos pos, ShapeContext context) {
+			return state.getOutlineShape(world, pos);
+		}
+
+		@Override
+		public BlockState getNormalBlock() {
+			return BlockContent.FRAMED_SUPERCONDUCTOR.getDefaultState();
+		}
+
+		@Override
+		public BlockState getConnectionBlock() {
+			return BlockContent.FRAMED_SUPERCONDUCTOR_CONNECTION.getDefaultState();
+		}
+	}
 }

@@ -22,9 +22,15 @@ import rearth.oritech.block.blocks.arcane.*;
 import rearth.oritech.block.blocks.decorative.*;
 import rearth.oritech.block.blocks.generators.*;
 import rearth.oritech.block.blocks.interaction.*;
-import rearth.oritech.block.blocks.pipes.energy.*;
-import rearth.oritech.block.blocks.pipes.fluid.*;
-import rearth.oritech.block.blocks.pipes.item.*;
+import rearth.oritech.block.blocks.pipes.energy.EnergyPipeBlock;
+import rearth.oritech.block.blocks.pipes.energy.EnergyPipeConnectionBlock;
+import rearth.oritech.block.blocks.pipes.energy.SuperConductorBlock;
+import rearth.oritech.block.blocks.pipes.energy.SuperConductorConnectionBlock;
+import rearth.oritech.block.blocks.pipes.fluid.FluidPipeBlock;
+import rearth.oritech.block.blocks.pipes.fluid.FluidPipeConnectionBlock;
+import rearth.oritech.block.blocks.pipes.item.ItemFilterBlock;
+import rearth.oritech.block.blocks.pipes.item.ItemPipeBlock;
+import rearth.oritech.block.blocks.pipes.item.ItemPipeConnectionBlock;
 import rearth.oritech.block.blocks.processing.*;
 import rearth.oritech.block.blocks.reactor.*;
 import rearth.oritech.block.blocks.storage.*;
@@ -49,19 +55,31 @@ public class BlockContent implements ArchitecturyBlockRegistryContainer {
     public static final Block MACHINE_FRAME_BLOCK = new MachineFrameBlock(AbstractBlock.Settings.copy(Blocks.IRON_BARS));
     
     public static final Block FLUID_PIPE = new FluidPipeBlock(AbstractBlock.Settings.copy(Blocks.IRON_BARS).strength(1.0f, 2.0f));
+	public static final Block FRAMED_FLUID_PIPE = new FluidPipeBlock.FramedFluidPipeBlock(AbstractBlock.Settings.copy(Blocks.IRON_BARS).strength(1.0f, 2.0f));
     public static final Block ENERGY_PIPE = new EnergyPipeBlock(AbstractBlock.Settings.copy(Blocks.IRON_BARS).strength(1.0f, 2.0f));
+	public static final Block FRAMED_ENERGY_PIPE = new EnergyPipeBlock.FramedEnergyPipeBlock(AbstractBlock.Settings.copy(Blocks.IRON_BARS).strength(1.0f, 2.0f));
     public static final Block SUPERCONDUCTOR = new SuperConductorBlock(AbstractBlock.Settings.copy(Blocks.IRON_BARS).strength(1.0f, 2.0f));
+	public static final Block FRAMED_SUPERCONDUCTOR = new SuperConductorBlock.FramedSuperConductorBlock(AbstractBlock.Settings.copy(Blocks.IRON_BARS).strength(1.0f, 2.0f));
     public static final Block ITEM_PIPE = new ItemPipeBlock(AbstractBlock.Settings.copy(Blocks.IRON_BARS).strength(1.0f, 2.0f));
+	public static final Block FRAMED_ITEM_PIPE = new ItemPipeBlock.FramedItemPipeBlock(AbstractBlock.Settings.copy(Blocks.IRON_BARS).strength(1.0f, 2.0f));
     public static final Block ITEM_FILTER_BLOCK = new ItemFilterBlock(AbstractBlock.Settings.copy(Blocks.IRON_BARS).strength(1.0f, 2.0f));
     
     @NoBlockItem
     public static final Block FLUID_PIPE_CONNECTION = new FluidPipeConnectionBlock(AbstractBlock.Settings.copy(Blocks.IRON_BARS).strength(1.0f, 2.0f));
+	@NoBlockItem
+	public static final Block FRAMED_FLUID_PIPE_CONNECTION = new FluidPipeConnectionBlock.FramedFluidPipeConnectionBlock(AbstractBlock.Settings.copy(Blocks.IRON_BARS).strength(1.0f, 2.0f));
     @NoBlockItem
     public static final Block ENERGY_PIPE_CONNECTION = new EnergyPipeConnectionBlock(AbstractBlock.Settings.copy(Blocks.IRON_BARS).strength(1.0f, 2.0f));
+	@NoBlockItem
+	public static final Block FRAMED_ENERGY_PIPE_CONNECTION = new EnergyPipeConnectionBlock.FramedEnergyPipeConnectionBlock(AbstractBlock.Settings.copy(Blocks.IRON_BARS).strength(1.0f, 2.0f));
     @NoBlockItem
     public static final Block SUPERCONDUCTOR_CONNECTION = new SuperConductorConnectionBlock(AbstractBlock.Settings.copy(Blocks.IRON_BARS).strength(1.0f, 2.0f));
+	@NoBlockItem
+	public static final Block FRAMED_SUPERCONDUCTOR_CONNECTION = new SuperConductorConnectionBlock.FramedSuperConductorConnectionBlock(AbstractBlock.Settings.copy(Blocks.IRON_BARS).strength(1.0f, 2.0f));
     @NoBlockItem
     public static final Block ITEM_PIPE_CONNECTION = new ItemPipeConnectionBlock(AbstractBlock.Settings.copy(Blocks.IRON_BARS).strength(1.0f, 2.0f));
+	@NoBlockItem
+	public static final Block FRAMED_ITEM_PIPE_CONNECTION = new ItemPipeConnectionBlock.FramedItemPipeConnectionBlock(AbstractBlock.Settings.copy(Blocks.IRON_BARS).strength(1.0f, 2.0f));
     
     @NoBlockItem
     public static final Block FRAME_GANTRY_ARM = new Block(AbstractBlock.Settings.copy(Blocks.CHAIN).nonOpaque());

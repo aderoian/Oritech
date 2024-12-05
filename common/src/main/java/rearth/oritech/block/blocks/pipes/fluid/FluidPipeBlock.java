@@ -3,10 +3,14 @@ package rearth.oritech.block.blocks.pipes.fluid;
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidStorage;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
+import net.minecraft.block.ShapeContext;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.Vec3d;
+import net.minecraft.util.shape.VoxelShape;
+import net.minecraft.util.shape.VoxelShapes;
+import net.minecraft.world.BlockView;
 import net.minecraft.world.World;
 import org.apache.commons.lang3.function.TriFunction;
 import rearth.oritech.block.blocks.pipes.GenericPipeBlock;
@@ -60,4 +64,31 @@ public class FluidPipeBlock extends GenericPipeBlock {
     public GenericPipeInterfaceEntity.PipeNetworkData getNetworkData(World world) {
         return FLUID_PIPE_DATA.computeIfAbsent(world.getRegistryKey().getValue(), data -> new GenericPipeInterfaceEntity.PipeNetworkData());
     }
+
+	public static class FramedFluidPipeBlock extends FluidPipeBlock {
+
+		public FramedFluidPipeBlock(Settings settings) {
+			super(settings);
+		}
+
+		@Override
+		public VoxelShape getOutlineShape(BlockState state, BlockView world, BlockPos pos, ShapeContext context) {
+			return VoxelShapes.fullCube();
+		}
+
+		@Override
+		public VoxelShape getCollisionShape(BlockState state, BlockView world, BlockPos pos, ShapeContext context) {
+			return state.getOutlineShape(world, pos);
+		}
+
+		@Override
+		public BlockState getNormalBlock() {
+			return BlockContent.FRAMED_FLUID_PIPE.getDefaultState();
+		}
+
+		@Override
+		public BlockState getConnectionBlock() {
+			return BlockContent.FRAMED_FLUID_PIPE_CONNECTION.getDefaultState();
+		}
+	}
 }
