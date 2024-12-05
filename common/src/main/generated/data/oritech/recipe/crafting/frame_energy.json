@@ -1,0 +1,24 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "c": {
+      "item": "oritech:energy_pipe"
+    },
+    "f": {
+      "tag": "c:ingots/steel"
+    },
+    "m": {
+      "item": "minecraft:iron_ingot"
+    }
+  },
+  "pattern": [
+    "fmf",
+    "ccc",
+    "fmf"
+  ],
+  "result": {
+    "count": 3,
+    "id": "oritech:framed_energy_pipe"
+  }
+}
