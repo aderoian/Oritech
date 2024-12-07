@@ -295,22 +295,17 @@ public class RecipeGenerator extends FabricRecipeProvider {
         offerInsulatedCableRecipe(exporter, new ItemStack(BlockContent.FLUID_PIPE.asItem(), 6), Ingredient.fromTag(TagContent.SILICON), Ingredient.ofItems(Items.COPPER_INGOT), "fluidpipe");
 
         // framed energy pipe
-        offerFramedCableRecipe(exporter, new ItemStack(BlockContent.FRAMED_ENERGY_PIPE, 3), Ingredient.ofItems(BlockContent.ENERGY_PIPE), "energy");
+        offerFramedCableRecipe(exporter, new ItemStack(BlockContent.FRAMED_ENERGY_PIPE, 8), Ingredient.ofItems(BlockContent.ENERGY_PIPE), "energy");
+        offerCableFromFrameRecipe(exporter, new ItemStack(BlockContent.ENERGY_PIPE, 1), Ingredient.ofItems(BlockContent.FRAMED_ENERGY_PIPE), "energy");
         // framed superconductor
-        offerFramedCableRecipe(exporter, new ItemStack(BlockContent.FRAMED_SUPERCONDUCTOR, 3), Ingredient.ofItems(BlockContent.SUPERCONDUCTOR.asItem()), "superconductor");
+        offerFramedCableRecipe(exporter, new ItemStack(BlockContent.FRAMED_SUPERCONDUCTOR, 8), Ingredient.ofItems(BlockContent.SUPERCONDUCTOR.asItem()), "superconductor");
+        offerCableFromFrameRecipe(exporter, new ItemStack(BlockContent.SUPERCONDUCTOR.asItem(), 1), Ingredient.ofItems(BlockContent.FRAMED_SUPERCONDUCTOR), "superconductor");
         // framed fluid pipe
-        offerFramedCableRecipe(exporter, new ItemStack(BlockContent.FRAMED_FLUID_PIPE, 3), Ingredient.ofItems(BlockContent.FLUID_PIPE), "fluid");
+        offerFramedCableRecipe(exporter, new ItemStack(BlockContent.FRAMED_FLUID_PIPE, 8), Ingredient.ofItems(BlockContent.FLUID_PIPE), "fluid");
+        offerCableFromFrameRecipe(exporter, new ItemStack(BlockContent.FLUID_PIPE, 1), Ingredient.ofItems(BlockContent.FRAMED_FLUID_PIPE), "fluid");
         // framed item pipe
-        offerFramedCableRecipe(exporter, new ItemStack(BlockContent.FRAMED_ITEM_PIPE, 3), Ingredient.ofItems(BlockContent.ITEM_PIPE), "item");
-
-        // framed energy pipe alt
-        addAssemblerRecipe(exporter, Ingredient.fromTag(TagContent.STEEL_INGOTS), Ingredient.ofItems(Items.IRON_INGOT), Ingredient.fromTag(TagContent.STEEL_INGOTS), Ingredient.ofItems(BlockContent.ENERGY_PIPE.asItem()), BlockContent.FRAMED_ENERGY_PIPE.asItem(), 3, 1f, "framed_energy_pipe");
-        // framed superconductor alt
-        addAssemblerRecipe(exporter, Ingredient.fromTag(TagContent.STEEL_INGOTS), Ingredient.ofItems(Items.IRON_INGOT), Ingredient.fromTag(TagContent.STEEL_INGOTS), Ingredient.ofItems(BlockContent.SUPERCONDUCTOR.asItem()), BlockContent.FRAMED_SUPERCONDUCTOR.asItem(), 3, 1f, "framed_superconductor");
-        // framed fluid pipe alt
-        addAssemblerRecipe(exporter, Ingredient.fromTag(TagContent.STEEL_INGOTS), Ingredient.ofItems(Items.IRON_INGOT), Ingredient.fromTag(TagContent.STEEL_INGOTS), Ingredient.ofItems(BlockContent.FLUID_PIPE.asItem()), BlockContent.FRAMED_FLUID_PIPE.asItem(), 3, 1f, "framed_fluid_pipe");
-        // framed item pipe alt
-        addAssemblerRecipe(exporter, Ingredient.fromTag(TagContent.STEEL_INGOTS), Ingredient.ofItems(Items.IRON_INGOT), Ingredient.fromTag(TagContent.STEEL_INGOTS), Ingredient.ofItems(BlockContent.ITEM_PIPE.asItem()), BlockContent.FRAMED_ITEM_PIPE.asItem(), 3, 1f, "framed_item_pipe");
+        offerFramedCableRecipe(exporter, new ItemStack(BlockContent.FRAMED_ITEM_PIPE, 8), Ingredient.ofItems(BlockContent.ITEM_PIPE), "item");
+        offerCableFromFrameRecipe(exporter, new ItemStack(BlockContent.ITEM_PIPE, 1), Ingredient.ofItems(BlockContent.FRAMED_ITEM_PIPE), "item");
 
         // deep drill
         offerAtomicForgeRecipe(exporter, BlockContent.DEEP_DRILL_BLOCK.asItem(), Ingredient.fromTag(TagContent.MACHINE_PLATING), Ingredient.ofItems(ItemContent.MOTOR), Ingredient.ofItems(ItemContent.HEISENBERG_COMPENSATOR), Ingredient.ofItems(ItemContent.OVERCHARGED_CRYSTAL), Ingredient.ofItems(ItemContent.DURATIUM_INGOT), "deepdrill");
@@ -889,6 +884,15 @@ public class RecipeGenerator extends FabricRecipeProvider {
         var item = output.getItem();
         createFramedCableRecipe(RecipeCategory.MISC, output.getItem(), output.getCount(), input).criterion(hasItem(item), conditionsFromItem(item)).offerTo(exporter, "crafting/frame_" + suffix);
     }
+
+    public void offerCableFromFrameRecipe(RecipeExporter exporter, ItemStack output, Ingredient frame, String suffix) {
+        var item = output.getItem();
+        var builder = ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, item, output.getCount()).input('#', frame)
+                .pattern("   ")
+                .pattern(" # ")
+                .pattern("   ");
+        builder.criterion(hasItem(item), conditionsFromItem(item)).offerTo(exporter, "crafting/unframe_" + suffix);
+    }
     
     public CraftingRecipeJsonBuilder createCableRecipe(RecipeCategory category, Item output, int count, Ingredient input) {
         return ShapedRecipeJsonBuilder.create(category, output, count).input('#', input).pattern("   ").pattern("###");
@@ -899,7 +903,7 @@ public class RecipeGenerator extends FabricRecipeProvider {
     }
 
     public CraftingRecipeJsonBuilder createFramedCableRecipe(RecipeCategory category, Item output, int count, Ingredient input) {
-        return ShapedRecipeJsonBuilder.create(category, output, count).input('c', input).input('f', Ingredient.fromTag(TagContent.STEEL_INGOTS)).input('m', Ingredient.ofItems(Items.IRON_INGOT)).pattern("fmf").pattern("ccc").pattern("fmf");
+        return ShapedRecipeJsonBuilder.create(category, output, count).input('c', input).input('p', Ingredient.fromTag(TagContent.MACHINE_PLATING)).pattern("ccc").pattern("cpc").pattern("ccc");
     }
     
     public void offerMotorRecipe(RecipeExporter exporter, Item output, Ingredient shaft, Ingredient core, Ingredient wall, String suffix) {

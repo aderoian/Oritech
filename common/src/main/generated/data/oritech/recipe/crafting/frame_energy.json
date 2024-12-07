@@ -5,20 +5,17 @@
     "c": {
       "item": "oritech:energy_pipe"
     },
-    "f": {
-      "tag": "c:ingots/steel"
-    },
-    "m": {
-      "item": "minecraft:iron_ingot"
+    "p": {
+      "tag": "oritech:plating"
     }
   },
   "pattern": [
-    "fmf",
     "ccc",
-    "fmf"
+    "cpc",
+    "ccc"
   ],
   "result": {
-    "count": 3,
+    "count": 8,
     "id": "oritech:framed_energy_pipe"
   }
 }
