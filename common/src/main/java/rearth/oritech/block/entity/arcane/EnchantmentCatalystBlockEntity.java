@@ -71,7 +71,7 @@ public class EnchantmentCatalystBlockEntity extends BaseSoulCollectionEntity
         }
     };
     
-    public final SimpleEnergyStorage energyStorage = new SimpleEnergyStorage(50000, 10000, 0);
+    public final SimpleEnergyStorage energyStorage = new SimpleEnergyStorage(10_000, 0, 50_000);
     
     protected final InventoryStorage inventoryStorage = InventoryStorage.of(inventory, null);
     
