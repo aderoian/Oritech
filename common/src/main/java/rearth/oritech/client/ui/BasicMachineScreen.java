@@ -260,19 +260,18 @@ public class BasicMachineScreen<S extends BasicMachineScreenHandler> extends Bas
         var amount = handler.energyStorage.getAmount();
         
         var fillAmount = (float) amount / capacity;
-        var tooltipText = getEnergyTooltip(amount, capacity);
+        var tooltipText = getEnergyTooltip(amount, capacity, (int) handler.screenData.getDisplayedEnergyUsage());
         
         energyIndicator.tooltip(tooltipText);
         energyIndicator.visibleArea(PositionedRectangle.of(0, 96 - ((int) (96 * (fillAmount))), 24, (int) (96 * fillAmount)));
     }
     
-    public Text getEnergyTooltip(long amount, long max) {
+    public static Text getEnergyTooltip(long amount, long max, int showedUsage) {
         var percentage = (float) amount / max;
         var energyFill = String.format("%.1f", percentage * 100);
-        var energyUsage = (int) handler.screenData.getDisplayedEnergyUsage();
         var storedAmount = TooltipHelper.getEnergyText(amount);
         var maxAmount = TooltipHelper.getEnergyText(max);
-        return Text.translatable("tooltip.oritech.energy_usage", storedAmount, maxAmount, energyFill, energyUsage);
+        return Text.translatable("tooltip.oritech.energy_usage", storedAmount, maxAmount, energyFill, showedUsage);
     }
     
     public void updateSettingsButtons() {

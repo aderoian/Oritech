@@ -3,6 +3,7 @@ package rearth.oritech.client.ui;
 import io.wispforest.owo.ui.base.BaseOwoHandledScreen;
 import io.wispforest.owo.ui.component.Components;
 import io.wispforest.owo.ui.component.LabelComponent;
+import io.wispforest.owo.ui.component.TextureComponent;
 import io.wispforest.owo.ui.container.Containers;
 import io.wispforest.owo.ui.container.FlowLayout;
 import io.wispforest.owo.ui.core.*;
@@ -24,6 +25,7 @@ import rearth.oritech.block.entity.reactor.ReactorFuelPortEntity;
 import rearth.oritech.client.ui.components.ReactorBlockRenderComponent;
 import rearth.oritech.client.ui.components.ReactorPreviewContainer;
 import rearth.oritech.init.BlockContent;
+import rearth.oritech.util.ScreenProvider;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -36,6 +38,9 @@ public class ReactorScreen extends BaseOwoHandledScreen<FlowLayout, ReactorScree
     private LabelComponent tooltipTitle;
     private FlowLayout tooltipContainer;
     private ReactorBlockRenderComponent selectedBlockOverlay;
+    private TextureComponent energyIndicator;
+    private LabelComponent tempLabel;
+    private LabelComponent productionLabel;
     
     public ReactorScreen(ReactorScreenHandler handler, PlayerInventory inventory, Text title) {
         super(handler, inventory, title);
@@ -61,20 +66,34 @@ public class ReactorScreen extends BaseOwoHandledScreen<FlowLayout, ReactorScree
         tooltipContainer.padding(Insets.of(3));
         tooltipTitle.zIndex(3001);
         
-        var overlay = Containers.horizontalFlow(Sizing.fixed(290), Sizing.fixed(200));
+        var overlay = Containers.horizontalFlow(Sizing.fixed(323), Sizing.fixed(200));
         rootComponent.child(overlay.surface(Surface.PANEL));
         
         if (handler.reactorEntity.uiData != null) {
             addReactorComponentPreview(overlay);
+            addReactorStats(overlay);
+            addEnergyBar(overlay);
         }
         
         addTitle(overlay);
         rootComponent.child(tooltipContainer.positioning(Positioning.absolute(0, 0)));
     }
     
+    private void addReactorStats(FlowLayout overlay) {
+        var container = Containers.verticalFlow(Sizing.fixed(120), Sizing.content(0));
+        
+        tempLabel = Components.label(Text.translatable("Heat %s C", "50").formatted(Formatting.WHITE));
+        productionLabel = Components.label(Text.translatable("Production %s RF/t", "50").formatted(Formatting.WHITE));
+        
+        container.child(tempLabel.margins(Insets.of(4)));
+        container.child(productionLabel.margins(Insets.of(4)));
+        
+        overlay.child(container.margins(Insets.of(8)).surface(Surface.PANEL_INSET).positioning(Positioning.absolute(187, 16)));
+    }
+    
     private void addReactorComponentPreview(FlowLayout overlay) {
         
-        var holoPreviewContainer = new ReactorPreviewContainer(Sizing.fixed(180), Sizing.fixed(184), FlowLayout.Algorithm.HORIZONTAL, this::onContainerMouseMove);
+        var holoPreviewContainer = new ReactorPreviewContainer(Sizing.fixed(180), Sizing.fixed(164), FlowLayout.Algorithm.HORIZONTAL, this::onContainerMouseMove);
         holoPreviewContainer.surface(Surface.PANEL_INSET);
         holoPreviewContainer.margins(Insets.of(8));
         
@@ -102,7 +121,7 @@ public class ReactorScreen extends BaseOwoHandledScreen<FlowLayout, ReactorScree
             var zIndex = offset.getY() - offset.getX() - offset.getZ();
             var preview = new ReactorBlockRenderComponent(handler.world.getBlockState(pos), handler.world.getBlockEntity(pos), zIndex, pos.toImmutable())
                             .sizing(Sizing.fixed(size))
-                            .positioning(Positioning.absolute((int) (projectedPosX * size + xOffset), (int) (-projectedPosY * size) + 120));
+                            .positioning(Positioning.absolute((int) (projectedPosX * size + xOffset), (int) (-projectedPosY * size) + 100));
             if (offset.getY() == 1) {
                 activeComponents.add(new Pair<>(-zIndex, (ReactorBlockRenderComponent) preview));
             }
@@ -111,7 +130,7 @@ public class ReactorScreen extends BaseOwoHandledScreen<FlowLayout, ReactorScree
             if (state.getBlock() instanceof ReactorRodBlock || state.getBlock() instanceof ReactorHeatPipeBlock) {
                 var heatOverlay = new ReactorBlockRenderComponent(Blocks.AIR.getDefaultState(), null, zIndex + 0.5f, pos.toImmutable())
                                     .sizing(Sizing.fixed(size))
-                                    .positioning(Positioning.absolute((int) (projectedPosX * size + xOffset), (int) (-projectedPosY * size) + 120));
+                                    .positioning(Positioning.absolute((int) (projectedPosX * size + xOffset), (int) (-projectedPosY * size) + 100));
                 
                 holoPreviewContainer.child(heatOverlay);
                 activeOverlays.add((ReactorBlockRenderComponent) heatOverlay);
@@ -126,13 +145,15 @@ public class ReactorScreen extends BaseOwoHandledScreen<FlowLayout, ReactorScree
         
         activeComponents.sort(Comparator.comparingInt(Pair::getLeft));
         
-        overlay.child(holoPreviewContainer);
+        overlay.child(holoPreviewContainer.positioning(Positioning.absolute(0, 16)));
         
     }
     
     @Override
     protected void handledScreenTick() {
         super.handledScreenTick();
+        
+        if (handler.reactorEntity.uiSyncData == null) return;
         
         for (var overlay : activeOverlays) {
             var data = getStatsAtPosition(overlay.pos);
@@ -154,6 +175,14 @@ public class ReactorScreen extends BaseOwoHandledScreen<FlowLayout, ReactorScree
             
             overlay.state = res;
         }
+        
+        // gather stats
+        var RFperPulse = 5;
+        var sumProducedEnergy = handler.reactorEntity.uiSyncData.componentHeats().stream().mapToInt(data -> data.receivedPulses() * RFperPulse).sum();
+        productionLabel.text(Text.translatable("Energy: %s RF/t", sumProducedEnergy));
+        tempLabel.text(Text.translatable("Outer Heat: %s C", handler.reactorEntity.uiSyncData.heat()));
+        
+        updateEnergyBar();
         
     }
     
@@ -274,6 +303,43 @@ public class ReactorScreen extends BaseOwoHandledScreen<FlowLayout, ReactorScree
         label.sizing(Sizing.fixed(176), Sizing.content(2));
         label.horizontalTextAlignment(HorizontalAlignment.CENTER);
         label.zIndex(1);
-        overlay.child(label.positioning(Positioning.relative(50, 2)));
+        overlay.child(label.positioning(Positioning.relative(50, 3)));
+    }
+    
+    private void addEnergyBar(FlowLayout panel) {
+        
+        var config = new ScreenProvider.BarConfiguration(277, 67, 36, 120);
+        var insetSize = 1;
+        var tooltipText = Text.translatable("tooltip.oritech.energy_indicator", 10, 50);
+        
+        var frame = Containers.horizontalFlow(Sizing.fixed(config.width() + insetSize * 2), Sizing.fixed(config.height() + insetSize * 2));
+        frame.surface(Surface.PANEL_INSET);
+        frame.padding(Insets.of(insetSize));
+        frame.positioning(Positioning.absolute(config.x() - insetSize, config.y() - insetSize));
+        panel.child(frame);
+        
+        var indicator_background = Components.texture(BasicMachineScreen.GUI_COMPONENTS, 24, 0, 24, 96, 98, 96);
+        indicator_background.sizing(Sizing.fixed(config.width()), Sizing.fixed(config.height()));
+        
+        energyIndicator = Components.texture(BasicMachineScreen.GUI_COMPONENTS, 0, 0, 24, (96), 98, 96);
+        energyIndicator.sizing(Sizing.fixed(config.width()), Sizing.fixed(config.height()));
+        energyIndicator.positioning(Positioning.absolute(0, 0));
+        energyIndicator.tooltip(tooltipText);
+        
+        frame
+          .child(indicator_background)
+          .child(energyIndicator);
+    }
+    
+    protected void updateEnergyBar() {
+        
+        var capacity = handler.reactorEntity.energyStorage.getCapacity();
+        var amount = handler.reactorEntity.energyStorage.getAmount();
+        
+        var fillAmount = (float) amount / capacity;
+        var tooltipText = BasicMachineScreen.getEnergyTooltip(amount, capacity, 0);
+        
+        energyIndicator.tooltip(tooltipText);
+        energyIndicator.visibleArea(PositionedRectangle.of(0, 96 - ((int) (96 * (fillAmount))), 24, (int) (96 * fillAmount)));
     }
 }
