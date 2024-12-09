@@ -6,10 +6,11 @@ import net.minecraft.util.math.Vec3i;
 import net.minecraft.world.World;
 import rearth.oritech.block.base.entity.ExpandableEnergyStorageBlockEntity;
 import rearth.oritech.init.BlockEntitiesContent;
+import rearth.oritech.util.ComparatorOutputProvider;
 
 import java.util.List;
 
-public class CreativeStorageBlockEntity extends ExpandableEnergyStorageBlockEntity {
+public class CreativeStorageBlockEntity extends ExpandableEnergyStorageBlockEntity implements ComparatorOutputProvider {
 
     public CreativeStorageBlockEntity(BlockPos pos, BlockState state) {
         super(BlockEntitiesContent.CREATIVE_STORAGE_ENTITY, pos, state);
@@ -35,6 +36,7 @@ public class CreativeStorageBlockEntity extends ExpandableEnergyStorageBlockEnti
         return Integer.MAX_VALUE;
     }
 
+    @Override
     public int getComparatorOutput() {
         if (energyStorage.amount == 0) return 0;
         return (int) (1 + ((energyStorage.amount / (float) energyStorage.capacity) * 14));

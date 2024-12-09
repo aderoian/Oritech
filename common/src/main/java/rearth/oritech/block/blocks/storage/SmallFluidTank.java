@@ -31,6 +31,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import rearth.oritech.block.entity.storage.SmallFluidTankEntity;
 import rearth.oritech.init.BlockContent;
+import rearth.oritech.util.ComparatorOutputProvider;
 
 import java.util.List;
 
@@ -65,7 +66,7 @@ public class SmallFluidTank extends Block implements BlockEntityProvider {
     
     @Override
     protected int getComparatorOutput(BlockState state, World world, BlockPos pos) {
-        return ((SmallFluidTankEntity) world.getBlockEntity(pos)).getComparatorOutput();
+        return ((ComparatorOutputProvider) world.getBlockEntity(pos)).getComparatorOutput();
     }
     
     @Override
