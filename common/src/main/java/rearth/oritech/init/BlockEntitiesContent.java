@@ -101,6 +101,7 @@ public class BlockEntitiesContent implements ArchitecturyRegistryContainer<Block
     public static final BlockEntityType<DeepDrillEntity> DEEP_DRILL_ENTITY = FabricBlockEntityTypeBuilder.create(DeepDrillEntity::new, BlockContent.DEEP_DRILL_BLOCK).build();
     
     @AssignSidedInventory
+    @AssignSidedFluid
     @AssignSidedEnergy
     public static final BlockEntityType<DronePortEntity> DRONE_PORT_ENTITY = FabricBlockEntityTypeBuilder.create(DronePortEntity::new, BlockContent.DRONE_PORT_BLOCK).build();
     
