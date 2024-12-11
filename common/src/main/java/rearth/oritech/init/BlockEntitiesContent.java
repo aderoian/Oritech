@@ -150,10 +150,10 @@ public class BlockEntitiesContent implements ArchitecturyRegistryContainer<Block
     
     public static final BlockEntityType<SpawnerControllerBlockEntity> SPAWNER_CONTROLLER_BLOCK_ENTITY = FabricBlockEntityTypeBuilder.create(SpawnerControllerBlockEntity::new, BlockContent.SPAWNER_CONTROLLER_BLOCK).build();
     
-    @AssignSidedEnergy
     public static final BlockEntityType<ReactorControllerBlockEntity> REACTOR_CONTROLLER_BLOCK_ENTITY = FabricBlockEntityTypeBuilder.create(ReactorControllerBlockEntity::new, BlockContent.REACTOR_CONTROLLER).build();
     public static final BlockEntityType<ReactorFuelPortEntity> REACTOR_FUEL_PORT_BLOCK_ENTITY = FabricBlockEntityTypeBuilder.create(ReactorFuelPortEntity::new, BlockContent.REACTOR_FUEL_PORT).build();
     public static final BlockEntityType<ReactorAbsorberPortEntity> REACTOR_ABSORBER_PORT_BLOCK_ENTITY = FabricBlockEntityTypeBuilder.create(ReactorAbsorberPortEntity::new, BlockContent.REACTOR_ABSORBER_PORT).build();
+    @AssignSidedEnergy
     public static final BlockEntityType<ReactorEnergyPortEntity> REACTOR_ENERGY_PORT_BLOCK_ENTITY = FabricBlockEntityTypeBuilder.create(ReactorEnergyPortEntity::new, BlockContent.REACTOR_ENERGY_PORT).build();
     
     @AssignSidedInventory

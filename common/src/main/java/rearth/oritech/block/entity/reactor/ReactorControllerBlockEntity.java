@@ -9,7 +9,9 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.screen.ScreenHandler;
 import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.state.property.Properties;
 import net.minecraft.text.Text;
+import net.minecraft.util.Pair;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.Vec3i;
@@ -21,6 +23,7 @@ import rearth.oritech.client.init.ModScreens;
 import rearth.oritech.client.ui.ReactorScreenHandler;
 import rearth.oritech.init.BlockEntitiesContent;
 import rearth.oritech.network.NetworkContent;
+import rearth.oritech.util.Geometry;
 import rearth.oritech.util.energy.EnergyApi;
 import rearth.oritech.util.energy.containers.SimpleEnergyStorage;
 
@@ -34,15 +37,15 @@ public class ReactorControllerBlockEntity extends BlockEntity implements BlockEn
     public static final int MAX_SIZE = 64;
     public static final int RF_PER_PULSE = 32;
     public static final int ABSORBER_RATE = 10;
-    public static final int VENT_BASE_RATE = 6;
-    public static final int VENT_RELATIVE_RATE = 50;
+    public static final int VENT_BASE_RATE = 4;
+    public static final int VENT_RELATIVE_RATE = 100;
     
     private final HashMap<Vector2i, BaseReactorBlock> activeComponents = new HashMap<>();   // 2d local position on the first layer containing the reactor blocks
     private final HashMap<Vector2i, ReactorFuelPortEntity> fuelPorts = new HashMap<>();     // same grid, but contains a reference to the port at the ceiling
     private final HashMap<Vector2i, ReactorAbsorberPortEntity> absorberPorts = new HashMap<>(); // same
     private final HashMap<Vector2i, Integer> componentHeats = new HashMap<>();              // same grid, contains the current heat of the component
     private final HashMap<Vector2i, ComponentStatistics> componentStats = new HashMap<>(); // mainly for client displays, same grid
-    private final HashSet<BlockPos> energyPorts = new HashSet<>();   // list of all energy port outputs (e.g. the targets to output to)
+    private final HashSet<Pair<BlockPos, Direction>> energyPorts = new HashSet<>();   // list of all energy port outputs (e.g. the targets to output to)
     
     public SimpleEnergyStorage energyStorage = new SimpleEnergyStorage(0, 1_000_000, 10_000_000, this::markDirty);
     public boolean active = false;
@@ -170,6 +173,8 @@ public class ReactorControllerBlockEntity extends BlockEntity implements BlockEn
             componentHeats.put(localPos, componentHeat);
         }
         
+        outputEnergy();
+        
         if (world.getTime() % 2 == 0)
             sendUINetworkData();
         
@@ -211,9 +216,15 @@ public class ReactorControllerBlockEntity extends BlockEntity implements BlockEn
                 var block = world.getBlockState(pos).getBlock();
                 return block instanceof ReactorWallBlock;
             } else if (isOnWall(pos, finalCornerA, finalCornerB)) {
-                var block = world.getBlockState(pos).getBlock();
+                var state = world.getBlockState(pos);
+                var block = state.getBlock();
                 
                 // load wall energy ports
+                if (block instanceof ReactorEnergyPortBlock) {
+                    var facing = state.get(Properties.FACING);
+                    var blockInFront = pos.add(Geometry.getForward(facing));
+                    energyPorts.add(new Pair<>(blockInFront, Direction.fromVector(Geometry.getBackward(facing).getX(), Geometry.getBackward(facing).getY(), Geometry.getBackward(facing).getZ())));
+                }
                 
                 return !(block instanceof BaseReactorBlock reactorBlock) || reactorBlock.validForWalls();
             }
@@ -338,6 +349,25 @@ public class ReactorControllerBlockEntity extends BlockEntity implements BlockEn
         
         return result;
         
+    }
+    
+    private void outputEnergy() {
+        
+        var totalMoved = 0;
+        
+        for (var candidateData : energyPorts) {
+            var candidate = EnergyApi.BLOCK.find(world, candidateData.getLeft(), candidateData.getRight());
+            if (candidate == null) continue;
+            var moved = EnergyApi.transfer(energyStorage, candidate, energyStorage.getAmount(), false);
+            
+            if (moved > 0)
+                candidate.update();
+            
+            totalMoved += moved;
+        }
+        
+        if (totalMoved > 0)
+            energyStorage.update();
     }
     
     @Override
