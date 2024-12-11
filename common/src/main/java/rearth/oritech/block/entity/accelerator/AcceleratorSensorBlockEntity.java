@@ -6,8 +6,9 @@ import net.minecraft.block.entity.BlockEntityTicker;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import rearth.oritech.init.BlockEntitiesContent;
+import rearth.oritech.util.ComparatorOutputProvider;
 
-public class AcceleratorSensorBlockEntity extends BlockEntity implements BlockEntityTicker<AcceleratorSensorBlockEntity> {
+public class AcceleratorSensorBlockEntity extends BlockEntity implements BlockEntityTicker<AcceleratorSensorBlockEntity>, ComparatorOutputProvider {
     
     private float measuredSpeed;
     private long measuredTime;
@@ -42,7 +43,8 @@ public class AcceleratorSensorBlockEntity extends BlockEntity implements BlockEn
         this.measuredTime = world.getTime();
         dirty = true;
     }
-    
+
+    @Override
     public int getComparatorOutput() {
         if (measuredSpeed <= 0) {
             return 0;
