@@ -145,7 +145,7 @@ public class NetworkContent {
     public record ReactorPortDataPacket(BlockPos position, int capacity, int remaining) {
     }
     
-    public record ReactorUISyncPacket(BlockPos position, List<BlockPos> componentPositions, List<ReactorControllerBlockEntity.ComponentStatistics> componentHeats, long energy, int heat) {
+    public record ReactorUISyncPacket(BlockPos position, List<BlockPos> componentPositions, List<ReactorControllerBlockEntity.ComponentStatistics> componentHeats, long energy) {
     }
     
     @SuppressWarnings("unchecked")
@@ -496,7 +496,6 @@ public class NetworkContent {
             if (entity instanceof ReactorControllerBlockEntity reactor) {
                 reactor.uiSyncData = message;
                 reactor.energyStorage.setAmount(message.energy);
-                reactor.reactorHeat = message.heat;
             }
             
         }));
