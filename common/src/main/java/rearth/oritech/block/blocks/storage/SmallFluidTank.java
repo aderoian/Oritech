@@ -1,6 +1,5 @@
 package rearth.oritech.block.blocks.storage;
 
-import dev.architectury.fluid.FluidStack;
 import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory;
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariantAttributes;
 import net.minecraft.block.Block;
@@ -103,8 +102,6 @@ public class SmallFluidTank extends Block implements BlockEntityProvider {
         if (tankEntity.getForDirectFluidAccess().amount > 0) {
             var nbt = new NbtCompound();
             tankEntity.writeNbt(nbt, world.getRegistryManager());
-            var fluidStack = FluidStack.create(tankEntity.fluidStorage.variant.getFluid(), tankEntity.fluidStorage.amount);
-            nbt = (NbtCompound) fluidStack.write(world.getRegistryManager(), nbt);
             stack.set(DataComponentTypes.CUSTOM_DATA, NbtComponent.of(nbt));
             var fluidName = FluidVariantAttributes.getName(tankEntity.getForDirectFluidAccess().variant);
             stack.set(DataComponentTypes.CUSTOM_NAME, fluidName.copy().append(" ").append(Text.translatable(tankEntity.isCreative ? "block.oritech.creative_tank_block" : "block.oritech.small_tank_block")));

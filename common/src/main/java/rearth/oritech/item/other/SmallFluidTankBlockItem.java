@@ -1,6 +1,5 @@
 package rearth.oritech.item.other;
 
-import dev.architectury.fluid.FluidStack;
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants;
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant;
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariantAttributes;
@@ -9,7 +8,9 @@ import net.minecraft.component.DataComponentTypes;
 import net.minecraft.item.BlockItem;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.tooltip.TooltipType;
+import net.minecraft.registry.Registries;
 import net.minecraft.text.Text;
+import net.minecraft.util.Identifier;
 
 import java.util.List;
 
@@ -24,13 +25,10 @@ public class SmallFluidTankBlockItem extends BlockItem {
         
         if (!stack.contains(DataComponentTypes.CUSTOM_DATA)) return;
         var nbt = stack.get(DataComponentTypes.CUSTOM_DATA).copyNbt();
-        if (nbt.isEmpty()) return;
+        if (nbt.isEmpty() || !nbt.contains("variant") || !nbt.contains("amount")) return;
         
-        var candidate = FluidStack.read(context.getRegistryLookup(), nbt);
-        if (candidate.isEmpty()) return;
-        var fluidStack = candidate.get();
-        var variant = fluidStack.getFluid();
-        var amount = fluidStack.getAmount() * 1000 / FluidConstants.BUCKET;
+        var variant = Registries.FLUID.get(Identifier.of(nbt.getCompound("variant").getString("fluid")));
+        var amount = nbt.getLong("amount") * 1000 / FluidConstants.BUCKET;
         tooltip.add(Text.translatable("tooltip.oritech.fluid_content", amount, amount <= 0
             ? Text.translatable("tooltip.oritech.fluid_empty")
             : FluidVariantAttributes.getName(FluidVariant.of(variant)).getString()));
