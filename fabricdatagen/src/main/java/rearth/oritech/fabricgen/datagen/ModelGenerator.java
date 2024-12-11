@@ -3,6 +3,7 @@ package rearth.oritech.fabricgen.datagen;
 import net.fabricmc.fabric.api.datagen.v1.FabricDataOutput;
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricModelProvider;
 import net.minecraft.block.Block;
+import net.minecraft.block.Blocks;
 import net.minecraft.block.CropBlock;
 import net.minecraft.block.enums.BlockFace;
 import net.minecraft.data.client.*;
@@ -55,6 +56,25 @@ public class ModelGenerator extends FabricModelProvider {
         blockStateModelGenerator.registerSimpleState(BlockContent.QUARRY_BEAM_INNER);
         blockStateModelGenerator.registerSimpleState(BlockContent.QUARRY_BEAM_TARGET);
         blockStateModelGenerator.registerSimpleState(BlockContent.QUARRY_BEAM_RING);
+        
+        // reactor section
+        // currently invisible, because I stupidly decided to work on main branch on this while doing smaller releases
+        blockStateModelGenerator.registerStateWithModelReference(BlockContent.REACTOR_CONTROLLER, Blocks.CRAFTER);
+        blockStateModelGenerator.registerStateWithModelReference(BlockContent.REACTOR_WALL, Blocks.BRICKS);
+        blockStateModelGenerator.registerStateWithModelReference(BlockContent.REACTOR_ROD, Blocks.DARK_OAK_LOG);
+        blockStateModelGenerator.registerStateWithModelReference(BlockContent.REACTOR_DOUBLE_ROD, Blocks.BLACK_CONCRETE);
+        blockStateModelGenerator.registerStateWithModelReference(BlockContent.REACTOR_QUAD_ROD, Blocks.GRAY_CONCRETE);
+        blockStateModelGenerator.registerStateWithModelReference(BlockContent.REACTOR_VENT, Blocks.NETHER_BRICKS);
+        blockStateModelGenerator.registerStateWithModelReference(BlockContent.REACTOR_REFLECTOR, Blocks.TARGET);
+        blockStateModelGenerator.registerStateWithModelReference(BlockContent.REACTOR_HEAT_PIPE, Blocks.GOLD_BLOCK);
+        blockStateModelGenerator.registerStateWithModelReference(BlockContent.REACTOR_CONDENSER, Blocks.LAPIS_BLOCK);
+        blockStateModelGenerator.registerStateWithModelReference(BlockContent.REACTOR_FUEL_PORT, Blocks.GREEN_TERRACOTTA);
+        blockStateModelGenerator.registerStateWithModelReference(BlockContent.REACTOR_ENERGY_PORT, Blocks.CYAN_TERRACOTTA);
+        blockStateModelGenerator.registerStateWithModelReference(BlockContent.REACTOR_ABSORBER_PORT, Blocks.LIGHT_BLUE_TERRACOTTA);
+        
+        blockStateModelGenerator.registerSimpleCubeAll(BlockContent.REACTOR_COLD_INDICATOR_BLOCK);
+        blockStateModelGenerator.registerSimpleCubeAll(BlockContent.REACTOR_MEDIUM_INDICATOR_BLOCK);
+        blockStateModelGenerator.registerSimpleCubeAll(BlockContent.REACTOR_HOT_INDICATOR_BLOCK);
         
         // these blocks all use geckolib to render/display, so the only thing this really adds are block particles (e.g. when breaking)
         // the machine speed addon has a generic particle references that fits all machines well enough

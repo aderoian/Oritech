@@ -3,7 +3,7 @@
   "category": "misc",
   "key": {
     "#": {
-      "item": "oritech:raw_platinum"
+      "tag": "c:raw_ores/platinum"
     }
   },
   "pattern": [
