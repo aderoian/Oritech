@@ -24,7 +24,7 @@ public class EnergyPipeInterfaceEntity extends GenericPipeInterfaceEntity implem
     private final SimpleEnergyStorage energyStorage;
     private final boolean isSuperConductor;
     
-    private List<EnergyApi.EnergyContainer> cachedTargets;
+    private List<EnergyApi.EnergyContainer> cachedTargets = List.of();
     private int cacheHash;
     
     public EnergyPipeInterfaceEntity(BlockPos pos, BlockState state) {
