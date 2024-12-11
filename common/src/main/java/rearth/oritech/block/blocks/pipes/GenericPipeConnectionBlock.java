@@ -2,6 +2,7 @@ package rearth.oritech.block.blocks.pipes;
 
 import net.minecraft.block.BlockEntityProvider;
 import net.minecraft.block.BlockState;
+import net.minecraft.block.Blocks;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.block.entity.BlockEntityTicker;
 import net.minecraft.block.entity.BlockEntityType;
@@ -16,6 +17,8 @@ import net.minecraft.world.WorldView;
 import org.jetbrains.annotations.Nullable;
 import rearth.oritech.Oritech;
 import rearth.oritech.block.entity.pipes.GenericPipeInterfaceEntity;
+
+import java.util.HashSet;
 
 public abstract class GenericPipeConnectionBlock extends GenericPipeBlock implements BlockEntityProvider {
     
@@ -46,13 +49,20 @@ public abstract class GenericPipeConnectionBlock extends GenericPipeBlock implem
         if (worldImp.isClient) return state;
 
         if (!hasNeighboringMachine(state, worldImp, pos, false)) {
+            // remove stale machine -> neighboring pipes mapping
+            GenericPipeInterfaceEntity.removeStaleMachinePipeNeighbors(pos, getNetworkData(worldImp));
+
             var normalState = getNormalBlock();
             return ((GenericPipeBlock) normalState.getBlock()).addConnectionStates(normalState, worldImp, pos, false);
         }
 
         var interfaceState = state;
         if (!(neighborState.getBlock() instanceof GenericPipeBlock)) {
-            interfaceState = addConnectionStates(state, worldImp, pos, direction);
+            // only update connection if neighbor is a new machine
+            var hadMachine = getNetworkData(worldImp).machinePipeNeighbors.getOrDefault(neighborPos, HashSet.newHashSet(0)).contains(direction.getOpposite());
+            if (state.isOf(Blocks.AIR) || !hadMachine) {
+                interfaceState = addConnectionStates(state, worldImp, pos, direction);
+            }
 
             if (!interfaceState.equals(state)) {
                 // reload connection when state has changed (e.g. machine added/removed)
