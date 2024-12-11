@@ -23,6 +23,7 @@ import net.minecraft.util.math.Direction;
 import net.minecraft.world.World;
 import org.jetbrains.annotations.Nullable;
 import rearth.oritech.block.entity.arcane.EnchantmentCatalystBlockEntity;
+import rearth.oritech.util.ComparatorOutputProvider;
 
 import java.util.List;
 import java.util.Objects;
@@ -41,7 +42,7 @@ public class EnchantmentCatalystBlock extends HorizontalFacingBlock implements B
     
     @Override
     protected int getComparatorOutput(BlockState state, World world, BlockPos pos) {
-        return ((EnchantmentCatalystBlockEntity) world.getBlockEntity(pos)).getComparatorOutput();
+        return ((ComparatorOutputProvider) world.getBlockEntity(pos)).getComparatorOutput();
     }
     
     @Override

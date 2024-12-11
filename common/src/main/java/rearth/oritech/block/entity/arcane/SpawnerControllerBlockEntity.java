@@ -23,8 +23,9 @@ import rearth.oritech.client.init.ParticleContent;
 import rearth.oritech.init.BlockContent;
 import rearth.oritech.init.BlockEntitiesContent;
 import rearth.oritech.network.NetworkContent;
+import rearth.oritech.util.ComparatorOutputProvider;
 
-public class SpawnerControllerBlockEntity extends BaseSoulCollectionEntity implements BlockEntityTicker<SpawnerControllerBlockEntity> {
+public class SpawnerControllerBlockEntity extends BaseSoulCollectionEntity implements BlockEntityTicker<SpawnerControllerBlockEntity>, ComparatorOutputProvider {
     
     public int maxSouls = 100_000;
     public int collectedSouls = 0;
@@ -169,7 +170,8 @@ public class SpawnerControllerBlockEntity extends BaseSoulCollectionEntity imple
         }
         
     }
-    
+
+    @Override
     public int getComparatorOutput() {
         if (spawnedMob == null || maxSouls == 0) return 0;
         

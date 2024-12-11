@@ -41,7 +41,7 @@ import rearth.oritech.util.*;
 
 import java.util.List;
 
-public class SmallFluidTankEntity extends BlockEntity implements FluidProvider, InventoryProvider, ScreenProvider, ExtendedScreenHandlerFactory, BlockEntityTicker<SmallFluidTankEntity> {
+public class SmallFluidTankEntity extends BlockEntity implements FluidProvider, InventoryProvider, ComparatorOutputProvider, ScreenProvider, ExtendedScreenHandlerFactory, BlockEntityTicker<SmallFluidTankEntity> {
     
     private boolean netDirty = false;
     private int lastComparatorOutput = 0;
@@ -219,7 +219,8 @@ public class SmallFluidTankEntity extends BlockEntity implements FluidProvider, 
         var slot = inventory.getStack(1);
         return (slot.isEmpty() || (slot.isStackable() && ItemStack.areItemsAndComponentsEqual(slot, bucket) && slot.getCount() < slot.getMaxCount()));
     }
-    
+
+    @Override
     public int getComparatorOutput() {
         if (fluidStorage.isResourceBlank()) return 0;
 

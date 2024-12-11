@@ -44,7 +44,7 @@ import software.bernie.geckolib.util.GeckoLibUtil;
 import java.util.List;
 
 public class EnchantmentCatalystBlockEntity extends BaseSoulCollectionEntity
-  implements InventoryProvider, EnergyApi.BlockProvider, ScreenProvider, GeoBlockEntity, BlockEntityTicker<EnchantmentCatalystBlockEntity>, ExtendedScreenHandlerFactory<ModScreens.BasicData> {
+  implements InventoryProvider, EnergyApi.BlockProvider, ScreenProvider, ComparatorOutputProvider, GeoBlockEntity, BlockEntityTicker<EnchantmentCatalystBlockEntity>, ExtendedScreenHandlerFactory<ModScreens.BasicData> {
     
     public static final RawAnimation IDLE = RawAnimation.begin().thenLoop("idle");
     public static final RawAnimation STABILIZED = RawAnimation.begin().thenLoop("stabilized");
@@ -71,7 +71,7 @@ public class EnchantmentCatalystBlockEntity extends BaseSoulCollectionEntity
         }
     };
     
-    public final SimpleEnergyStorage energyStorage = new SimpleEnergyStorage(50000, 10000, 0);
+    public final SimpleEnergyStorage energyStorage = new SimpleEnergyStorage(10_000, 0, 50_000);
     
     protected final InventoryStorage inventoryStorage = InventoryStorage.of(inventory, null);
     
@@ -275,7 +275,8 @@ public class EnchantmentCatalystBlockEntity extends BaseSoulCollectionEntity
     public boolean canAcceptSoul() {
         return collectedSouls < maxSouls;
     }
-    
+
+    @Override
     public int getComparatorOutput() {
         return calculateComparatorLevel();
     }

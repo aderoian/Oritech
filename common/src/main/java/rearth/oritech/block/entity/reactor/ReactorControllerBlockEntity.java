@@ -40,12 +40,12 @@ public class ReactorControllerBlockEntity extends BlockEntity implements BlockEn
     private final HashMap<Vector2i, ComponentStatistics> componentStats = new HashMap<>(); // mainly for client displays, same grid
     private final HashSet<ReactorEnergyPortEntity> energyPorts = new HashSet<>();   // list of all energy ports on the reactor wall
     
+    public SimpleEnergyStorage energyStorage = new SimpleEnergyStorage(0, 1_000_000, 10_000_000, this::markDirty);
     public boolean active = false;
-    private int reactorHeat;   // the heat of the entire casing
+    public int reactorHeat;   // the heat of the entire casing
     private int reactorStackHeight;
     private BlockPos areaMin;
     private BlockPos areaMax;
-    private SimpleEnergyStorage energyStorage = new SimpleEnergyStorage(0, 1_000_000, 10_000_000, this::markDirty);
     
     // client only
     public NetworkContent.ReactorUIDataPacket uiData;
@@ -115,7 +115,7 @@ public class ReactorControllerBlockEntity extends BlockEntity implements BlockEn
                     var neighborHeat = componentHeats.get(neighbor);
                     if (neighborHeat <= componentHeat) continue;
                     var diff = neighborHeat - componentHeat;
-                    var gainedHeat = diff / 100;
+                    var gainedHeat = (int) Math.min(Math.sqrt(diff) + 6, diff);
                     neighborHeat -= gainedHeat;
                     componentHeats.put(neighbor, neighborHeat);
                     componentHeat += gainedHeat;
@@ -162,7 +162,8 @@ public class ReactorControllerBlockEntity extends BlockEntity implements BlockEn
             componentHeats.put(localPos, componentHeat);
         }
         
-        sendUINetworkData();
+        if (world.getTime() % 2 == 0)
+            sendUINetworkData();
         
     }
     
@@ -347,7 +348,7 @@ public class ReactorControllerBlockEntity extends BlockEntity implements BlockEn
         var positions = positionsFlat.stream().map(pos -> areaMin.add(pos.x + 1, 1, pos.y + 1)).toList();
         var heats = positionsFlat.stream().map(pos -> componentStats.getOrDefault(pos, ComponentStatistics.EMPTY)).toList();
         
-        NetworkContent.MACHINE_CHANNEL.serverHandle(this).send(new NetworkContent.ReactorUISyncPacket(pos, positions, heats));
+        NetworkContent.MACHINE_CHANNEL.serverHandle(this).send(new NetworkContent.ReactorUISyncPacket(pos, positions, heats, energyStorage.getAmount(), reactorHeat));
     }
     
     private boolean isActivelyViewed() {
