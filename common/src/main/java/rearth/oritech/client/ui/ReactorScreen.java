@@ -101,6 +101,7 @@ public class ReactorScreen extends BaseOwoHandledScreen<FlowLayout, ReactorScree
         holoPreviewContainer.margins(Insets.of(8));
         
         var uiData = handler.reactorEntity.uiData;
+        if (uiData == null) return;
         
         var totalSize = uiData.previewMax().subtract(uiData.min());
         var leftCount = totalSize.getZ();
@@ -110,7 +111,6 @@ public class ReactorScreen extends BaseOwoHandledScreen<FlowLayout, ReactorScree
         var xOffset = middlePercentage * 170 + 10;
         
         var size = (int) (170 / (float) totalWidth * 2.2f);
-        System.out.println(size);
         
         activeComponents = new ArrayList<>();
         activeOverlays = new HashSet<>();
@@ -246,6 +246,7 @@ public class ReactorScreen extends BaseOwoHandledScreen<FlowLayout, ReactorScree
         var stackHeight = handler.reactorEntity.uiData.max().getY() - handler.reactorEntity.uiData.min().getY() - 1;
         var portPosition = pos.add(0, stackHeight, 0);
         var portEntity = handler.world.getBlockEntity(portPosition);
+        if (portEntity != null && portEntity.isRemoved()) return;
         
         
         if (state.getBlock() instanceof ReactorRodBlock rodBlock) {

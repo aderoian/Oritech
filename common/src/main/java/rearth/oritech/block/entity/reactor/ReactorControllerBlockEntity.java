@@ -74,12 +74,18 @@ public class ReactorControllerBlockEntity extends BlockEntity implements BlockEn
         for (var localPos : activeComponents.keySet()) {
             var component = activeComponents.get(localPos);
             var componentHeat = componentHeats.get(localPos);
+            
             if (component instanceof ReactorRodBlock rodBlock) {
                 
                 var ownRodCount = rodBlock.getRodCount();
                 var receivedPulses = rodBlock.getInternalPulseCount();
                 
-                var hasFuel = fuelPorts.get(localPos).tryConsumeFuel(ownRodCount * reactorStackHeight);
+                var portEntity = fuelPorts.get(localPos);
+                if (portEntity == null|| portEntity.isRemoved()) {
+                    continue;
+                }
+                
+                var hasFuel = portEntity.tryConsumeFuel(ownRodCount * reactorStackHeight);
                 var heatCreated = 0;
                 
                 if (hasFuel) {
@@ -127,7 +133,11 @@ public class ReactorControllerBlockEntity extends BlockEntity implements BlockEn
             } else if (component instanceof ReactorAbsorberBlock absorberBlock) {
                 
                 var sumRemovedHeat = 0;
-                var fuelAvailable = absorberPorts.get(localPos).getAvailableFuel();
+                var portEntity = absorberPorts.get(localPos);
+                if (portEntity == null|| portEntity.isRemoved()) {
+                    continue;
+                }
+                var fuelAvailable = portEntity.getAvailableFuel();
                 
                 if (fuelAvailable >= reactorStackHeight) {
                     // take heat in from neighbors and remove it
@@ -141,7 +151,7 @@ public class ReactorControllerBlockEntity extends BlockEntity implements BlockEn
                 }
                 
                 if (sumRemovedHeat > 0) {
-                    absorberPorts.get(localPos).consumeFuel(reactorStackHeight);
+                    portEntity.consumeFuel(reactorStackHeight);
                 }
                 
                 componentStats.put(localPos, new ComponentStatistics((short) 0, 0, (short) sumRemovedHeat));
