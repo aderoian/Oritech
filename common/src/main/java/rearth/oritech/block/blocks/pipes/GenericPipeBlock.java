@@ -1,9 +1,6 @@
 package rearth.oritech.block.blocks.pipes;
 
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockRenderType;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.ShapeContext;
+import net.minecraft.block.*;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemPlacementContext;
 import net.minecraft.sound.SoundCategory;
@@ -27,6 +24,7 @@ import rearth.oritech.block.entity.pipes.GenericPipeInterfaceEntity;
 import rearth.oritech.item.tools.Wrench;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 
 public abstract class GenericPipeBlock extends Block implements Wrench.Wrenchable {
@@ -147,9 +145,15 @@ public abstract class GenericPipeBlock extends Block implements Wrench.Wrenchabl
 
 		// transform to interface when machine is placed as neighbor
 		if (hasMachineInDirection(direction, world, pos, apiValidationFunction())) {
+			// Only update if the neighbor is a new machine
+			var hasMachine = getNetworkData(world).machinePipeNeighbors.getOrDefault(neighborPos, HashSet.newHashSet(0)).contains(direction.getOpposite());
+			if (hasMachine) return state;
+
 			var connectionBlock = getConnectionBlock();
 			return ((GenericPipeBlock) connectionBlock.getBlock()).addConnectionStates(connectionBlock, world, pos, direction);
-		}
+		} else if (neighborState.isOf(Blocks.AIR))
+			// remove potential stale machine -> neighboring pipes mapping
+			getNetworkData(world).machinePipeNeighbors.remove(neighborPos);
 
 		return state;
 	}
