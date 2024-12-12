@@ -47,7 +47,7 @@ public class LaserArmRenderer<T extends LaserArmBlockEntity & GeoAnimatable> ext
         
         if (laserEntity.getCurrentTarget() == null || !laserEntity.isFiring()) return;
         
-        var startOffset = new Vector3f(0, 1.55f, 0);
+        var startOffset = new Vector3f(0, 1.65f, 0);
         var startPos = Vec3d.of(laserEntity.getPos()).add(0.5, 1.55, 0.5);
         
         var targetPos = laserEntity.getVisualTarget();
