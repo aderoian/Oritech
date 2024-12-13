@@ -208,6 +208,7 @@ public class BlockContent implements ArchitecturyBlockRegistryContainer {
     public static final Block REACTOR_FUEL_PORT = new ReactorFuelPortBlock(AbstractBlock.Settings.copy(Blocks.IRON_BLOCK));
     public static final Block REACTOR_ABSORBER_PORT = new ReactorAbsorberPortBlock(AbstractBlock.Settings.copy(Blocks.IRON_BLOCK));
     public static final Block REACTOR_ENERGY_PORT = new ReactorEnergyPortBlock(AbstractBlock.Settings.copy(Blocks.IRON_BLOCK));
+    public static final Block REACTOR_EXPLOSION = new NuclearExplosionBlock(AbstractBlock.Settings.copy(Blocks.IRON_BLOCK));
     
     // cooling cell, early game re-fillable component
     
