@@ -15,6 +15,7 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import org.jetbrains.annotations.Nullable;
 import rearth.oritech.block.entity.accelerator.AcceleratorSensorBlockEntity;
+import rearth.oritech.util.ComparatorOutputProvider;
 
 import java.util.List;
 
@@ -31,7 +32,7 @@ public class AcceleratorSensorBlock extends AcceleratorPassthroughBlock implemen
     
     @Override
     protected int getComparatorOutput(BlockState state, World world, BlockPos pos) {
-        return ((AcceleratorSensorBlockEntity) world.getBlockEntity(pos)).getComparatorOutput();
+        return ((ComparatorOutputProvider) world.getBlockEntity(pos)).getComparatorOutput();
     }
     
     @Nullable

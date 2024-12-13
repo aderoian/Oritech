@@ -1,6 +1,7 @@
 package rearth.oritech.init;
 
 import net.minecraft.block.Block;
+import net.minecraft.entity.EntityType;
 import net.minecraft.item.Item;
 import net.minecraft.registry.RegistryKeys;
 import net.minecraft.registry.tag.TagKey;
@@ -72,4 +73,7 @@ public class TagContent {
     public static final TagKey<Item> RAW_BLUE_DYE = TagKey.of(RegistryKeys.ITEM, Identifier.of("c", "raw_materials/dyes/blue"));
     public static final TagKey<Item> RAW_MAGENTA_DYE = TagKey.of(RegistryKeys.ITEM, Identifier.of("c", "raw_materials/dyes/magenta"));
     public static final TagKey<Item> RAW_PINK_DYE = TagKey.of(RegistryKeys.ITEM, Identifier.of("c", "raw_materials/dyes/pink"));
+    
+    // spawner blacklist
+    public static final TagKey<EntityType<?>> SPAWNER_BLACKLIST = TagKey.of(RegistryKeys.ENTITY_TYPE, Oritech.id("spawner_blacklist"));
 }

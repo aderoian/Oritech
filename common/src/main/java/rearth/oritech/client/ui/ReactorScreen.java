@@ -3,6 +3,7 @@ package rearth.oritech.client.ui;
 import io.wispforest.owo.ui.base.BaseOwoHandledScreen;
 import io.wispforest.owo.ui.component.Components;
 import io.wispforest.owo.ui.component.LabelComponent;
+import io.wispforest.owo.ui.component.TextureComponent;
 import io.wispforest.owo.ui.container.Containers;
 import io.wispforest.owo.ui.container.FlowLayout;
 import io.wispforest.owo.ui.core.*;
@@ -24,6 +25,7 @@ import rearth.oritech.block.entity.reactor.ReactorFuelPortEntity;
 import rearth.oritech.client.ui.components.ReactorBlockRenderComponent;
 import rearth.oritech.client.ui.components.ReactorPreviewContainer;
 import rearth.oritech.init.BlockContent;
+import rearth.oritech.util.ScreenProvider;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -36,6 +38,10 @@ public class ReactorScreen extends BaseOwoHandledScreen<FlowLayout, ReactorScree
     private LabelComponent tooltipTitle;
     private FlowLayout tooltipContainer;
     private ReactorBlockRenderComponent selectedBlockOverlay;
+    private TextureComponent energyIndicator;
+    private LabelComponent productionLabel;
+    private LabelComponent hottestLabel;
+    private LabelComponent sumHeatLabel;
     
     public ReactorScreen(ReactorScreenHandler handler, PlayerInventory inventory, Text title) {
         super(handler, inventory, title);
@@ -61,24 +67,41 @@ public class ReactorScreen extends BaseOwoHandledScreen<FlowLayout, ReactorScree
         tooltipContainer.padding(Insets.of(3));
         tooltipTitle.zIndex(3001);
         
-        var overlay = Containers.horizontalFlow(Sizing.fixed(290), Sizing.fixed(200));
+        var overlay = Containers.horizontalFlow(Sizing.fixed(329), Sizing.fixed(200));
         rootComponent.child(overlay.surface(Surface.PANEL));
         
         if (handler.reactorEntity.uiData != null) {
             addReactorComponentPreview(overlay);
+            addReactorStats(overlay);
+            addEnergyBar(overlay);
         }
         
         addTitle(overlay);
         rootComponent.child(tooltipContainer.positioning(Positioning.absolute(0, 0)));
     }
     
+    private void addReactorStats(FlowLayout overlay) {
+        var container = Containers.verticalFlow(Sizing.fixed(131), Sizing.content(0));
+        
+        productionLabel = Components.label(Text.translatable("RF Production: %s RF/t", "50").formatted(Formatting.WHITE));
+        sumHeatLabel = Components.label(Text.translatable("Heat Production: %s RF/t", "50").formatted(Formatting.WHITE));
+        hottestLabel = Components.label(Text.translatable("Hottest Part: %s RF/t", "50").formatted(Formatting.WHITE));
+        
+        container.child(productionLabel.margins(Insets.of(4)));
+        container.child(hottestLabel.margins(Insets.of(4)));
+        container.child(sumHeatLabel.margins(Insets.of(4)));
+        
+        overlay.child(container.margins(Insets.of(8)).surface(Surface.PANEL_INSET).positioning(Positioning.absolute(183, 16)));
+    }
+    
     private void addReactorComponentPreview(FlowLayout overlay) {
         
-        var holoPreviewContainer = new ReactorPreviewContainer(Sizing.fixed(180), Sizing.fixed(184), FlowLayout.Algorithm.HORIZONTAL, this::onContainerMouseMove);
+        var holoPreviewContainer = new ReactorPreviewContainer(Sizing.fixed(180), Sizing.fixed(164), FlowLayout.Algorithm.HORIZONTAL, this::onContainerMouseMove);
         holoPreviewContainer.surface(Surface.PANEL_INSET);
         holoPreviewContainer.margins(Insets.of(8));
         
         var uiData = handler.reactorEntity.uiData;
+        if (uiData == null) return;
         
         var totalSize = uiData.previewMax().subtract(uiData.min());
         var leftCount = totalSize.getZ();
@@ -88,7 +111,6 @@ public class ReactorScreen extends BaseOwoHandledScreen<FlowLayout, ReactorScree
         var xOffset = middlePercentage * 170 + 10;
         
         var size = (int) (170 / (float) totalWidth * 2.2f);
-        System.out.println(size);
         
         activeComponents = new ArrayList<>();
         activeOverlays = new HashSet<>();
@@ -102,7 +124,7 @@ public class ReactorScreen extends BaseOwoHandledScreen<FlowLayout, ReactorScree
             var zIndex = offset.getY() - offset.getX() - offset.getZ();
             var preview = new ReactorBlockRenderComponent(handler.world.getBlockState(pos), handler.world.getBlockEntity(pos), zIndex, pos.toImmutable())
                             .sizing(Sizing.fixed(size))
-                            .positioning(Positioning.absolute((int) (projectedPosX * size + xOffset), (int) (-projectedPosY * size) + 120));
+                            .positioning(Positioning.absolute((int) (projectedPosX * size + xOffset), (int) (-projectedPosY * size) + 100));
             if (offset.getY() == 1) {
                 activeComponents.add(new Pair<>(-zIndex, (ReactorBlockRenderComponent) preview));
             }
@@ -111,7 +133,7 @@ public class ReactorScreen extends BaseOwoHandledScreen<FlowLayout, ReactorScree
             if (state.getBlock() instanceof ReactorRodBlock || state.getBlock() instanceof ReactorHeatPipeBlock) {
                 var heatOverlay = new ReactorBlockRenderComponent(Blocks.AIR.getDefaultState(), null, zIndex + 0.5f, pos.toImmutable())
                                     .sizing(Sizing.fixed(size))
-                                    .positioning(Positioning.absolute((int) (projectedPosX * size + xOffset), (int) (-projectedPosY * size) + 120));
+                                    .positioning(Positioning.absolute((int) (projectedPosX * size + xOffset), (int) (-projectedPosY * size) + 100));
                 
                 holoPreviewContainer.child(heatOverlay);
                 activeOverlays.add((ReactorBlockRenderComponent) heatOverlay);
@@ -120,19 +142,21 @@ public class ReactorScreen extends BaseOwoHandledScreen<FlowLayout, ReactorScree
         });
         
         selectedBlockOverlay = (ReactorBlockRenderComponent) new ReactorBlockRenderComponent(Blocks.AIR.getDefaultState(), null, 10 + 0.5f, BlockPos.ORIGIN)
-                                     .sizing(Sizing.fixed(size))
-                                     .positioning(Positioning.absolute(0, 0));
+                                                               .sizing(Sizing.fixed(size))
+                                                               .positioning(Positioning.absolute(0, 0));
         holoPreviewContainer.child(selectedBlockOverlay);
         
         activeComponents.sort(Comparator.comparingInt(Pair::getLeft));
         
-        overlay.child(holoPreviewContainer);
+        overlay.child(holoPreviewContainer.positioning(Positioning.absolute(0, 16)));
         
     }
     
     @Override
     protected void handledScreenTick() {
         super.handledScreenTick();
+        
+        if (handler.reactorEntity.uiSyncData == null) return;
         
         for (var overlay : activeOverlays) {
             var data = getStatsAtPosition(overlay.pos);
@@ -145,7 +169,6 @@ public class ReactorScreen extends BaseOwoHandledScreen<FlowLayout, ReactorScree
             
             var res = BlockContent.REACTOR_COLD_INDICATOR_BLOCK.getDefaultState();
             
-            // TODO remove magic numbers here
             if (data.storedHeat() > 1000) {
                 res = BlockContent.REACTOR_HOT_INDICATOR_BLOCK.getDefaultState();
             } else if (data.storedHeat() > 200) {
@@ -154,6 +177,24 @@ public class ReactorScreen extends BaseOwoHandledScreen<FlowLayout, ReactorScree
             
             overlay.state = res;
         }
+        
+        // gather stats
+        var sumProducedEnergy = handler.reactorEntity.uiSyncData.componentHeats().stream()
+                                  .mapToInt(data -> data.receivedPulses() * ReactorControllerBlockEntity.RF_PER_PULSE).sum();
+        
+        var sumProducedHeat = handler.reactorEntity.uiSyncData.componentHeats().stream()
+                                .filter(elem -> elem.receivedPulses() > 0)
+                                .mapToInt(ReactorControllerBlockEntity.ComponentStatistics::heatChanged).sum();
+        
+        var hottestComponent = handler.reactorEntity.uiSyncData.componentHeats().stream()
+                                 .mapToInt(ReactorControllerBlockEntity.ComponentStatistics::storedHeat)
+                                 .max().orElse(0);
+        
+        productionLabel.text(Text.translatable("text.oritech.reactor.rf_production", sumProducedEnergy));
+        hottestLabel.text(Text.translatable("text.oritech.reactor.hottest_part", hottestComponent));
+        sumHeatLabel.text(Text.translatable("text.oritech.reactor.heat_production", sumProducedHeat));
+        
+        updateEnergyBar();
         
     }
     
@@ -205,17 +246,16 @@ public class ReactorScreen extends BaseOwoHandledScreen<FlowLayout, ReactorScree
         var stackHeight = handler.reactorEntity.uiData.max().getY() - handler.reactorEntity.uiData.min().getY() - 1;
         var portPosition = pos.add(0, stackHeight, 0);
         var portEntity = handler.world.getBlockEntity(portPosition);
+        if (portEntity != null && portEntity.isRemoved()) return;
         
-        // todo remove magic numbers here
         
         if (state.getBlock() instanceof ReactorRodBlock rodBlock) {
             var rodCount = rodBlock.getRodCount();
             var totalPulses = stats.receivedPulses();
             var createdPulses = rodBlock.getInternalPulseCount();
             var externalPulses = totalPulses - createdPulses;
-            var generatedEnergy = 5 * totalPulses;
+            var generatedEnergy = ReactorControllerBlockEntity.RF_PER_PULSE * totalPulses;
             var generatedHeat = stats.heatChanged();
-            var heatToReactor = stats.heatToReactor();
             var heat = stats.storedHeat();
             
             if (totalPulses == 0) { // probably no fuel
@@ -232,12 +272,10 @@ public class ReactorScreen extends BaseOwoHandledScreen<FlowLayout, ReactorScree
             container.child(Components.label(Text.translatable("text.oritech.reactor.received_pulses", externalPulses).formatted(Formatting.WHITE)));
             container.child(Components.label(Text.translatable("text.oritech.reactor.generated_heat", generatedHeat).formatted(Formatting.WHITE)));
             container.child(Components.label(Text.translatable("text.oritech.reactor.generated_energy", generatedEnergy).formatted(Formatting.WHITE)));
-            container.child(Components.label(Text.translatable("text.oritech.reactor.heat_to_reactor", heatToReactor).formatted(Formatting.WHITE)));
             container.child(Components.label(Text.translatable("text.oritech.reactor.heat", heat).formatted(Formatting.WHITE)));
             container.child(Components.label(Text.translatable("text.oritech.reactor.fuel", availableFuel, maxFuel).formatted(Formatting.WHITE)));
         } else if (state.getBlock() instanceof ReactorHeatPipeBlock pipeBlock) {
             container.child(Components.label(Text.translatable("text.oritech.reactor.collected_heat", stats.heatChanged()).formatted(Formatting.WHITE)));
-            container.child(Components.label(Text.translatable("text.oritech.reactor.heat_to_reactor", stats.heatToReactor()).formatted(Formatting.WHITE)));
             container.child(Components.label(Text.translatable("text.oritech.reactor.heat", stats.storedHeat()).formatted(Formatting.WHITE)));
         } else if (state.getBlock() instanceof ReactorHeatVentBlock pipeBlock) {
             container.child(Components.label(Text.translatable("text.oritech.reactor.removed_heat", stats.heatChanged()).formatted(Formatting.WHITE)));
@@ -274,6 +312,43 @@ public class ReactorScreen extends BaseOwoHandledScreen<FlowLayout, ReactorScree
         label.sizing(Sizing.fixed(176), Sizing.content(2));
         label.horizontalTextAlignment(HorizontalAlignment.CENTER);
         label.zIndex(1);
-        overlay.child(label.positioning(Positioning.relative(50, 2)));
+        overlay.child(label.positioning(Positioning.relative(50, 3)));
+    }
+    
+    private void addEnergyBar(FlowLayout panel) {
+        
+        var config = new ScreenProvider.BarConfiguration(285, 80, 36, 108);
+        var insetSize = 1;
+        var tooltipText = Text.translatable("tooltip.oritech.energy_indicator", 10, 50);
+        
+        var frame = Containers.horizontalFlow(Sizing.fixed(config.width() + insetSize * 2), Sizing.fixed(config.height() + insetSize * 2));
+        frame.surface(Surface.PANEL_INSET);
+        frame.padding(Insets.of(insetSize));
+        frame.positioning(Positioning.absolute(config.x() - insetSize, config.y() - insetSize));
+        panel.child(frame);
+        
+        var indicator_background = Components.texture(BasicMachineScreen.GUI_COMPONENTS, 24, 0, 24, 96, 98, 96);
+        indicator_background.sizing(Sizing.fixed(config.width()), Sizing.fixed(config.height()));
+        
+        energyIndicator = Components.texture(BasicMachineScreen.GUI_COMPONENTS, 0, 0, 24, (96), 98, 96);
+        energyIndicator.sizing(Sizing.fixed(config.width()), Sizing.fixed(config.height()));
+        energyIndicator.positioning(Positioning.absolute(0, 0));
+        energyIndicator.tooltip(tooltipText);
+        
+        frame
+          .child(indicator_background)
+          .child(energyIndicator);
+    }
+    
+    protected void updateEnergyBar() {
+        
+        var capacity = handler.reactorEntity.energyStorage.getCapacity();
+        var amount = handler.reactorEntity.energyStorage.getAmount();
+        
+        var fillAmount = (float) amount / capacity;
+        var tooltipText = BasicMachineScreen.getEnergyTooltip(amount, capacity, 0);
+        
+        energyIndicator.tooltip(tooltipText);
+        energyIndicator.visibleArea(PositionedRectangle.of(0, 96 - ((int) (96 * (fillAmount))), 24, (int) (96 * fillAmount)));
     }
 }

@@ -22,9 +22,11 @@ import rearth.oritech.Oritech;
 import rearth.oritech.client.init.ParticleContent;
 import rearth.oritech.init.BlockContent;
 import rearth.oritech.init.BlockEntitiesContent;
+import rearth.oritech.init.TagContent;
 import rearth.oritech.network.NetworkContent;
+import rearth.oritech.util.ComparatorOutputProvider;
 
-public class SpawnerControllerBlockEntity extends BaseSoulCollectionEntity implements BlockEntityTicker<SpawnerControllerBlockEntity> {
+public class SpawnerControllerBlockEntity extends BaseSoulCollectionEntity implements BlockEntityTicker<SpawnerControllerBlockEntity>, ComparatorOutputProvider {
     
     public int maxSouls = 100_000;
     public int collectedSouls = 0;
@@ -169,7 +171,8 @@ public class SpawnerControllerBlockEntity extends BaseSoulCollectionEntity imple
         }
         
     }
-    
+
+    @Override
     public int getComparatorOutput() {
         if (spawnedMob == null || maxSouls == 0) return 0;
         
@@ -201,7 +204,15 @@ public class SpawnerControllerBlockEntity extends BaseSoulCollectionEntity imple
         if (spawnedMob != null) return;
         
         if (entity instanceof MobEntity mobEntity) {
+            
+            if (mobEntity.getType().arch$holder().isIn(TagContent.SPAWNER_BLACKLIST)) {
+                Oritech.LOGGER.debug("Ignored blacklisted entity for spawner: " + mobEntity.getType().arch$registryName());
+                return;
+            }
+            
             spawnedMob = mobEntity.getType();
+            
+            
             networkDirty = true;
             maxSouls = getSoulCost((int) mobEntity.getMaxHealth());
             

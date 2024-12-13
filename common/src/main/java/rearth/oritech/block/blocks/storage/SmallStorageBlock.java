@@ -34,6 +34,7 @@ import org.jetbrains.annotations.Nullable;
 import rearth.oritech.block.base.entity.ExpandableEnergyStorageBlockEntity;
 import rearth.oritech.block.entity.storage.SmallStorageBlockEntity;
 import rearth.oritech.init.BlockContent;
+import rearth.oritech.util.ComparatorOutputProvider;
 import rearth.oritech.util.MachineAddonController;
 
 import java.util.List;
@@ -79,7 +80,7 @@ public class SmallStorageBlock extends Block implements BlockEntityProvider {
     
     @Override
     protected int getComparatorOutput(BlockState state, World world, BlockPos pos) {
-        return ((SmallStorageBlockEntity) world.getBlockEntity(pos)).getComparatorOutput();
+        return ((ComparatorOutputProvider) world.getBlockEntity(pos)).getComparatorOutput();
     }
     
     @Override
