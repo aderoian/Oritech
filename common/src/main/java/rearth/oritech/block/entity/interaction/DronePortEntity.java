@@ -176,6 +176,7 @@ public class DronePortEntity extends BlockEntity implements InventoryProvider, F
         addMultiblockToNbt(nbt);
         writeAddonToNbt(nbt);
         nbt.putBoolean("has_fluid_addon", hasFluidAddon);
+        nbt.putBoolean("disabled_via_redstone", disabledViaRedstone);
         nbt.putLong("energy_stored", energyStorage.amount);
         
         if (targetPosition != null) {
@@ -204,6 +205,7 @@ public class DronePortEntity extends BlockEntity implements InventoryProvider, F
         loadAddonNbtData(nbt);
 
         hasFluidAddon = nbt.getBoolean("has_fluid_addon");
+        disabledViaRedstone = nbt.getBoolean("disabled_via_redstone");
         energyStorage.amount = nbt.getLong("energy_stored");
         targetPosition = BlockPos.fromLong(nbt.getLong("target_position"));
         
