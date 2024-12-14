@@ -37,6 +37,7 @@ import org.jetbrains.annotations.Nullable;
 import rearth.oritech.Oritech;
 import rearth.oritech.block.blocks.interaction.DronePortBlock;
 import rearth.oritech.block.blocks.processing.MachineCoreBlock;
+import rearth.oritech.block.entity.addons.RedstoneAddonBlockEntity;
 import rearth.oritech.block.entity.processing.MachineCoreEntity;
 import rearth.oritech.client.init.ModScreens;
 import rearth.oritech.client.ui.DroneScreenHandler;
@@ -63,7 +64,7 @@ import java.util.Objects;
 import static rearth.oritech.block.base.block.MultiblockMachine.ASSEMBLED;
 import static rearth.oritech.block.base.entity.MachineBlockEntity.*;
 
-public class DronePortEntity extends BlockEntity implements InventoryProvider, FluidProvider, EnergyApi.BlockProvider, GeoBlockEntity, BlockEntityTicker<DronePortEntity>, MultiblockMachineController, MachineAddonController, ExtendedScreenHandlerFactory, ScreenProvider {
+public class DronePortEntity extends BlockEntity implements InventoryProvider, FluidProvider, EnergyApi.BlockProvider, GeoBlockEntity, BlockEntityTicker<DronePortEntity>, MultiblockMachineController, MachineAddonController, ExtendedScreenHandlerFactory, ScreenProvider, RedstoneAddonBlockEntity.RedstoneControllable {
 
     // addon data
     private final List<BlockPos> connectedAddons = new ArrayList<>();
@@ -102,6 +103,9 @@ public class DronePortEntity extends BlockEntity implements InventoryProvider, F
 
     // fluid
 	public boolean hasFluidAddon;
+
+    // redstone
+    public boolean disabledViaRedstone;
     
     // work data
     private BlockPos targetPosition;
@@ -115,10 +119,11 @@ public class DronePortEntity extends BlockEntity implements InventoryProvider, F
     private final long baseEnergyUsage = 1024;
     private final int takeOffTime = 300;
     private final int landTime = 260;
+    private final int totalFlightTime = takeOffTime + landTime;
     
     // client only
     private String statusMessage;
-    
+
     public DronePortEntity(BlockPos pos, BlockState state) {
         super(BlockEntitiesContent.DRONE_PORT_ENTITY, pos, state);
     }
@@ -317,18 +322,29 @@ public class DronePortEntity extends BlockEntity implements InventoryProvider, F
         tx.abort();
         return true;
     }
+
+    /**
+     * Check if the drone is currently sending a package
+     * Drone will be in a sending state for a certain amount of time after sending a package
+     * (time it takes to take off)
+     *
+     * @return true if drone is sending a package
+     */
+    public boolean isSendingDrone() {
+        var diff = world.getTime() - lastSentAt;
+        return diff < takeOffTime;
+    }
     
     private boolean canSend() {
         
-        if (targetPosition == null || (inventory.isEmpty() && fluidStorage.getAmount() == 0) || energyStorage.amount < calculateEnergyUsage() || incomingPacket != null)
+        if (disabledViaRedstone || targetPosition == null || (inventory.isEmpty() && fluidStorage.getAmount() == 0) || energyStorage.amount < calculateEnergyUsage() || incomingPacket != null)
             return false;
         var targetEntity = world.getBlockEntity(targetPosition);
-        if (!(targetEntity instanceof DronePortEntity targetPort) || targetPort.getIncomingPacket() != null || !targetPort.canAcceptPayload(inventory.heldStacks, fluidStorage.variant, fluidStorage.amount))
+        if (!(targetEntity instanceof DronePortEntity targetPort) || targetPort.disabledViaRedstone || targetPort.getIncomingPacket() != null || !targetPort.canAcceptPayload(inventory.heldStacks, fluidStorage.variant, fluidStorage.amount))
             return false;
         
         
-        var diff = world.getTime() - lastSentAt;
-        return diff > takeOffTime;
+        return !isSendingDrone();
     }
     
     private long calculateEnergyUsage() {
@@ -565,7 +581,64 @@ public class DronePortEntity extends BlockEntity implements InventoryProvider, F
     public AnimatableInstanceCache getAnimatableInstanceCache() {
         return animatableInstanceCache;
     }
-    
+
+    @Override
+    public int getComparatorEnergyAmount() {
+        return (int) ((energyStorage.amount / (float) energyStorage.capacity) * 15);
+    }
+
+    @Override
+    public int getComparatorSlotAmount(int slot) {
+        if (inventory.heldStacks.size() <= slot)
+            return hasFluidAddon ? ComparatorOutputProvider.getFluidStorageComparatorOutput(fluidStorage) : 0;
+
+        var stack = inventory.getStack(slot);
+        if (stack.isEmpty()) return
+                hasFluidAddon ? ComparatorOutputProvider.getFluidStorageComparatorOutput(fluidStorage) : 0;
+
+        return hasFluidAddon ?
+                Math.max(ComparatorOutputProvider.getItemStackComparatorOutput(stack), ComparatorOutputProvider.getFluidStorageComparatorOutput(fluidStorage)) :
+                ComparatorOutputProvider.getItemStackComparatorOutput(stack);
+    }
+
+    @Override
+    public int getComparatorProgress() {
+        if (isSendingDrone()) {
+            return (int) (((world.getTime() - lastSentAt) / (float) takeOffTime) * 15);
+        } else if (incomingPacket != null) {
+            return (int) ((totalFlightTime + (world.getTime() - incomingPacket.arrivesAt)) / (float) (totalFlightTime) * 15);
+        } else {
+            return 0;
+        }
+    }
+
+    @Override
+    public int getComparatorActiveState() {
+        return isSendingDrone() || incomingPacket != null ? 15 : 0;
+    }
+
+    @Override
+    public void onRedstoneEvent(boolean isPowered) {
+        this.disabledViaRedstone = isPowered;
+    }
+
+    @Override
+    public int receivedRedstoneSignal() {
+        if (disabledViaRedstone) return 15;
+        return 0;
+    }
+
+    @Override
+    public String currentRedstoneEffect() {
+        if (disabledViaRedstone) return "tooltip.oritech.redstone_disabled";
+        return "tooltip.oritech.redstone_enabled";
+    }
+
+    @Override
+    public boolean hasRedstoneControlAvailable() {
+        return true;
+    }
+
     private enum DroneAnimState {
         IDLE, TAKEOFF, LANDING
     }
