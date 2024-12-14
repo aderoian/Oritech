@@ -14,6 +14,8 @@ import net.minecraft.item.tooltip.TooltipType;
 import net.minecraft.state.StateManager;
 import net.minecraft.state.property.BooleanProperty;
 import net.minecraft.text.Text;
+import net.minecraft.util.BlockMirror;
+import net.minecraft.util.BlockRotation;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
@@ -92,6 +94,18 @@ public class MachineAddonBlock extends WallMountedBlock implements BlockEntityPr
             builder.add(FACING);
             builder.add(FACE);
         }
+    }
+    
+    @Override
+    protected BlockState rotate(BlockState state, BlockRotation rotation) {
+        if (!constructorAssignmentSupportWorkaround) return state;
+        return super.rotate(state, rotation);
+    }
+    
+    @Override
+    protected BlockState mirror(BlockState state, BlockMirror mirror) {
+        if (!constructorAssignmentSupportWorkaround) return state;
+        return super.mirror(state, mirror);
     }
     
     @Nullable
