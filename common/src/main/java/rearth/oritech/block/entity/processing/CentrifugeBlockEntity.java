@@ -202,7 +202,7 @@ public class CentrifugeBlockEntity extends MultiblockMachineEntity implements Fl
         return world.getRecipeManager().getFirstMatch(RecipeContent.CENTRIFUGE, getInputInventory(), world);
     }
     
-    protected boolean recipeMatchesTank(SingleVariantStorage<FluidVariant> checkedTank, OritechRecipe recipe) {
+    public static boolean recipeMatchesTank(SingleVariantStorage<FluidVariant> checkedTank, OritechRecipe recipe) {
         
         var isTankEmpty = checkedTank.isResourceBlank() || checkedTank.amount <= 0;
         var recipeNeedsFluid = recipe.getFluidInput() != null && recipe.getFluidInput().getAmount() > 0;

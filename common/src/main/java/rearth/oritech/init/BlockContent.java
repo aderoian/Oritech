@@ -104,6 +104,8 @@ public class BlockContent implements ArchitecturyBlockRegistryContainer {
     @UseGeoBlockItem(scale = 0.7f)
     public static final Block FOUNDRY_BLOCK = new FoundryBlock(AbstractBlock.Settings.copy(Blocks.IRON_BLOCK).nonOpaque());
     @UseGeoBlockItem(scale = 0.7f)
+    public static final Block COOLER_BLOCK = new CoolerBlock(AbstractBlock.Settings.copy(Blocks.IRON_BLOCK).nonOpaque());
+    @UseGeoBlockItem(scale = 0.7f)
     public static final Block CENTRIFUGE_BLOCK = new CentrifugeBlock(AbstractBlock.Settings.copy(Blocks.IRON_BLOCK).nonOpaque());
     @UseGeoBlockItem(scale = 0.3f)
     public static final Block ATOMIC_FORGE_BLOCK = new AtomicForgeBlock(AbstractBlock.Settings.copy(Blocks.IRON_BLOCK).nonOpaque());

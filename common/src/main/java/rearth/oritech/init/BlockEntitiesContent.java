@@ -55,6 +55,11 @@ public class BlockEntitiesContent implements ArchitecturyRegistryContainer<Block
     @AssignSidedEnergy
     public static final BlockEntityType<FoundryBlockEntity> FOUNDRY_ENTITY = FabricBlockEntityTypeBuilder.create(FoundryBlockEntity::new, BlockContent.FOUNDRY_BLOCK).build();
     
+    @AssignSidedInventory
+    @AssignSidedEnergy
+    @AssignSidedFluid
+    public static final BlockEntityType<CoolerBlockEntity> COOLER_ENTITY = FabricBlockEntityTypeBuilder.create(CoolerBlockEntity::new, BlockContent.COOLER_BLOCK).build();
+    
     @AssignSidedFluid
     @AssignSidedInventory
     @AssignSidedEnergy

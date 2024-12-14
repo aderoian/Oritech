@@ -17,6 +17,7 @@ public class ModRenderers {
         BlockEntityRendererFactories.register(BlockEntitiesContent.FRAGMENT_FORGE_ENTITY, ctx -> new MachineRenderer<>("models/fragment_forge_block"));
         BlockEntityRendererFactories.register(BlockEntitiesContent.ASSEMBLER_ENTITY, ctx -> new MachineRenderer<>("models/assembler_block"));
         BlockEntityRendererFactories.register(BlockEntitiesContent.FOUNDRY_ENTITY, ctx -> new MachineRenderer<>("models/foundry_block"));
+        BlockEntityRendererFactories.register(BlockEntitiesContent.COOLER_ENTITY, ctx -> new MachineRenderer<>("models/cooler_block"));
         BlockEntityRendererFactories.register(BlockEntitiesContent.CENTRIFUGE_ENTITY, ctx -> new MachineRenderer<>("models/centrifuge_block"));
         BlockEntityRendererFactories.register(BlockEntitiesContent.ATOMIC_FORGE_ENTITY, ctx -> new MachineRenderer<>("models/atomic_forge_block"));
         BlockEntityRendererFactories.register(BlockEntitiesContent.POWERED_FURNACE_ENTITY, ctx -> new MachineRenderer<>("models/powered_furnace_block"));
@@ -78,6 +79,7 @@ public class ModRenderers {
         BlockRenderLayerMap.INSTANCE.putBlock(BlockContent.BLACK_HOLE_INNER, RenderLayer.getTranslucent());
         BlockRenderLayerMap.INSTANCE.putBlock(BlockContent.BLACK_HOLE_MIDDLE, RenderLayer.getTranslucent());
         BlockRenderLayerMap.INSTANCE.putBlock(BlockContent.BLACK_HOLE_OUTER, RenderLayer.getTranslucent());
+        BlockRenderLayerMap.INSTANCE.putBlock(BlockContent.COOLER_BLOCK, RenderLayer.getTranslucent());
 
         Oritech.LOGGER.info("Registering Entities Renderers for " + Oritech.MOD_ID);
     }
