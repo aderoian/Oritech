@@ -6,9 +6,9 @@
 				"identifier": "geometry.unknown",
 				"texture_width": 256,
 				"texture_height": 256,
-				"visible_bounds_width": 3,
-				"visible_bounds_height": 1.5,
-				"visible_bounds_offset": [0, 0.25, 0]
+				"visible_bounds_width": 8,
+				"visible_bounds_height": 3.5,
+				"visible_bounds_offset": [0, 1.25, 0]
 			},
 			"bones": [
 				{
@@ -27,9 +27,7 @@
 								"north": {"uv": [98, 96], "uv_size": [44, 3]},
 								"east": {"uv": [98, 99], "uv_size": [44, 3]},
 								"south": {"uv": [98, 102], "uv_size": [44, 3]},
-								"west": {"uv": [44, 105], "uv_size": [44, 3]},
-								"up": {"uv": [0, 92], "uv_size": [44, 44]},
-								"down": {"uv": [92, 44], "uv_size": [44, -44]}
+								"west": {"uv": [44, 105], "uv_size": [44, 3]}
 							}
 						},
 						{
@@ -317,6 +315,62 @@
 								"west": {"uv": [126, 55], "uv_size": [5, 11]},
 								"up": {"uv": [82, 131], "uv_size": [6, 5]},
 								"down": {"uv": [52, 137], "uv_size": [6, -5]}
+							}
+						}
+					]
+				},
+				{
+					"name": "addonClip",
+					"parent": "base",
+					"pivot": [2, 8.1, -5],
+					"cubes": [
+						{
+							"origin": [10, 0.1, 38],
+							"size": [12, 11, 2],
+							"uv": {
+								"east": {"uv": [12, 103], "uv_size": [2, 11]},
+								"south": {"uv": [0, 103], "uv_size": [12, 11]},
+								"up": {"uv": [12, 116], "uv_size": [-12, -2]},
+								"down": {"uv": [12, 118], "uv_size": [-12, -2]}
+							}
+						},
+						{
+							"origin": [22, 0.1, 26],
+							"size": [2, 11, 12],
+							"uv": {
+								"north": {"uv": [14, 92], "uv_size": [2, 11]},
+								"south": {"uv": [12, 92], "uv_size": [2, 11]},
+								"west": {"uv": [0, 92], "uv_size": [12, 11]},
+								"up": {"uv": [18, 104], "uv_size": [-2, -12]},
+								"down": {"uv": [20, 104], "uv_size": [-2, -12]}
+							}
+						},
+						{
+							"origin": [22, 0.1, 38],
+							"size": [2, 11, 2],
+							"uv": {
+								"south": {"uv": [20, 92], "uv_size": [2, 11]},
+								"west": {"uv": [22, 92], "uv_size": [2, 11]},
+								"up": {"uv": [22, 105], "uv_size": [-2, -2]},
+								"down": {"uv": [24, 105], "uv_size": [-2, -2]}
+							}
+						},
+						{
+							"origin": [10, 6.1, 35],
+							"size": [9, 5, 3],
+							"uv": {
+								"north": {"uv": [24, 92], "uv_size": [9, 5]},
+								"east": {"uv": [33, 92], "uv_size": [3, 5]},
+								"up": {"uv": [33, 100], "uv_size": [-9, -3]}
+							}
+						},
+						{
+							"origin": [19, 6.1, 26],
+							"size": [3, 5, 12],
+							"uv": {
+								"north": {"uv": [24, 100], "uv_size": [3, 5]},
+								"east": {"uv": [27, 100], "uv_size": [12, 5]},
+								"up": {"uv": [19, 116], "uv_size": [-3, -12]}
 							}
 						}
 					]
