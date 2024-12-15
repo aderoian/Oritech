@@ -11,7 +11,7 @@
       "entries": [
         {
           "type": "minecraft:item",
-          "name": "oritech:reactor_explosion"
+          "name": "oritech:reactor_explosion_medium"
         }
       ],
       "rolls": 1.0

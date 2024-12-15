@@ -9,7 +9,7 @@ import net.minecraft.registry.tag.BlockTags;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
-import rearth.oritech.init.BlockContent;
+import rearth.oritech.block.blocks.reactor.NuclearExplosionBlock;
 import rearth.oritech.init.BlockEntitiesContent;
 
 import java.util.ArrayList;
@@ -23,16 +23,23 @@ public class NuclearExplosionEntity extends BlockEntity implements BlockEntityTi
     private final Set<BlockPos> removedBlocks = new HashSet<>();
     private final Set<BlockPos> borderBlocks = new HashSet<>();
     private final Set<DirectionExplosionWave> waves = new HashSet<>();
+    private final int size;
+    
+    public NuclearExplosionEntity(BlockPos pos, BlockState state, int size) {
+        super(BlockEntitiesContent.REACTOR_EXPLOSION_ENTITY, pos, state);
+        this.size = size;
+    }
     
     public NuclearExplosionEntity(BlockPos pos, BlockState state) {
         super(BlockEntitiesContent.REACTOR_EXPLOSION_ENTITY, pos, state);
+        this.size = 9;
     }
     
     @Override
     public void tick(World world, BlockPos pos, BlockState state, NuclearExplosionEntity blockEntity) {
         if (world.isClient) return;
         
-        var initialRadius = 9;
+        var initialRadius = size;
         
         if (startTime == -1) {
             startTime = world.getTime();
@@ -191,7 +198,7 @@ public class NuclearExplosionEntity extends BlockEntity implements BlockEntityTi
             var targetBlock = targetState.getBlock();
             var targetHardness = targetBlock.getBlastResistance();
             
-            if (targetBlock.equals(BlockContent.REACTOR_EXPLOSION) || targetState.isAir() && !targetState.isLiquid()) continue;
+            if (targetBlock instanceof NuclearExplosionBlock || targetState.isAir() && !targetState.isLiquid()) continue;
             
             // skip too hard blocks (except for the first few)
             if (targetHardness > power && hardBusters-- < 0) continue;
