@@ -85,9 +85,12 @@ public abstract class GenericPipeInterfaceEntity extends BlockEntity implements 
                     connectedMachines.add(pos.offset(neighbor));
 
                 neighborMap.add(neighbor.getOpposite());
+            } else {
+                neighborMap.remove(neighbor.getOpposite());
             }
 
             if (!neighborMap.isEmpty()) data.machinePipeNeighbors.put(neighborPos, neighborMap);
+            else data.machinePipeNeighbors.remove(neighborPos);
         }
 
         if (isInterface) {
