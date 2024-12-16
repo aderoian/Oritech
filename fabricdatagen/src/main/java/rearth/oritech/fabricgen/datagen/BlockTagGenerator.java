@@ -90,5 +90,12 @@ public class BlockTagGenerator extends FabricTagProvider.BlockTagProvider {
           .add(Blocks.SHROOMLIGHT)
           .add(Blocks.RED_MUSHROOM_BLOCK)
           .add(Blocks.BROWN_MUSHROOM_BLOCK);
+        
+        getOrCreateTagBuilder(TagContent.REACTOR_WALL_BLOCKS)
+          .add(BlockContent.REACTOR_WALL)
+          .add(BlockContent.REACTOR_ABSORBER_PORT)
+          .add(BlockContent.REACTOR_ENERGY_PORT)
+          .add(BlockContent.REACTOR_FUEL_PORT)
+          .add(BlockContent.REACTOR_CONTROLLER);
     }
 }

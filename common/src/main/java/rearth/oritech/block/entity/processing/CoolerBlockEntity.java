@@ -1,5 +1,6 @@
 package rearth.oritech.block.entity.processing;
 
+import net.fabricmc.fabric.api.tag.convention.v2.ConventionalBiomeTags;
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants;
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant;
 import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
@@ -14,11 +15,15 @@ import net.minecraft.registry.RegistryWrapper;
 import net.minecraft.screen.ScreenHandlerType;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
+import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.math.Vec3i;
+import net.minecraft.world.World;
 import org.jetbrains.annotations.Nullable;
 import rearth.oritech.Oritech;
+import rearth.oritech.block.base.entity.MachineBlockEntity;
 import rearth.oritech.block.base.entity.MultiblockMachineEntity;
 import rearth.oritech.client.init.ModScreens;
+import rearth.oritech.client.init.ParticleContent;
 import rearth.oritech.init.BlockEntitiesContent;
 import rearth.oritech.init.recipes.OritechRecipe;
 import rearth.oritech.init.recipes.OritechRecipeType;
@@ -32,6 +37,9 @@ import java.util.Objects;
 import java.util.Optional;
 
 public class CoolerBlockEntity extends MultiblockMachineEntity implements FluidProvider {
+    
+    private boolean inColdArea;
+    private boolean initialized = false;
     
     public final SingleVariantStorage<FluidVariant> inputTank = new SingleVariantStorage<>() {
         @Override
@@ -61,11 +69,32 @@ public class CoolerBlockEntity extends MultiblockMachineEntity implements FluidP
     }
     
     @Override
+    public void tick(World world, BlockPos pos, BlockState state, MachineBlockEntity blockEntity) {
+        super.tick(world, pos, state, blockEntity);
+        
+        if (!world.isClient && !initialized) {
+            initialized = true;
+            var biome = world.getBiome(pos);
+            inColdArea = biome.isIn(ConventionalBiomeTags.IS_COLD);
+        }
+        
+    }
+    
+    @Override
+    public AddonUiData getUiData() {
+        var base = super.getUiData();
+        if (!inColdArea) return base;
+        
+        return new AddonUiData(base.positions(), base.openSlots(), base.efficiency() * 0.5f, base.speed() * 0.5f, base.ownPosition());
+    }
+    
+    @Override
     protected void writeNbt(NbtCompound nbt, RegistryWrapper.WrapperLookup registryLookup) {
         super.writeNbt(nbt, registryLookup);
         
         var inNbt = new NbtCompound();
         SingleVariantStorage.writeNbt(inputTank, FluidVariant.CODEC, inNbt, registryLookup);
+        nbt.put("inputStorage", inNbt);
     }
     
     @Override
@@ -80,6 +109,21 @@ public class CoolerBlockEntity extends MultiblockMachineEntity implements FluidP
     protected void sendNetworkEntry() {
         super.sendNetworkEntry();
         NetworkContent.MACHINE_CHANNEL.serverHandle(this).send(new NetworkContent.SingleVariantFluidSyncPacket(pos, Registries.FLUID.getId(inputTank.variant.getFluid()).toString(), inputTank.amount));
+    }
+    
+    @Override
+    protected void useEnergy() {
+        super.useEnergy();
+        
+        var progress = getProgress();
+        if (progress < 0.35 || progress > 0.65) return;
+        
+        if (world.random.nextFloat() > 0.4) return;
+        // emit particles
+        var emitPosition = Vec3d.ofCenter(pos);
+        
+        ParticleContent.COOLER_WORKING.spawn(world, emitPosition, 2);
+        
     }
     
     @Override
@@ -113,6 +157,18 @@ public class CoolerBlockEntity extends MultiblockMachineEntity implements FluidP
             tx.commit();
         }
         
+    }
+    
+    @Override
+    public float getSpeedMultiplier() {
+        var biomeBonus = inColdArea ? 0.5f : 1f;
+        return super.getSpeedMultiplier() * biomeBonus;
+    }
+    
+    @Override
+    public float getEfficiencyMultiplier() {
+        var biomeBonus = inColdArea ? 0.5f : 1f;
+        return super.getEfficiencyMultiplier() * biomeBonus;
     }
     
     @Override

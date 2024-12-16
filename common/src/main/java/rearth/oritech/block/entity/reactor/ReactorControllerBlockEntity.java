@@ -1,6 +1,7 @@
 package rearth.oritech.block.entity.reactor;
 
 import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory;
+import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.block.entity.BlockEntity;
@@ -27,10 +28,7 @@ import rearth.oritech.util.Geometry;
 import rearth.oritech.util.energy.EnergyApi;
 import rearth.oritech.util.energy.containers.SimpleEnergyStorage;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 
 public class ReactorControllerBlockEntity extends BlockEntity implements BlockEntityTicker<ReactorControllerBlockEntity>, EnergyApi.BlockProvider, ExtendedScreenHandlerFactory {
     
@@ -81,12 +79,14 @@ public class ReactorControllerBlockEntity extends BlockEntity implements BlockEn
                 var receivedPulses = rodBlock.getInternalPulseCount();
                 
                 var portEntity = fuelPorts.get(localPos);
-                if (portEntity == null|| portEntity.isRemoved()) {
+                if (portEntity == null || portEntity.isRemoved()) {
                     continue;
                 }
                 
                 var hasFuel = portEntity.tryConsumeFuel(ownRodCount * reactorStackHeight);
                 var heatCreated = 0;
+                
+                setRodBlockState(localPos, hasFuel);
                 
                 if (hasFuel) {
                     // check how many pulses are received from neighbors / reflectors
@@ -134,7 +134,7 @@ public class ReactorControllerBlockEntity extends BlockEntity implements BlockEn
                 
                 var sumRemovedHeat = 0;
                 var portEntity = absorberPorts.get(localPos);
-                if (portEntity == null|| portEntity.isRemoved()) {
+                if (portEntity == null || portEntity.isRemoved()) {
                     continue;
                 }
                 var fuelAvailable = portEntity.getAvailableFuel();
@@ -306,6 +306,22 @@ public class ReactorControllerBlockEntity extends BlockEntity implements BlockEn
         
     }
     
+    private void setRodBlockState(Vector2i localPos, boolean on) {
+        if (world.getTime() % 10 != 0) return;
+        var stackTop = fuelPorts.get(localPos).getPos();
+        
+        for (int i = 1; i <= reactorStackHeight; i++) {
+            var candidatePos = stackTop.down(i);
+            var candidateState = world.getBlockState(candidatePos);
+            if (!(candidateState.getBlock() instanceof ReactorRodBlock)) continue;
+            var oldLit = candidateState.get(Properties.LIT);
+            if (oldLit != on) {
+                // update only when changed
+                world.setBlockState(candidatePos, candidateState.with(Properties.LIT, on), Block.NOTIFY_LISTENERS, 0);
+            }
+        }
+    }
+    
     private static Set<Vector2i> getNeighborsInBounds(Vector2i pos, Set<Vector2i> keys) {
         
         var res = new HashSet<Vector2i>(4);
@@ -365,7 +381,10 @@ public class ReactorControllerBlockEntity extends BlockEntity implements BlockEn
         
         var totalMoved = 0;
         
-        for (var candidateData : energyPorts) {
+        var randomOrderedList = new ArrayList<>(energyPorts);
+        Collections.shuffle(randomOrderedList);
+        
+        for (var candidateData : randomOrderedList) {
             var candidate = EnergyApi.BLOCK.find(world, candidateData.getLeft(), candidateData.getRight());
             if (candidate == null) continue;
             var moved = EnergyApi.transfer(energyStorage, candidate, energyStorage.getAmount(), false);

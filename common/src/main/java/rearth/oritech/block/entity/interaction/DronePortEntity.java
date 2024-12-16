@@ -179,6 +179,10 @@ public class DronePortEntity extends BlockEntity implements InventoryProvider, F
         nbt.putBoolean("disabled_via_redstone", disabledViaRedstone);
         nbt.putLong("energy_stored", energyStorage.amount);
         
+        var inNbt = new NbtCompound();
+        SingleVariantStorage.writeNbt(fluidStorage, FluidVariant.CODEC, inNbt, registryLookup);
+        nbt.put("fluid_storage", inNbt);
+        
         if (targetPosition != null) {
             nbt.putLong("target_position", targetPosition.asLong());
         }
@@ -203,6 +207,9 @@ public class DronePortEntity extends BlockEntity implements InventoryProvider, F
         Inventories.readNbt(nbt, inventory.heldStacks, registryLookup);
         loadMultiblockNbtData(nbt);
         loadAddonNbtData(nbt);
+        
+        var inNbt = nbt.getCompound("fluid_storage");
+        SingleVariantStorage.readNbt(fluidStorage, FluidVariant.CODEC, FluidVariant::blank, inNbt, registryLookup);
 
         hasFluidAddon = nbt.getBoolean("has_fluid_addon");
         disabledViaRedstone = nbt.getBoolean("disabled_via_redstone");

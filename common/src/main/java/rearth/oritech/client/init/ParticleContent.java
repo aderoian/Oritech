@@ -94,6 +94,11 @@ public class ParticleContent {
         ClientParticles.spawn(ParticleTypes.ENCHANTED_HIT, world, pos, 0.6);
     }));
     
+    public static final ParticleSystem<Integer> COOLER_WORKING = PARTICLE_CONTROLLER.register(Integer.class, ((world, pos, data) -> {
+        ClientParticles.setParticleCount(data);
+        ClientParticles.spawn(ParticleTypes.SNOWFLAKE, world, pos, 1.2);
+    }));
+    
     public static final ParticleSystem<Integer> STEAM_ENGINE_WORKING = PARTICLE_CONTROLLER.register(Integer.class, ((world, pos, data) -> {
         ClientParticles.setParticleCount(data);
         ClientParticles.spawn(ParticleTypes.CLOUD, world, pos, 0.6);

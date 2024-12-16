@@ -58,19 +58,18 @@ public class ModelGenerator extends FabricModelProvider {
         blockStateModelGenerator.registerSimpleState(BlockContent.QUARRY_BEAM_RING);
         
         // reactor section
-        // currently invisible, because I stupidly decided to work on main branch on this while doing smaller releases
-        blockStateModelGenerator.registerStateWithModelReference(BlockContent.REACTOR_CONTROLLER, Blocks.CRAFTER);
+        blockStateModelGenerator.registerNorthDefaultHorizontalRotation(BlockContent.REACTOR_CONTROLLER);
+        blockStateModelGenerator.registerSimpleState(BlockContent.REACTOR_ENERGY_PORT);
+        blockStateModelGenerator.registerSimpleState(BlockContent.REACTOR_FUEL_PORT);
+        blockStateModelGenerator.registerSimpleState(BlockContent.REACTOR_ABSORBER_PORT);
+        blockStateModelGenerator.registerSimpleState(BlockContent.REACTOR_ROD);
+        blockStateModelGenerator.registerSimpleState(BlockContent.REACTOR_DOUBLE_ROD);
+        blockStateModelGenerator.registerSimpleState(BlockContent.REACTOR_QUAD_ROD);
         blockStateModelGenerator.registerStateWithModelReference(BlockContent.REACTOR_WALL, Blocks.BRICKS);
-        blockStateModelGenerator.registerStateWithModelReference(BlockContent.REACTOR_ROD, Blocks.DARK_OAK_LOG);
-        blockStateModelGenerator.registerStateWithModelReference(BlockContent.REACTOR_DOUBLE_ROD, Blocks.BLACK_CONCRETE);
-        blockStateModelGenerator.registerStateWithModelReference(BlockContent.REACTOR_QUAD_ROD, Blocks.GRAY_CONCRETE);
         blockStateModelGenerator.registerStateWithModelReference(BlockContent.REACTOR_VENT, Blocks.NETHER_BRICKS);
         blockStateModelGenerator.registerStateWithModelReference(BlockContent.REACTOR_REFLECTOR, Blocks.TARGET);
         blockStateModelGenerator.registerStateWithModelReference(BlockContent.REACTOR_HEAT_PIPE, Blocks.GOLD_BLOCK);
         blockStateModelGenerator.registerStateWithModelReference(BlockContent.REACTOR_CONDENSER, Blocks.LAPIS_BLOCK);
-        blockStateModelGenerator.registerStateWithModelReference(BlockContent.REACTOR_FUEL_PORT, Blocks.GREEN_TERRACOTTA);
-        blockStateModelGenerator.registerStateWithModelReference(BlockContent.REACTOR_ENERGY_PORT, Blocks.CYAN_TERRACOTTA);
-        blockStateModelGenerator.registerStateWithModelReference(BlockContent.REACTOR_ABSORBER_PORT, Blocks.LIGHT_BLUE_TERRACOTTA);
         
         blockStateModelGenerator.registerSimpleCubeAll(BlockContent.LOW_YIELD_NUKE);
         blockStateModelGenerator.registerSimpleCubeAll(BlockContent.NUKE);

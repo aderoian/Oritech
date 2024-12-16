@@ -10,6 +10,7 @@ import net.minecraft.item.Item;
 import net.minecraft.registry.Registries;
 import net.minecraft.registry.Registry;
 import net.minecraft.sound.BlockSoundGroup;
+import net.minecraft.state.property.Properties;
 import net.minecraft.util.Identifier;
 import rearth.oritech.Oritech;
 import rearth.oritech.block.blocks.accelerator.*;
@@ -198,11 +199,11 @@ public class BlockContent implements ArchitecturyBlockRegistryContainer {
     public static final Block MACHINE_REDSTONE_ADDON = new RedstoneAddonBlock(AbstractBlock.Settings.copy(Blocks.IRON_BLOCK).nonOpaque(), AddonSettings.getDefaultSettings().withBoundingShape(MachineAddonBlock.MACHINE_REDSTONE_ADDON_SHAPE));
     
     //region reactor
-    public static final Block REACTOR_CONTROLLER = new ReactorControllerBlock(AbstractBlock.Settings.copy(Blocks.IRON_BLOCK));
+    public static final Block REACTOR_CONTROLLER = new ReactorControllerBlock(AbstractBlock.Settings.copy(Blocks.IRON_BLOCK).luminance(state -> 5));
     public static final Block REACTOR_WALL = new ReactorWallBlock(AbstractBlock.Settings.copy(Blocks.IRON_BLOCK));
-    public static final Block REACTOR_ROD = new ReactorRodBlock(AbstractBlock.Settings.copy(Blocks.IRON_BLOCK), 1, 1);
-    public static final Block REACTOR_DOUBLE_ROD = new ReactorRodBlock(AbstractBlock.Settings.copy(Blocks.IRON_BLOCK), 2, 4);
-    public static final Block REACTOR_QUAD_ROD = new ReactorRodBlock(AbstractBlock.Settings.copy(Blocks.IRON_BLOCK), 4, 12);
+    public static final Block REACTOR_ROD = new ReactorRodBlock(AbstractBlock.Settings.copy(Blocks.IRON_BLOCK).nonOpaque().luminance(state -> state.get(Properties.LIT) ? 15 : 3), 1, 1);
+    public static final Block REACTOR_DOUBLE_ROD = new ReactorRodBlock(AbstractBlock.Settings.copy(Blocks.IRON_BLOCK).nonOpaque().luminance(state -> state.get(Properties.LIT) ? 15 : 3), 2, 4);
+    public static final Block REACTOR_QUAD_ROD = new ReactorRodBlock(AbstractBlock.Settings.copy(Blocks.IRON_BLOCK).nonOpaque().luminance(state -> state.get(Properties.LIT) ? 15 : 3), 4, 12);
     public static final Block REACTOR_VENT = new ReactorHeatVentBlock(AbstractBlock.Settings.copy(Blocks.IRON_BLOCK));
     public static final Block REACTOR_REFLECTOR = new ReactorReflectorBlock(AbstractBlock.Settings.copy(Blocks.IRON_BLOCK));
     public static final Block REACTOR_HEAT_PIPE = new ReactorHeatPipeBlock(AbstractBlock.Settings.copy(Blocks.IRON_BLOCK));
@@ -212,7 +213,9 @@ public class BlockContent implements ArchitecturyBlockRegistryContainer {
     public static final Block REACTOR_ENERGY_PORT = new ReactorEnergyPortBlock(AbstractBlock.Settings.copy(Blocks.IRON_BLOCK));
     @NoBlockItem
     public static final Block REACTOR_EXPLOSION_SMALL = new NuclearExplosionBlock(AbstractBlock.Settings.copy(Blocks.IRON_BLOCK), 9);
+    @NoBlockItem
     public static final Block REACTOR_EXPLOSION_MEDIUM = new NuclearExplosionBlock(AbstractBlock.Settings.copy(Blocks.IRON_BLOCK), 14);
+    @NoBlockItem
     public static final Block REACTOR_EXPLOSION_LARGE = new NuclearExplosionBlock(AbstractBlock.Settings.copy(Blocks.IRON_BLOCK), 20);
     public static final Block LOW_YIELD_NUKE = new NukeBlock(AbstractBlock.Settings.copy(Blocks.IRON_BLOCK), true);
     public static final Block NUKE = new NukeBlock(AbstractBlock.Settings.copy(Blocks.IRON_BLOCK), false);

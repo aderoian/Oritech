@@ -198,7 +198,6 @@ public class AcceleratorParticleLogic {
             var secondVelocity = secondParticle.nextGate.toCenterPos().subtract(secondParticle.lastGate.toCenterPos()).multiply(secondParticle.velocity);
             var impactSpeed = ownVelocity.distanceTo(secondVelocity);
             
-            System.out.println("speeds: " + ownVelocity + " | " + secondVelocity + " | " + impactSpeed);
             entity.onParticleCollided((float) impactSpeed, particle.position, secondControllerPos, secondAccelerator);
             
             return true;

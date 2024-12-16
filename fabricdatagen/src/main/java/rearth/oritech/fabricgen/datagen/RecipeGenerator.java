@@ -441,7 +441,7 @@ public class RecipeGenerator extends FabricRecipeProvider {
         addAtomicForgeRecipe(exporter, Ingredient.ofItems(ItemContent.OVERCHARGED_CRYSTAL), Ingredient.ofItems(ItemContent.HEISENBERG_COMPENSATOR), ItemContent.PROMETHEUM_INGOT, 1000, "prometheum");
     
         // ice in cooler
-        addCoolerRecipe(exporter, FluidStack.create(Fluids.WATER, FluidConstants.BUCKET), Items.ICE, 1f, "ice");
+        addCoolerRecipe(exporter, FluidStack.create(Fluids.WATER, FluidConstants.BUCKET), Items.ICE, 3, 1f, "ice");
     
     }
     
@@ -786,10 +786,10 @@ public class RecipeGenerator extends FabricRecipeProvider {
         exporter.accept(Oritech.id("foundry/alloy/inverse/" + suffix), entryInverse, null);
     }
     
-    public static void addCoolerRecipe(RecipeExporter exporter, FluidStack input, Item result, float speedMultiplier, String suffix) {
-        var coolerDefaultSpeed = (int) (100 * speedMultiplier);
+    public static void addCoolerRecipe(RecipeExporter exporter, FluidStack input, Item result, int count, float speedMultiplier, String suffix) {
+        var coolerDefaultSpeed = (int) (200 * speedMultiplier);
         
-        var entry = new OritechRecipe(coolerDefaultSpeed, List.of(), List.of(new ItemStack(result)), RecipeContent.COOLER, input, null);
+        var entry = new OritechRecipe(coolerDefaultSpeed, List.of(), List.of(new ItemStack(result, count)), RecipeContent.COOLER, input, null);
         exporter.accept(Oritech.id("cooler/" + suffix), entry, null);
     }
     
