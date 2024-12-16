@@ -42,12 +42,12 @@ public class FeatureContent implements ArchitecturyRegistryContainer<Feature<?>>
         
         BiomeModifications.addFeature(
           BiomeSelectors.foundInOverworld(),
-          GenerationStep.Feature.TOP_LAYER_MODIFICATION,
+          GenerationStep.Feature.UNDERGROUND_DECORATION,
           RegistryKey.of(RegistryKeys.PLACED_FEATURE, Oritech.id("resource_node_rare")));
         
         BiomeModifications.addFeature(
           BiomeSelectors.foundInOverworld(),
-          GenerationStep.Feature.TOP_LAYER_MODIFICATION,
+          GenerationStep.Feature.UNDERGROUND_DECORATION,
           RegistryKey.of(RegistryKeys.PLACED_FEATURE, Oritech.id("resource_node_other")));
         
         // ores

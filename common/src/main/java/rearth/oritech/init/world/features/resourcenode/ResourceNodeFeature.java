@@ -31,40 +31,35 @@ public class ResourceNodeFeature extends Feature<ResourceNodeFeatureConfig> {
         
         if (world.isClient()) return false;
         
-        var bedrockFound = false;
+        var solidBlockFound = false;
         var testPos = new BlockPos(origin);
         var deepNodePos = testPos;
+        var boulderPos = testPos;
 
-        Oritech.LOGGER.info("Trying to place at: " + testPos);
-        for (int y = world.getBottomY(); y < world.getHeight(); y++) {
-            testPos = testPos.up();
-            var testState = world.getBlockState(testPos);
-            
-            if (!testState.isOf(Blocks.BEDROCK) && !bedrockFound) {
+        for (int y = origin.getY(); y > world.getBottomY(); y--) {
+            var downPos = testPos.down();
+            var testState = world.getBlockState(downPos);
+            if (testState.isOf(Blocks.BEDROCK)) {
                 deepNodePos = testPos;
-                bedrockFound = true;
-            } else if (bedrockFound && testState.isOf(Blocks.BEDROCK)) {
-                bedrockFound = false;
-                // reset if another bedrock layer occurs
+                break;
+            } else if (testState.isSolidBlock(world, downPos) && !solidBlockFound) {
+                boulderPos = testPos = downPos;
+                solidBlockFound = true;
+            } else {
+                testPos = downPos;
             }
-            if (testState.isIn(BlockTags.DIRT) || testState.isIn(BlockTags.SAND) || testState.isIn(BlockTags.SNOW)) {
-                if (world.getBlockState(testPos.up()).isOf(Blocks.AIR) || world.getBlockState(testPos.up()).isIn(TagContent.RESOURCE_BOULDER_REPLACEABLE)) {
-                    Oritech.LOGGER.info("placing boulder at: " + testPos);
-                    if (Oritech.CONFIG.easyFindFeatures())
-                        placeSurfaceBoulder(testPos, context);
-                    placeBedrockNode(deepNodePos, context);
-                    Oritech.LOGGER.debug("placing resource node at " + testPos + " with deep " + deepNodePos);
-                    return true;
-                }
-            }
-            
         }
 
-        for (int i = origin.getY(); i < world.getHeight(); i++) {
-            world.setBlockState(testPos.up(i), Blocks.GLASS.getDefaultState(), 0x10);
-        }
+        // edge case: if no solid block was found, or the boulder is too close to the deep node, don't generate
+        if (!solidBlockFound || boulderPos.getY() < (deepNodePos.getY() + 10))
+            return false;
+
+        if (Oritech.CONFIG.easyFindFeatures())
+            placeSurfaceBoulder(boulderPos, context);
+        placeBedrockNode(deepNodePos, context);
+        Oritech.LOGGER.debug("placing resource node at " + boulderPos + " with deep " + deepNodePos);
+        return true;
         
-        return false;
     }
     
     private BlockState getRandomBlockFromList(List<Identifier> list, Random random) {
@@ -119,11 +114,6 @@ public class ResourceNodeFeature extends Feature<ResourceNodeFeatureConfig> {
         for (BlockPos pos : BlockPos.iterateOutwards(movedCenter, radius, radius, radius)) {
             if (Math.sqrt(pos.getSquaredDistance(movedCenter)) > radius + noise.sample(pos.getX(), pos.getY(), pos.getZ())) continue;
             world.setBlockState(pos, getRandomBlockFromList(ores, random), 0x10);
-        }
-
-        //TODO: Temporary pillar
-        for (int i = movedCenter.getY(); i < world.getHeight(); i++) {
-            world.setBlockState(movedCenter.up(i), Blocks.BEDROCK.getDefaultState(), 0x10);
         }
     }
 }
