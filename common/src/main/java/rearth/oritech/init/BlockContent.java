@@ -198,7 +198,7 @@ public class BlockContent implements ArchitecturyBlockRegistryContainer {
     public static final Block MACHINE_REDSTONE_ADDON = new RedstoneAddonBlock(AbstractBlock.Settings.copy(Blocks.IRON_BLOCK).nonOpaque(), AddonSettings.getDefaultSettings().withBoundingShape(MachineAddonBlock.MACHINE_REDSTONE_ADDON_SHAPE));
     
     //region reactor
-    public static final Block REACTOR_CONTROLLER = new ReactorControllerBlock(AbstractBlock.Settings.copy(Blocks.IRON_BLOCK));
+    public static final Block REACTOR_CONTROLLER = new ReactorControllerBlock(AbstractBlock.Settings.copy(Blocks.IRON_BLOCK).luminance(state -> 5));
     public static final Block REACTOR_WALL = new ReactorWallBlock(AbstractBlock.Settings.copy(Blocks.IRON_BLOCK));
     public static final Block REACTOR_ROD = new ReactorRodBlock(AbstractBlock.Settings.copy(Blocks.IRON_BLOCK), 1, 1);
     public static final Block REACTOR_DOUBLE_ROD = new ReactorRodBlock(AbstractBlock.Settings.copy(Blocks.IRON_BLOCK), 2, 4);
@@ -212,7 +212,9 @@ public class BlockContent implements ArchitecturyBlockRegistryContainer {
     public static final Block REACTOR_ENERGY_PORT = new ReactorEnergyPortBlock(AbstractBlock.Settings.copy(Blocks.IRON_BLOCK));
     @NoBlockItem
     public static final Block REACTOR_EXPLOSION_SMALL = new NuclearExplosionBlock(AbstractBlock.Settings.copy(Blocks.IRON_BLOCK), 9);
+    @NoBlockItem
     public static final Block REACTOR_EXPLOSION_MEDIUM = new NuclearExplosionBlock(AbstractBlock.Settings.copy(Blocks.IRON_BLOCK), 14);
+    @NoBlockItem
     public static final Block REACTOR_EXPLOSION_LARGE = new NuclearExplosionBlock(AbstractBlock.Settings.copy(Blocks.IRON_BLOCK), 20);
     public static final Block LOW_YIELD_NUKE = new NukeBlock(AbstractBlock.Settings.copy(Blocks.IRON_BLOCK), true);
     public static final Block NUKE = new NukeBlock(AbstractBlock.Settings.copy(Blocks.IRON_BLOCK), false);

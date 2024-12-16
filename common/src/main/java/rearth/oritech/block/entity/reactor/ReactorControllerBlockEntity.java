@@ -27,10 +27,7 @@ import rearth.oritech.util.Geometry;
 import rearth.oritech.util.energy.EnergyApi;
 import rearth.oritech.util.energy.containers.SimpleEnergyStorage;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 
 public class ReactorControllerBlockEntity extends BlockEntity implements BlockEntityTicker<ReactorControllerBlockEntity>, EnergyApi.BlockProvider, ExtendedScreenHandlerFactory {
     
@@ -365,7 +362,10 @@ public class ReactorControllerBlockEntity extends BlockEntity implements BlockEn
         
         var totalMoved = 0;
         
-        for (var candidateData : energyPorts) {
+        var randomOrderedList = new ArrayList<>(energyPorts);
+        Collections.shuffle(randomOrderedList);
+        
+        for (var candidateData : randomOrderedList) {
             var candidate = EnergyApi.BLOCK.find(world, candidateData.getLeft(), candidateData.getRight());
             if (candidate == null) continue;
             var moved = EnergyApi.transfer(energyStorage, candidate, energyStorage.getAmount(), false);

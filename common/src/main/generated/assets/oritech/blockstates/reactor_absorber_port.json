@@ -1,7 +1,7 @@
 {
   "variants": {
     "": {
-      "model": "minecraft:block/light_blue_terracotta"
+      "model": "oritech:block/reactor_absorber_port"
     }
   }
 }

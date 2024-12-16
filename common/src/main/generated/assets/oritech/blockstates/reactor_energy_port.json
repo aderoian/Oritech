@@ -1,7 +1,7 @@
 {
   "variants": {
     "": {
-      "model": "minecraft:block/cyan_terracotta"
+      "model": "oritech:block/reactor_energy_port"
     }
   }
 }
