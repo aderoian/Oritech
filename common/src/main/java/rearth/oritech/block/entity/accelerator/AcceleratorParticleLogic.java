@@ -55,6 +55,7 @@ public class AcceleratorParticleLogic {
             var path = particle.nextGate.toCenterPos().subtract(particle.position);
             var pathLength = path.length();
             var moveDist = Math.min(pathLength, availableDistance);
+            moveDist = Math.min(moveDist, 1);
             availableDistance -= moveDist;
             var movedBy = path.normalize().multiply(moveDist);
             
@@ -346,7 +347,7 @@ public class AcceleratorParticleLogic {
         toRemove.forEach(cachedGates::remove);
     }
     
-    public static void resetNearbyCache(BlockPos pos ) {
+    public static void resetNearbyCache(BlockPos pos) {
         var toRemove = cachedGates.keySet().stream().filter(blockPos -> blockPos.getLeft().getManhattanDistance(pos) < Oritech.CONFIG.maxGateDist() + 1).toList();
         toRemove.forEach(cachedGates::remove);
     }
