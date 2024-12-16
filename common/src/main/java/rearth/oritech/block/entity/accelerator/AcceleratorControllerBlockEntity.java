@@ -8,6 +8,7 @@ import net.minecraft.block.Blocks;
 import net.minecraft.block.Portal;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.block.entity.BlockEntityTicker;
+import net.minecraft.client.MinecraftClient;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
@@ -329,14 +330,23 @@ public class AcceleratorControllerBlockEntity extends BlockEntity implements Blo
     
     public void onReceiveMovement(List<Vec3d> displayTrail) {
         this.displayTrail = displayTrail;
+        if (displayTrail.size() < 2) return;
         
-        if (displayTrail.size() >= 2) {
-            var pitch = Math.pow(lastEvent.lastEventSpeed, 0.1);
-            for (int i = 1; i < displayTrail.size(); i++) {
-                var soundPos = displayTrail.get(i);
-                world.playSound(soundPos.x, soundPos.y, soundPos.z, SoundContent.PARTICLE_MOVING, SoundCategory.BLOCKS, 2f, (float) pitch, true);
+        var playerPos = MinecraftClient.getInstance().player.getPos();
+        
+        // play sound pos at closest segment
+        var minDist = Double.MAX_VALUE;
+        var soundPos = displayTrail.getFirst();
+        for (var candidate : displayTrail) {
+            var dist = candidate.distanceTo(playerPos);
+            if (dist < minDist) {
+                minDist = dist;
+                soundPos = candidate;
             }
         }
+        
+        var pitch = Math.pow(lastEvent.lastEventSpeed, 0.1);
+        world.playSound(soundPos.x, soundPos.y, soundPos.z, SoundContent.PARTICLE_MOVING, SoundCategory.BLOCKS, 2f, (float) pitch, true);
         
     }
     
