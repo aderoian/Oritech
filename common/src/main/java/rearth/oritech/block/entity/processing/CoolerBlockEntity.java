@@ -94,6 +94,7 @@ public class CoolerBlockEntity extends MultiblockMachineEntity implements FluidP
         
         var inNbt = new NbtCompound();
         SingleVariantStorage.writeNbt(inputTank, FluidVariant.CODEC, inNbt, registryLookup);
+        nbt.put("inputStorage", inNbt);
     }
     
     @Override
