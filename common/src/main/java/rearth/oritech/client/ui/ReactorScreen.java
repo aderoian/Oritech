@@ -122,7 +122,7 @@ public class ReactorScreen extends BaseOwoHandledScreen<FlowLayout, ReactorScree
             var projectedPosX = offset.getX() * 0.43f - offset.getZ() * 0.43f;
             var projectedPosY = offset.getX() * 0.224f + offset.getZ() * 0.224f + offset.getY() * 0.5f;
             var zIndex = offset.getY() - offset.getX() - offset.getZ();
-            var preview = new ReactorBlockRenderComponent(handler.world.getBlockState(pos), handler.world.getBlockEntity(pos), zIndex, pos.toImmutable())
+            var preview = new ReactorBlockRenderComponent(null, handler.world.getBlockEntity(pos), zIndex, pos.toImmutable())
                             .sizing(Sizing.fixed(size))
                             .positioning(Positioning.absolute((int) (projectedPosX * size + xOffset), (int) (-projectedPosY * size) + 100));
             if (offset.getY() == 1) {

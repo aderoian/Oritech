@@ -1,6 +1,7 @@
 package rearth.oritech.block.entity.reactor;
 
 import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory;
+import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.block.entity.BlockEntity;
@@ -78,12 +79,14 @@ public class ReactorControllerBlockEntity extends BlockEntity implements BlockEn
                 var receivedPulses = rodBlock.getInternalPulseCount();
                 
                 var portEntity = fuelPorts.get(localPos);
-                if (portEntity == null|| portEntity.isRemoved()) {
+                if (portEntity == null || portEntity.isRemoved()) {
                     continue;
                 }
                 
                 var hasFuel = portEntity.tryConsumeFuel(ownRodCount * reactorStackHeight);
                 var heatCreated = 0;
+                
+                setRodBlockState(localPos, hasFuel);
                 
                 if (hasFuel) {
                     // check how many pulses are received from neighbors / reflectors
@@ -131,7 +134,7 @@ public class ReactorControllerBlockEntity extends BlockEntity implements BlockEn
                 
                 var sumRemovedHeat = 0;
                 var portEntity = absorberPorts.get(localPos);
-                if (portEntity == null|| portEntity.isRemoved()) {
+                if (portEntity == null || portEntity.isRemoved()) {
                     continue;
                 }
                 var fuelAvailable = portEntity.getAvailableFuel();
@@ -301,6 +304,22 @@ public class ReactorControllerBlockEntity extends BlockEntity implements BlockEn
         
         System.out.println("walls: " + wallsValid + " interiorStack: " + interiorStackedRight + " height: " + interiorHeight);
         
+    }
+    
+    private void setRodBlockState(Vector2i localPos, boolean on) {
+        if (world.getTime() % 10 != 0) return;
+        var stackTop = fuelPorts.get(localPos).getPos();
+        
+        for (int i = 1; i <= reactorStackHeight; i++) {
+            var candidatePos = stackTop.down(i);
+            var candidateState = world.getBlockState(candidatePos);
+            if (!(candidateState.getBlock() instanceof ReactorRodBlock)) continue;
+            var oldLit = candidateState.get(Properties.LIT);
+            if (oldLit != on) {
+                // update only when changed
+                world.setBlockState(candidatePos, candidateState.with(Properties.LIT, on), Block.NOTIFY_LISTENERS, 0);
+            }
+        }
     }
     
     private static Set<Vector2i> getNeighborsInBounds(Vector2i pos, Set<Vector2i> keys) {

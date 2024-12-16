@@ -62,10 +62,10 @@ public class ModelGenerator extends FabricModelProvider {
         blockStateModelGenerator.registerSimpleState(BlockContent.REACTOR_ENERGY_PORT);
         blockStateModelGenerator.registerSimpleState(BlockContent.REACTOR_FUEL_PORT);
         blockStateModelGenerator.registerSimpleState(BlockContent.REACTOR_ABSORBER_PORT);
+        blockStateModelGenerator.registerSimpleState(BlockContent.REACTOR_ROD);
+        blockStateModelGenerator.registerSimpleState(BlockContent.REACTOR_DOUBLE_ROD);
+        blockStateModelGenerator.registerSimpleState(BlockContent.REACTOR_QUAD_ROD);
         blockStateModelGenerator.registerStateWithModelReference(BlockContent.REACTOR_WALL, Blocks.BRICKS);
-        blockStateModelGenerator.registerStateWithModelReference(BlockContent.REACTOR_ROD, Blocks.DARK_OAK_LOG);
-        blockStateModelGenerator.registerStateWithModelReference(BlockContent.REACTOR_DOUBLE_ROD, Blocks.BLACK_CONCRETE);
-        blockStateModelGenerator.registerStateWithModelReference(BlockContent.REACTOR_QUAD_ROD, Blocks.GRAY_CONCRETE);
         blockStateModelGenerator.registerStateWithModelReference(BlockContent.REACTOR_VENT, Blocks.NETHER_BRICKS);
         blockStateModelGenerator.registerStateWithModelReference(BlockContent.REACTOR_REFLECTOR, Blocks.TARGET);
         blockStateModelGenerator.registerStateWithModelReference(BlockContent.REACTOR_HEAT_PIPE, Blocks.GOLD_BLOCK);

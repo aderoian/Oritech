@@ -1,6 +1,9 @@
 package rearth.oritech.block.blocks.reactor;
 
 import net.minecraft.block.Block;
+import net.minecraft.block.BlockState;
+import net.minecraft.state.StateManager;
+import net.minecraft.state.property.Properties;
 import rearth.oritech.init.BlockContent;
 
 public class ReactorRodBlock extends BaseReactorBlock {
@@ -12,6 +15,13 @@ public class ReactorRodBlock extends BaseReactorBlock {
         super(settings);
         this.rodCount = rodCount;
         this.internalPulseCount = internalPulseCount;
+        this.setDefaultState(getDefaultState().with(Properties.LIT, false));
+    }
+    
+    @Override
+    protected void appendProperties(StateManager.Builder<Block, BlockState> builder) {
+        super.appendProperties(builder);
+        builder.add(Properties.LIT);
     }
     
     public int getRodCount() {
