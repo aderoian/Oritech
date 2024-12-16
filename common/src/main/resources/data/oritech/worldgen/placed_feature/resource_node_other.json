@@ -3,10 +3,14 @@
   "placement": [
     {
       "type": "minecraft:rarity_filter",
-      "chance": 250
+      "chance": 600
     },
     {
       "type": "minecraft:in_square"
+    },
+    {
+      "type": "minecraft:heightmap",
+      "heightmap": "WORLD_SURFACE_WG"
     }
   ]
 }
