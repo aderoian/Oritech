@@ -38,6 +38,7 @@ public class OritechJeiPlugin implements IModPlugin {
         registerOritechCategory(registration, RecipeContent.GRINDER, BlockContent.FRAGMENT_FORGE_BLOCK, FragmentForgeBlockEntity.class);
         registerOritechCategory(registration, RecipeContent.ASSEMBLER, BlockContent.ASSEMBLER_BLOCK, AssemblerBlockEntity.class);
         registerOritechCategory(registration, RecipeContent.FOUNDRY, BlockContent.FOUNDRY_BLOCK, FoundryBlockEntity.class);
+        registerOritechCategory(registration, RecipeContent.COOLER, BlockContent.COOLER_BLOCK, CoolerBlockEntity.class);
         registerOritechCategory(registration, RecipeContent.CENTRIFUGE, BlockContent.CENTRIFUGE_BLOCK, CentrifugeBlockEntity.class);
         registerOritechCategory(registration, RecipeContent.CENTRIFUGE_FLUID, BlockContent.CENTRIFUGE_BLOCK, CentrifugeBlockEntity.class);
         registerOritechCategory(registration, RecipeContent.ATOMIC_FORGE, BlockContent.ATOMIC_FORGE_BLOCK, AtomicForgeBlockEntity.class);
@@ -64,6 +65,7 @@ public class OritechJeiPlugin implements IModPlugin {
         registerRecipe(registration, RecipeContent.GRINDER);
         registerRecipe(registration, RecipeContent.ASSEMBLER);
         registerRecipe(registration, RecipeContent.FOUNDRY);
+        registerRecipe(registration, RecipeContent.COOLER);
         registerRecipe(registration, RecipeContent.CENTRIFUGE);
         registerRecipe(registration, RecipeContent.CENTRIFUGE_FLUID);
         registerRecipe(registration, RecipeContent.ATOMIC_FORGE);
@@ -91,6 +93,7 @@ public class OritechJeiPlugin implements IModPlugin {
         registerCatalyst(registration, RecipeContent.GRINDER, BlockContent.FRAGMENT_FORGE_BLOCK);
         registerCatalyst(registration, RecipeContent.ASSEMBLER, BlockContent.ASSEMBLER_BLOCK);
         registerCatalyst(registration, RecipeContent.FOUNDRY, BlockContent.FOUNDRY_BLOCK);
+        registerCatalyst(registration, RecipeContent.COOLER, BlockContent.COOLER_BLOCK);
         registerCatalyst(registration, RecipeContent.CENTRIFUGE, BlockContent.CENTRIFUGE_BLOCK);
         registerCatalyst(registration, RecipeContent.CENTRIFUGE_FLUID, BlockContent.CENTRIFUGE_BLOCK);
         registerCatalyst(registration, RecipeContent.ATOMIC_FORGE, BlockContent.ATOMIC_FORGE_BLOCK);

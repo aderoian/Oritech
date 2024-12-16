@@ -5,6 +5,7 @@ import me.jddev0.ep.EnergizedPowerMod;
 import net.fabricmc.fabric.api.datagen.v1.FabricDataOutput;
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider;
 import net.fabricmc.fabric.api.tag.convention.v2.ConventionalItemTags;
+import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants;
 import net.fabricmc.fabric.impl.resource.conditions.conditions.AllModsLoadedResourceCondition;
 import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
@@ -238,6 +239,8 @@ public class RecipeGenerator extends FabricRecipeProvider {
         offerFurnaceRecipe(exporter, BlockContent.ASSEMBLER_BLOCK.asItem(), Ingredient.fromTag(TagContent.MACHINE_PLATING), Ingredient.ofItems(ItemContent.MOTOR), Ingredient.ofItems(Items.CRAFTER), Ingredient.ofItems(ItemContent.ADAMANT_INGOT), Ingredient.ofItems(Items.COPPER_INGOT), "assembleralt");
         // foundry
         offerGeneratorRecipe(exporter, BlockContent.FOUNDRY_BLOCK.asItem(), Ingredient.ofItems(Blocks.CAULDRON.asItem()), of(TagContent.ELECTRUM_INGOTS), Ingredient.ofItems(ItemContent.MOTOR), Ingredient.ofItems(Items.COPPER_INGOT), "foundry");
+        // cooler
+        offerGeneratorRecipe(exporter, BlockContent.COOLER_BLOCK.asItem(), Ingredient.ofItems(Blocks.CAULDRON.asItem()), of(Blocks.ICE.asItem()), Ingredient.ofItems(ItemContent.MOTOR), Ingredient.ofItems(Items.IRON_INGOT), "cooler");
         // centrifuge
         offerFurnaceRecipe(exporter, BlockContent.CENTRIFUGE_BLOCK.asItem(), Ingredient.fromTag(TagContent.MACHINE_PLATING), Ingredient.ofItems(ItemContent.PROCESSING_UNIT), Ingredient.ofItems(ItemContent.MOTOR), Ingredient.fromTag(TagContent.STEEL_INGOTS), Ingredient.ofItems(Items.GLASS_BOTTLE), "centrifuge");
         offerFurnaceRecipe(exporter, BlockContent.CENTRIFUGE_BLOCK.asItem(), Ingredient.ofItems(ItemContent.MOTOR), Ingredient.ofItems(Items.IRON_BLOCK), Ingredient.ofItems(Items.COPPER_INGOT), Ingredient.ofItems(ItemContent.MOTOR), Ingredient.ofItems(Items.GLASS_BOTTLE), "centrifugealt");
@@ -436,6 +439,10 @@ public class RecipeGenerator extends FabricRecipeProvider {
         offerMotorRecipe(exporter, ItemContent.OVERCHARGED_CRYSTAL, Ingredient.ofItems(Items.AMETHYST_BLOCK), Ingredient.ofItems(ItemContent.ADVANCED_BATTERY), Ingredient.ofItems(BlockContent.SUPERCONDUCTOR.asItem()), "overchargedcrystal");
         addAssemblerRecipe(exporter, Ingredient.ofItems(ItemContent.FLUX_GATE), Ingredient.fromTag(TagContent.WIRES), Ingredient.ofItems(ItemContent.DUBIOS_CONTAINER), Ingredient.ofItems(ItemContent.ENERGITE_INGOT), BlockContent.SUPERCONDUCTOR.asItem(), 2f, "superconductor");
         addAtomicForgeRecipe(exporter, Ingredient.ofItems(ItemContent.OVERCHARGED_CRYSTAL), Ingredient.ofItems(ItemContent.HEISENBERG_COMPENSATOR), ItemContent.PROMETHEUM_INGOT, 1000, "prometheum");
+    
+        // ice in cooler
+        addCoolerRecipe(exporter, FluidStack.create(Fluids.WATER, FluidConstants.BUCKET), Items.ICE, 1f, "ice");
+    
     }
     
     private void addCompactingRecipes(RecipeExporter exporter) {
@@ -777,6 +784,13 @@ public class RecipeGenerator extends FabricRecipeProvider {
         
         var entryInverse = new OritechRecipe(foundryDefaultSpeed, List.of(B, A), List.of(new ItemStack(result, count)), RecipeContent.FOUNDRY, null, null);
         exporter.accept(Oritech.id("foundry/alloy/inverse/" + suffix), entryInverse, null);
+    }
+    
+    public static void addCoolerRecipe(RecipeExporter exporter, FluidStack input, Item result, float speedMultiplier, String suffix) {
+        var coolerDefaultSpeed = (int) (100 * speedMultiplier);
+        
+        var entry = new OritechRecipe(coolerDefaultSpeed, List.of(), List.of(new ItemStack(result)), RecipeContent.COOLER, input, null);
+        exporter.accept(Oritech.id("cooler/" + suffix), entry, null);
     }
     
     // A is inserted twice, surrounding B

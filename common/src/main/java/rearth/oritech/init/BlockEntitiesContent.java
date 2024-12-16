@@ -55,6 +55,11 @@ public class BlockEntitiesContent implements ArchitecturyRegistryContainer<Block
     @AssignSidedEnergy
     public static final BlockEntityType<FoundryBlockEntity> FOUNDRY_ENTITY = FabricBlockEntityTypeBuilder.create(FoundryBlockEntity::new, BlockContent.FOUNDRY_BLOCK).build();
     
+    @AssignSidedInventory
+    @AssignSidedEnergy
+    @AssignSidedFluid
+    public static final BlockEntityType<CoolerBlockEntity> COOLER_ENTITY = FabricBlockEntityTypeBuilder.create(CoolerBlockEntity::new, BlockContent.COOLER_BLOCK).build();
+    
     @AssignSidedFluid
     @AssignSidedInventory
     @AssignSidedEnergy
@@ -153,7 +158,7 @@ public class BlockEntitiesContent implements ArchitecturyRegistryContainer<Block
     public static final BlockEntityType<ReactorAbsorberPortEntity> REACTOR_ABSORBER_PORT_BLOCK_ENTITY = FabricBlockEntityTypeBuilder.create(ReactorAbsorberPortEntity::new, BlockContent.REACTOR_ABSORBER_PORT).build();
     @AssignSidedEnergy
     public static final BlockEntityType<ReactorEnergyPortEntity> REACTOR_ENERGY_PORT_BLOCK_ENTITY = FabricBlockEntityTypeBuilder.create(ReactorEnergyPortEntity::new, BlockContent.REACTOR_ENERGY_PORT).build();
-    public static final BlockEntityType<NuclearExplosionEntity> REACTOR_EXPLOSION_ENTITY = FabricBlockEntityTypeBuilder.create(NuclearExplosionEntity::new, BlockContent.REACTOR_EXPLOSION).build();
+    public static final BlockEntityType<NuclearExplosionEntity> REACTOR_EXPLOSION_ENTITY = FabricBlockEntityTypeBuilder.create(NuclearExplosionEntity::new, BlockContent.REACTOR_EXPLOSION_SMALL, BlockContent.REACTOR_EXPLOSION_MEDIUM, BlockContent.REACTOR_EXPLOSION_LARGE).build();
     
     @AssignSidedInventory
     public static final BlockEntityType<AcceleratorControllerBlockEntity> ACCELERATOR_CONTROLLER_BLOCK_ENTITY = FabricBlockEntityTypeBuilder.create(AcceleratorControllerBlockEntity::new, BlockContent.ACCELERATOR_CONTROLLER).build();

@@ -38,6 +38,7 @@ public class ModScreens implements ArchitecturyRegistryContainer<ScreenHandlerTy
     public static final ExtendedScreenHandlerType<UpgradableMachineScreenHandler, UpgradableData> GRINDER_SCREEN = upgradeHandler();
     public static final ExtendedScreenHandlerType<UpgradableMachineScreenHandler, UpgradableData> ASSEMBLER_SCREEN = upgradeHandler();
     public static final ExtendedScreenHandlerType<UpgradableMachineScreenHandler, UpgradableData> FOUNDRY_SCREEN = upgradeHandler();
+    public static final ExtendedScreenHandlerType<UpgradableMachineScreenHandler, UpgradableData> COOLER_SCREEN = upgradeHandler();
     public static final ExtendedScreenHandlerType<UpgradableMachineScreenHandler, UpgradableData> STORAGE_SCREEN = upgradeHandler();
     public static final ExtendedScreenHandlerType<UpgradableMachineScreenHandler, UpgradableData> POWERED_FURNACE_SCREEN = upgradeHandler();
     public static final ExtendedScreenHandlerType<UpgradableMachineScreenHandler, UpgradableData> BIO_GENERATOR_SCREEN = upgradeHandler();
@@ -74,6 +75,7 @@ public class ModScreens implements ArchitecturyRegistryContainer<ScreenHandlerTy
         HandledScreens.register(GRINDER_SCREEN, UpgradableMachineScreen<UpgradableMachineScreenHandler>::new);
         HandledScreens.register(ASSEMBLER_SCREEN, UpgradableMachineScreen<UpgradableMachineScreenHandler>::new);
         HandledScreens.register(FOUNDRY_SCREEN, UpgradableMachineScreen<UpgradableMachineScreenHandler>::new);
+        HandledScreens.register(COOLER_SCREEN, UpgradableMachineScreen<UpgradableMachineScreenHandler>::new);
         HandledScreens.register(POWERED_FURNACE_SCREEN, UpgradableMachineScreen<UpgradableMachineScreenHandler>::new);
         HandledScreens.register(BIO_GENERATOR_SCREEN, UpgradableMachineScreen<UpgradableMachineScreenHandler>::new);
         HandledScreens.register(LAVA_GENERATOR_SCREEN, UpgradableMachineScreen<UpgradableMachineScreenHandler>::new);

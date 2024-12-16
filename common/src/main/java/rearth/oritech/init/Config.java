@@ -107,19 +107,21 @@ public class Config {
         public int machineFrameMaxLength = 64;
         
         @Nest
-        public BasicEnergyMachineData assemblerData = new BasicEnergyMachineData(10000, 1024, 0, 128);
+        public BasicEnergyMachineData assemblerData = new BasicEnergyMachineData(50000, 1024, 0, 128);
         @Nest
         public BasicEnergyMachineData atomicForgeData = new BasicEnergyMachineData(1024, 0, 0, 1024);
         @Nest
         public CentrifugeConfig centrifugeData = new CentrifugeConfig();
         @Nest
-        public BasicEnergyMachineData foundryData = new BasicEnergyMachineData(10000, 1024, 0, 128);
+        public BasicEnergyMachineData foundryData = new BasicEnergyMachineData(50000, 1024, 0, 128);
         @Nest
-        public BasicEnergyMachineData fragmentForgeData = new BasicEnergyMachineData(10000, 2048, 0, 256);
+        public BasicEnergyMachineData coolerData = new BasicEnergyMachineData(50000, 1024, 0, 32);
+        @Nest
+        public BasicEnergyMachineData fragmentForgeData = new BasicEnergyMachineData(50000, 2048, 0, 256);
         @Nest
         public FurnaceConfig furnaceData = new FurnaceConfig();
         @Nest
-        public BasicEnergyMachineData pulverizerData = new BasicEnergyMachineData(10000, 256, 0, 32);
+        public BasicEnergyMachineData pulverizerData = new BasicEnergyMachineData(25000, 256, 0, 32);
     }
     
     public static class Generators {
