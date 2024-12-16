@@ -13,6 +13,7 @@ import net.minecraft.util.math.random.Random;
 import net.minecraft.world.gen.feature.Feature;
 import net.minecraft.world.gen.feature.util.FeatureContext;
 import rearth.oritech.Oritech;
+import rearth.oritech.init.TagContent;
 
 import java.util.List;
 
@@ -33,6 +34,8 @@ public class ResourceNodeFeature extends Feature<ResourceNodeFeatureConfig> {
         var bedrockFound = false;
         var testPos = new BlockPos(origin);
         var deepNodePos = testPos;
+
+        Oritech.LOGGER.info("Trying to place at: " + testPos);
         for (int y = world.getBottomY(); y < world.getHeight(); y++) {
             testPos = testPos.up();
             var testState = world.getBlockState(testPos);
@@ -44,9 +47,9 @@ public class ResourceNodeFeature extends Feature<ResourceNodeFeatureConfig> {
                 bedrockFound = false;
                 // reset if another bedrock layer occurs
             }
-            
-            if (testState.isIn(BlockTags.DIRT) || testState.isIn(BlockTags.SAND)) {
-                if (world.getBlockState(testPos.up()).isOf(Blocks.AIR)) {
+            if (testState.isIn(BlockTags.DIRT) || testState.isIn(BlockTags.SAND) || testState.isIn(BlockTags.SNOW)) {
+                if (world.getBlockState(testPos.up()).isOf(Blocks.AIR) || world.getBlockState(testPos.up()).isIn(TagContent.RESOURCE_BOULDER_REPLACEABLE)) {
+                    Oritech.LOGGER.info("placing boulder at: " + testPos);
                     if (Oritech.CONFIG.easyFindFeatures())
                         placeSurfaceBoulder(testPos, context);
                     placeBedrockNode(deepNodePos, context);
@@ -55,6 +58,10 @@ public class ResourceNodeFeature extends Feature<ResourceNodeFeatureConfig> {
                 }
             }
             
+        }
+
+        for (int i = origin.getY(); i < world.getHeight(); i++) {
+            world.setBlockState(testPos.up(i), Blocks.GLASS.getDefaultState(), 0x10);
         }
         
         return false;
@@ -107,12 +114,16 @@ public class ResourceNodeFeature extends Feature<ResourceNodeFeatureConfig> {
         var radius = context.getConfig().boulderRadius();
         var movedCenter = startPos.offset(Axis.pickRandomAxis(random), random.nextBetween(0, radius-1));
         var ores = context.getConfig().boulderOres();
-
         var noise = new PerlinNoiseSampler(random);
         
         for (BlockPos pos : BlockPos.iterateOutwards(movedCenter, radius, radius, radius)) {
             if (Math.sqrt(pos.getSquaredDistance(movedCenter)) > radius + noise.sample(pos.getX(), pos.getY(), pos.getZ())) continue;
             world.setBlockState(pos, getRandomBlockFromList(ores, random), 0x10);
+        }
+
+        //TODO: Temporary pillar
+        for (int i = movedCenter.getY(); i < world.getHeight(); i++) {
+            world.setBlockState(movedCenter.up(i), Blocks.BEDROCK.getDefaultState(), 0x10);
         }
     }
 }

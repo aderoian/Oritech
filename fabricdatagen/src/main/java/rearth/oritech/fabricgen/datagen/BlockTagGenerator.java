@@ -77,6 +77,25 @@ public class BlockTagGenerator extends FabricTagProvider.BlockTagProvider {
           .forceAddTag(ConventionalBlockTags.GLASS_PANES)
           .forceAddTag(ConventionalBlockTags.BUDS);
 
+        getOrCreateTagBuilder(TagContent.RESOURCE_BOULDER_REPLACEABLE)
+                .forceAddTag(BlockTags.SMALL_FLOWERS)
+                .forceAddTag(BlockTags.FLOWERS)
+                .forceAddTag(BlockTags.TALL_FLOWERS)
+                .forceAddTag(BlockTags.SAPLINGS)
+                .add(Blocks.SNOW)
+                .add(Blocks.SHORT_GRASS)
+                .add(Blocks.TALL_GRASS)
+                .add(Blocks.FERN)
+                .add(Blocks.LARGE_FERN)
+                .add(Blocks.DEAD_BUSH)
+                .add(Blocks.CACTUS)
+                .add(Blocks.SUGAR_CANE)
+                .add(Blocks.BAMBOO)
+                .add(Blocks.VINE)
+                .add(Blocks.MOSS_CARPET);
+
+
+
         getOrCreateTagBuilder(TagContent.CUTTER_LOGS_MINEABLE)
         // using forceAddTag because the datagen wasn't recognizing the vanilla LOGS, LEAVES, and WART_BLOCKS tags
         // even though they should absolutely be there
