@@ -74,6 +74,7 @@ public class DronePortBlock extends Block implements BlockEntityProvider {
             // first time created
             if (isAssembled && !wasAssembled) {
                 NetworkContent.MACHINE_CHANNEL.serverHandle(entity).send(new NetworkContent.MachineSetupEventPacket(pos));
+				dronePort.initAddons();
                 return ActionResult.SUCCESS;
             }
             
@@ -81,6 +82,8 @@ public class DronePortBlock extends Block implements BlockEntityProvider {
                 player.sendMessage(Text.translatable("message.oritech.machine.missing_core"));
                 return ActionResult.SUCCESS;
             }
+
+            dronePort.initAddons();
             
             var handler = (ExtendedScreenHandlerFactory) world.getBlockEntity(pos);
             player.openHandledScreen(handler);

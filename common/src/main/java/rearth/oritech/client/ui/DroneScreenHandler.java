@@ -1,30 +1,41 @@
 package rearth.oritech.client.ui;
 
+import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant;
+import net.fabricmc.fabric.api.transfer.v1.storage.base.SingleVariantStorage;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.inventory.SimpleInventory;
 import net.minecraft.item.ItemStack;
-import net.minecraft.network.PacketByteBuf;
 import net.minecraft.screen.slot.Slot;
+import rearth.oritech.Oritech;
 import rearth.oritech.block.entity.interaction.DronePortEntity;
 import rearth.oritech.item.tools.LaserTargetDesignator;
+import rearth.oritech.util.MachineAddonController;
 
-import java.util.Objects;
-
-public class DroneScreenHandler extends BasicMachineScreenHandler {
+public class DroneScreenHandler extends UpgradableMachineScreenHandler {
     
     private final SimpleInventory cardInventory;
+    private final SingleVariantStorage<FluidVariant> fluidTank;
     
-    public DroneScreenHandler(int syncId, PlayerInventory inventory, PacketByteBuf buf) {
-        this(syncId, inventory, Objects.requireNonNull(inventory.player.getWorld().getBlockEntity(buf.readBlockPos())));
-    }
-    
-    public DroneScreenHandler(int syncId, PlayerInventory playerInventory, BlockEntity blockEntity) {
-        super(syncId, playerInventory, blockEntity);
+    public DroneScreenHandler(int syncId, PlayerInventory playerInventory, BlockEntity blockEntity, MachineAddonController.AddonUiData addonUiData, float coreQuality) {
+        super(syncId, playerInventory, blockEntity, addonUiData, coreQuality);
+
+        if (!(blockEntity instanceof DronePortEntity dronePortEntity)) {
+            cardInventory = null;
+            fluidTank = null;
+            Oritech.LOGGER.error("Opened drone screen on non-drone block, this should never happen");
+            return;
+        }
         
-        cardInventory = ((DronePortEntity) blockEntity).getCardInventory();
+        cardInventory = dronePortEntity.getCardInventory();
         cardInventory.onOpen(playerInventory.player);
         addCardSlots();
+
+        if (dronePortEntity.hasFluidAddon) {
+            fluidTank = dronePortEntity.fluidStorage;
+        } else {
+            fluidTank = null;
+        }
     }
     
     private void addCardSlots() {

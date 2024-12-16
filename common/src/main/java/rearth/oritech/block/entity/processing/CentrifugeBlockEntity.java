@@ -157,20 +157,26 @@ public class CentrifugeBlockEntity extends MultiblockMachineEntity implements Fl
         
         // check if input is available
         var input = recipe.getFluidInput();
-        if (input == null || input.getAmount() <= 0) return false;
-        if (!input.getFluid().equals(inputStorage.variant.getFluid()) || input.getAmount() > inputStorage.amount)
-            return false;
+        if (input != null && input.getAmount() > 0) {   // only verify fluid input match if fluid input exists
+            if (!input.getFluid().equals(inputStorage.variant.getFluid()) || input.getAmount() > inputStorage.amount)   // check if input matches tank
+                return false;   // input tank too low or wrong type
+        }
         
         // check if output fluid fits
         var output = recipe.getFluidOutput();
-        if (output != null && output.getAmount() > 0) {
+        if (output != null && output.getAmount() > 0) { // only verify fluid output if fluid output exists
+            
             if (output.getFluid().equals(Fluids.EMPTY) || outputStorage.amount == 0)
-                return true;  // no output stored
-            if (outputStorage.amount + output.getAmount() > outputStorage.getCapacity()) return false; // output full
-            return outputStorage.variant.getFluid().equals(output.getFluid());  // type check
+                return super.canProceed(recipe);  // no output stored/needed
+            
+            if (outputStorage.amount + output.getAmount() > outputStorage.getCapacity())
+                return false; // output too full
+            
+            if (!outputStorage.variant.getFluid().equals(output.getFluid()))
+                return false;   // output type mismatch
         }
         
-        return true;
+        return super.canProceed(recipe);
         
     }
     
@@ -183,7 +189,17 @@ public class CentrifugeBlockEntity extends MultiblockMachineEntity implements Fl
         // get recipes matching input items
         var candidates = Objects.requireNonNull(world).getRecipeManager().getAllMatches(getOwnRecipeType(), getInputInventory(), world);
         // filter out recipes based on input tank
-        return candidates.stream().filter(candidate -> recipeMatchesTank(inputStorage, candidate.value())).findAny();
+        var fluidRecipe = candidates.stream().filter(candidate -> recipeMatchesTank(inputStorage, candidate.value())).findAny();
+        if (fluidRecipe.isPresent()) {
+            return fluidRecipe;
+        }
+        
+        return getNormalRecipe();
+    }
+    
+    // this is provided as fallback for fluid centrifuges that may still process normal stuff
+    private Optional<RecipeEntry<OritechRecipe>> getNormalRecipe() {
+        return world.getRecipeManager().getFirstMatch(RecipeContent.CENTRIFUGE, getInputInventory(), world);
     }
     
     protected boolean recipeMatchesTank(SingleVariantStorage<FluidVariant> checkedTank, OritechRecipe recipe) {

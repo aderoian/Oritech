@@ -133,6 +133,9 @@ public class NetworkContent {
     public record CentrifugeFluidSyncPacket(BlockPos position, boolean fluidAddon, String fluidTypeIn, long amountIn, String fluidTypeOut,
                                             long amountOut) {
     }
+
+    public record DronePortFluidSyncPacket(BlockPos position, boolean fluidAddon, String fluidType, long amount) {
+    }
     
     public record JetpackUsageUpdatePacket(long energyStored, String fluidType, long fluidAmount) {}
     
@@ -145,7 +148,7 @@ public class NetworkContent {
     public record ReactorPortDataPacket(BlockPos position, int capacity, int remaining) {
     }
     
-    public record ReactorUISyncPacket(BlockPos position, List<BlockPos> componentPositions, List<ReactorControllerBlockEntity.ComponentStatistics> componentHeats, long energy, int heat) {
+    public record ReactorUISyncPacket(BlockPos position, List<BlockPos> componentPositions, List<ReactorControllerBlockEntity.ComponentStatistics> componentHeats, long energy) {
     }
     
     @SuppressWarnings("unchecked")
@@ -361,6 +364,18 @@ public class NetworkContent {
             }
             
         }));
+
+        MACHINE_CHANNEL.registerClientbound(DronePortFluidSyncPacket.class, ((message, access) -> {
+
+            var entity = access.player().clientWorld.getBlockEntity(message.position);
+
+            if (entity instanceof DronePortEntity dronePort) {
+                dronePort.hasFluidAddon = message.fluidAddon;
+                dronePort.fluidStorage.amount = message.amount;
+                dronePort.fluidStorage.variant = FluidVariant.of(Registries.FLUID.get(Identifier.of(message.fluidType)));
+            }
+
+        }));
         
         MACHINE_CHANNEL.registerClientbound(GeneratorUISyncPacket.class, ((message, access) -> {
             
@@ -496,7 +511,6 @@ public class NetworkContent {
             if (entity instanceof ReactorControllerBlockEntity reactor) {
                 reactor.uiSyncData = message;
                 reactor.energyStorage.setAmount(message.energy);
-                reactor.reactorHeat = message.heat;
             }
             
         }));

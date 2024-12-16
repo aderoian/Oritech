@@ -46,6 +46,11 @@ public class PoweredFurnaceBlockEntity extends MultiblockMachineEntity {
     }   // not used in this special case
     
     @Override
+    protected float calculateEnergyUsage() {
+        return energyPerTick * getEfficiencyMultiplier() * (1 / getSpeedMultiplier()) / 2;
+    }
+    
+    @Override
     public void tick(World world, BlockPos pos, BlockState state, MachineBlockEntity blockEntity) {
         
         if (world.isClient || !isActive(state)) return;

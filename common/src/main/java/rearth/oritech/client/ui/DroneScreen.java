@@ -11,11 +11,11 @@ import net.minecraft.util.Identifier;
 import rearth.oritech.Oritech;
 import rearth.oritech.block.entity.interaction.DronePortEntity;
 
-public class DroneScreen extends BasicMachineScreen<DroneScreenHandler> {
+public class DroneScreen extends UpgradableMachineScreen<DroneScreenHandler> {
     
     public static final Identifier CARD_SLOT = Oritech.id("textures/gui/modular/designator_arrow.png");
     private final DronePortEntity dronePort;
-    
+
     public DroneScreen(DroneScreenHandler handler, PlayerInventory inventory, Text title) {
         super(handler, inventory, title);
         dronePort = (DronePortEntity) handler.blockEntity;
@@ -54,6 +54,5 @@ public class DroneScreen extends BasicMachineScreen<DroneScreenHandler> {
         overlay.child(BasicMachineScreen.getItemFrame(129, 26));
         overlay.child(BasicMachineScreen.getItemFrame(129, 62));
         overlay.child(Components.texture(CARD_SLOT, 0, 0, 18, 40, 18, 40).positioning(Positioning.absolute(128, 25)));
-        
     }
 }

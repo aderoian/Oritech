@@ -46,7 +46,7 @@ public class LaserArmModel<T extends LaserArmBlockEntity & GeoAnimatable> extend
         }
         
         var ownPos = Vec3d.of(laserEntity.getPos());
-        var offset = target.subtract(ownPos.add(0, 1.55 - 0.5, 0)); // add 1.55 to get to height of pivotX, minus block center offset
+        var offset = target.subtract(ownPos.add(0, 1.7 - 0.5, 0)); // add 1.55 to get to height of pivotX, minus block center offset
         
         // thanks to: https://math.stackexchange.com/questions/878785/how-to-find-an-angle-in-range0-360-between-2-vectors
         var offsetY = new Vector2f((float) offset.getX(), (float) offset.getZ());

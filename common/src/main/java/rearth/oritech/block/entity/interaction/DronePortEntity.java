@@ -1,9 +1,14 @@
 package rearth.oritech.block.entity.interaction;
 
 import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory;
+import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants;
+import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant;
 import net.fabricmc.fabric.api.transfer.v1.item.InventoryStorage;
 import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
+import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
+import net.fabricmc.fabric.api.transfer.v1.storage.base.SingleVariantStorage;
 import net.fabricmc.fabric.api.transfer.v1.transaction.Transaction;
+import net.fabricmc.fabric.api.transfer.v1.transaction.TransactionContext;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.block.entity.BlockEntityTicker;
@@ -15,12 +20,14 @@ import net.minecraft.inventory.Inventory;
 import net.minecraft.inventory.SimpleInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtCompound;
+import net.minecraft.registry.Registries;
 import net.minecraft.registry.RegistryWrapper;
 import net.minecraft.screen.ScreenHandler;
 import net.minecraft.screen.ScreenHandlerType;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.state.property.Properties;
 import net.minecraft.text.Text;
+import net.minecraft.util.Identifier;
 import net.minecraft.util.collection.DefaultedList;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
@@ -28,18 +35,20 @@ import net.minecraft.util.math.Vec3i;
 import net.minecraft.world.World;
 import org.jetbrains.annotations.Nullable;
 import rearth.oritech.Oritech;
-import rearth.oritech.block.blocks.processing.MachineCoreBlock;
 import rearth.oritech.block.blocks.interaction.DronePortBlock;
+import rearth.oritech.block.blocks.processing.MachineCoreBlock;
+import rearth.oritech.block.entity.addons.RedstoneAddonBlockEntity;
 import rearth.oritech.block.entity.processing.MachineCoreEntity;
 import rearth.oritech.client.init.ModScreens;
 import rearth.oritech.client.ui.DroneScreenHandler;
+import rearth.oritech.init.BlockContent;
 import rearth.oritech.init.BlockEntitiesContent;
 import rearth.oritech.init.ComponentContent;
 import rearth.oritech.init.ItemContent;
 import rearth.oritech.network.NetworkContent;
 import rearth.oritech.util.*;
-import rearth.oritech.util.energy.containers.DynamicEnergyStorage;
 import rearth.oritech.util.energy.EnergyApi;
+import rearth.oritech.util.energy.containers.DynamicEnergyStorage;
 import software.bernie.geckolib.animatable.GeoBlockEntity;
 import software.bernie.geckolib.animatable.instance.AnimatableInstanceCache;
 import software.bernie.geckolib.animation.AnimatableManager;
@@ -55,26 +64,19 @@ import java.util.Objects;
 import static rearth.oritech.block.base.block.MultiblockMachine.ASSEMBLED;
 import static rearth.oritech.block.base.entity.MachineBlockEntity.*;
 
-public class DronePortEntity extends BlockEntity implements InventoryProvider, EnergyApi.BlockProvider, GeoBlockEntity, BlockEntityTicker<DronePortEntity>, MultiblockMachineController, ExtendedScreenHandlerFactory, ScreenProvider {
-    
-    public record DroneTransferData(List<ItemStack> transferredStacks, long arrivesAt) {
-    }
+public class DronePortEntity extends BlockEntity implements InventoryProvider, FluidProvider, EnergyApi.BlockProvider, GeoBlockEntity, BlockEntityTicker<DronePortEntity>, MultiblockMachineController, MachineAddonController, ExtendedScreenHandlerFactory, ScreenProvider, RedstoneAddonBlockEntity.RedstoneControllable {
+
+    // addon data
+    private final List<BlockPos> connectedAddons = new ArrayList<>();
+    private final List<BlockPos> openSlots = new ArrayList<>();
+    private BaseAddonData addonData = MachineAddonController.DEFAULT_ADDON_DATA;
     
     // storage
     protected final DynamicEnergyStorage energyStorage = new DynamicEnergyStorage(1024 * 32, 1000, 0, this::markDirty);
     
-    public final SimpleInventory inventory = new SimpleInventory(15) {
-        @Override
-        public void markDirty() {
-            DronePortEntity.this.markDirty();
-        }
-        
-        @Override
-        public boolean canInsert(ItemStack stack) {
-            if (DronePortEntity.this.incomingPacket != null) return false;
-            return super.canInsert(stack);
-        }
-    };
+    public final SimpleInventory inventory = new DronePortItemInventory(15);
+
+    public final DronePortFluidStorage fluidStorage = new DronePortFluidStorage();
     
     // not persisted, only to assign targets
     protected final SimpleInventory cardInventory = new SimpleInventory(2) {
@@ -82,7 +84,7 @@ public class DronePortEntity extends BlockEntity implements InventoryProvider, E
         public void markDirty() {
             DronePortEntity.this.markDirty();
         }
-        
+
         @Override
         public boolean canInsert(ItemStack stack) {
             return stack.getItem().equals(ItemContent.TARGET_DESIGNATOR);
@@ -98,6 +100,12 @@ public class DronePortEntity extends BlockEntity implements InventoryProvider, E
     
     // multiblock
     private final ArrayList<BlockPos> coreBlocksConnected = new ArrayList<>();
+
+    // fluid
+	public boolean hasFluidAddon;
+
+    // redstone
+    public boolean disabledViaRedstone;
     
     // work data
     private BlockPos targetPosition;
@@ -107,13 +115,15 @@ public class DronePortEntity extends BlockEntity implements InventoryProvider, E
     private boolean networkDirty;
     
     // config
+    private final long FLUID_CAPACITY = 128 * FluidConstants.BUCKET;
     private final long baseEnergyUsage = 1024;
     private final int takeOffTime = 300;
     private final int landTime = 260;
+    private final int totalFlightTime = takeOffTime + landTime;
     
     // client only
     private String statusMessage;
-    
+
     public DronePortEntity(BlockPos pos, BlockState state) {
         super(BlockEntitiesContent.DRONE_PORT_ENTITY, pos, state);
     }
@@ -138,7 +148,7 @@ public class DronePortEntity extends BlockEntity implements InventoryProvider, E
         
         if (networkDirty && world.getTime() % 10 == 0) {
             networkDirty = false;
-            sendNetworkEnergyUpdate();
+            sendNetworkUpdate();
         }
     }
     
@@ -164,6 +174,9 @@ public class DronePortEntity extends BlockEntity implements InventoryProvider, E
         super.writeNbt(nbt, registryLookup);
         Inventories.writeNbt(nbt, inventory.heldStacks, false, registryLookup);
         addMultiblockToNbt(nbt);
+        writeAddonToNbt(nbt);
+        nbt.putBoolean("has_fluid_addon", hasFluidAddon);
+        nbt.putBoolean("disabled_via_redstone", disabledViaRedstone);
         nbt.putLong("energy_stored", energyStorage.amount);
         
         if (targetPosition != null) {
@@ -176,6 +189,8 @@ public class DronePortEntity extends BlockEntity implements InventoryProvider, E
             list.addAll(incomingPacket.transferredStacks);
             Inventories.writeNbt(compound, list, false, registryLookup);
             nbt.put("incoming", compound);
+            nbt.putString("transferredFluid", Registries.FLUID.getId(incomingPacket.transferredFluid.getFluid()).toString());
+            nbt.putLong("transferredFluidAmount", incomingPacket.fluidAmount);
             nbt.putLong("incomingTime", incomingPacket.arrivesAt);
         } else {
             nbt.remove("incoming");
@@ -187,18 +202,48 @@ public class DronePortEntity extends BlockEntity implements InventoryProvider, E
         super.readNbt(nbt, registryLookup);
         Inventories.readNbt(nbt, inventory.heldStacks, registryLookup);
         loadMultiblockNbtData(nbt);
-        
+        loadAddonNbtData(nbt);
+
+        hasFluidAddon = nbt.getBoolean("has_fluid_addon");
+        disabledViaRedstone = nbt.getBoolean("disabled_via_redstone");
         energyStorage.amount = nbt.getLong("energy_stored");
         targetPosition = BlockPos.fromLong(nbt.getLong("target_position"));
         
         if (nbt.contains("incoming")) {
             DefaultedList<ItemStack> list = DefaultedList.ofSize(15);
             Inventories.readNbt(nbt.getCompound("incoming"), list, registryLookup);
+            FluidVariant fluid = FluidVariant.of(Registries.FLUID.get(Identifier.of(nbt.getString("transferredFluid"))));
+            long fluidAmount = nbt.getLong("transferredFluidAmount");
             var arrivalTime = nbt.getLong("incomingTime");
-            incomingPacket = new DroneTransferData(list, arrivalTime);
+            incomingPacket = new DroneTransferData(list, fluid, fluidAmount, arrivalTime);
         }
     }
-    
+
+    @Override
+    public void initAddons() {
+        MachineAddonController.super.initAddons();
+
+        // Trigger block updates for pipes to connect
+        world.updateNeighbors(pos, getCachedState().getBlock());
+        for (Vec3i corePosition : getCorePositions()) {
+            var worldPos = new BlockPos(Geometry.offsetToWorldPosition(getFacingForMultiblock(), corePosition, getMachinePos()));
+            world.updateNeighbors(worldPos, world.getBlockState(worldPos).getBlock());
+        }
+    }
+
+    @Override
+    public void getAdditionalStatFromAddon(AddonBlock addonBlock) {
+        if (addonBlock.state().getBlock().equals(BlockContent.MACHINE_FLUID_ADDON)) {
+            hasFluidAddon = true;
+        }
+    }
+
+    @Override
+    public void resetAddons() {
+        MachineAddonController.super.resetAddons();
+        hasFluidAddon = false;
+    }
+
     private void checkIncomingAnimation() {
         if (world.getTime() == incomingPacket.arrivesAt - landTime) {
             triggerNetworkReceiveAnimation();
@@ -210,13 +255,34 @@ public class DronePortEntity extends BlockEntity implements InventoryProvider, E
         if (!hasArrived) return;
         
         Oritech.LOGGER.debug("receiving drone package: " + incomingPacket);
-        
+
+        long totalToInsert = incomingPacket.transferredStacks.stream().mapToLong(ItemStack::getCount).sum();
         try (var tx = Transaction.openOuter()) {
+            long totalInserted = 0;
             for (var stack : incomingPacket.transferredStacks) {
-                inventoryStorage.insert(ItemVariant.of(stack), stack.getCount(), tx);
+                totalInserted += inventoryStorage.insert(ItemVariant.of(stack), stack.getCount(), tx);
+            }
+
+            if (totalInserted != totalToInsert) {
+                Oritech.LOGGER.warn("Something weird has happened with drone port item storage. Caused at: " + pos);
+                tx.abort();
+                return;
             }
             tx.commit();
         }
+
+        if (!incomingPacket.transferredFluid.isBlank()) {
+            try (var tx = Transaction.openOuter()) {
+                var inserted = fluidStorage.insertFromDrone(incomingPacket.transferredFluid, incomingPacket.fluidAmount, tx);
+                if (inserted != incomingPacket.fluidAmount) {
+                    Oritech.LOGGER.warn("Something weird has happened with drone port fluid storage. Caused at: " + pos);
+                    tx.abort();
+                } else {
+                    tx.commit();
+                }
+            }
+        }
+
         incomingPacket = null;
         markDirty();
     }
@@ -224,10 +290,12 @@ public class DronePortEntity extends BlockEntity implements InventoryProvider, E
     private void sendDrone() {
         var targetPort = (DronePortEntity) world.getBlockEntity(targetPosition);
         var arriveTime = world.getTime() + takeOffTime + landTime;
-        var data = new DroneTransferData(inventory.heldStacks.stream().filter(stack -> !stack.isEmpty()).toList(), arriveTime);
+        var data = new DroneTransferData(inventory.heldStacks.stream().filter(stack -> !stack.isEmpty()).toList(), fluidStorage.variant, fluidStorage.amount, arriveTime);
         targetPort.setIncomingPacket(data);
         
         inventory.clear();
+        fluidStorage.amount = 0;
+        fluidStorage.variant = FluidVariant.blank();
         lastSentAt = world.getTime();
         energyStorage.amount -= calculateEnergyUsage();
         
@@ -238,7 +306,7 @@ public class DronePortEntity extends BlockEntity implements InventoryProvider, E
         Oritech.LOGGER.debug("sending drone package: " + data);
     }
     
-    public boolean canAcceptItems(List<ItemStack> stacks) {
+    public boolean canAcceptPayload(List<ItemStack> stacks, FluidVariant fluid, long fluidAmount) {
         var tx = Transaction.openOuter();
         for (var stack : stacks) {
             if (stack.isEmpty()) continue;
@@ -247,22 +315,38 @@ public class DronePortEntity extends BlockEntity implements InventoryProvider, E
                 return false;
             }
         }
+
+        if (!fluid.isBlank() && (!hasFluidAddon || fluidStorage.insert(fluid, fluidAmount, tx) != fluidAmount)) {
+            tx.abort();
+            return false;
+        }
         
         tx.abort();
         return true;
     }
+
+    /**
+     * Check if the drone is currently sending a package
+     * Drone will be in a sending state for a certain amount of time after sending a package
+     * (time it takes to take off)
+     *
+     * @return true if drone is sending a package
+     */
+    public boolean isSendingDrone() {
+        var diff = world.getTime() - lastSentAt;
+        return diff < takeOffTime;
+    }
     
     private boolean canSend() {
         
-        if (targetPosition == null || inventory.isEmpty() || energyStorage.amount < calculateEnergyUsage() || incomingPacket != null)
+        if (disabledViaRedstone || targetPosition == null || (inventory.isEmpty() && fluidStorage.getAmount() == 0) || energyStorage.amount < calculateEnergyUsage() || incomingPacket != null)
             return false;
         var targetEntity = world.getBlockEntity(targetPosition);
-        if (!(targetEntity instanceof DronePortEntity targetPort) || targetPort.getIncomingPacket() != null || !targetPort.canAcceptItems(inventory.heldStacks))
+        if (!(targetEntity instanceof DronePortEntity targetPort) || targetPort.disabledViaRedstone || targetPort.getIncomingPacket() != null || !targetPort.canAcceptPayload(inventory.heldStacks, fluidStorage.variant, fluidStorage.amount))
             return false;
         
         
-        var diff = world.getTime() - lastSentAt;
-        return diff > takeOffTime;
+        return !isSendingDrone();
     }
     
     private long calculateEnergyUsage() {
@@ -278,9 +362,10 @@ public class DronePortEntity extends BlockEntity implements InventoryProvider, E
     private void triggerNetworkReceiveAnimation() {
         NetworkContent.MACHINE_CHANNEL.serverHandle(this).send(new NetworkContent.DroneSendEventPacket(pos, false, true));
     }
-    
-    private void sendNetworkEnergyUpdate() {
+
+    private void sendNetworkUpdate() {
         NetworkContent.MACHINE_CHANNEL.serverHandle(this).send(new NetworkContent.GenericEnergySyncPacket(pos, energyStorage.amount, energyStorage.capacity));
+        NetworkContent.MACHINE_CHANNEL.serverHandle(this).send(new NetworkContent.DronePortFluidSyncPacket(pos, hasFluidAddon, Registries.FLUID.getId(fluidStorage.variant.getFluid()).toString(), fluidStorage.amount));
     }
     
     private void sendNetworkStatusMessage(String statusMessage) {
@@ -328,7 +413,7 @@ public class DronePortEntity extends BlockEntity implements InventoryProvider, E
     
     @Override
     public InventoryStorage getInventory(Direction direction) {
-        return inventoryStorage;
+        return InventoryStorage.of(inventory, direction);
     }
     
     @Override
@@ -387,6 +472,79 @@ public class DronePortEntity extends BlockEntity implements InventoryProvider, E
     public EnergyApi.EnergyContainer getEnergyStorageForLink() {
         return energyStorage;
     }
+
+    @Override
+    public @Nullable Storage<FluidVariant> getFluidStorage(Direction direction) {
+        return hasFluidAddon ? fluidStorage : null;
+    }
+
+    @Override
+    public @Nullable SingleVariantStorage<FluidVariant> getForDirectFluidAccess() {
+        return hasFluidAddon ? fluidStorage : null;
+    }
+
+    @Override
+    public List<Vec3i> getAddonSlots() {
+        return List.of(
+                new Vec3i(3, 0, -1),
+                new Vec3i(2, 0, -2)
+        );
+    }
+
+    @Override
+    public long getDefaultCapacity() {
+        return 1024 * 32;
+    }
+
+    @Override
+    public long getDefaultInsertRate() {
+        return 512;
+    }
+
+    @Override
+    public SimpleInventory getInventoryForAddon() {
+        return inventory;
+    }
+
+    @Override
+    public ScreenProvider getScreenProvider() {
+        return this;
+    }
+
+    public DynamicEnergyStorage getEnergyStorage() {
+        return energyStorage;
+    }
+
+    @Override
+    public List<BlockPos> getConnectedAddons() {
+        return connectedAddons;
+    }
+
+    @Override
+    public List<BlockPos> getOpenSlots() {
+        return openSlots;
+    }
+
+    @Override
+    public Direction getFacingForAddon() {
+        return Objects.requireNonNull(world).getBlockState(getPos()).get(Properties.HORIZONTAL_FACING);
+    }
+
+    @Override
+    public DynamicEnergyStorage getStorageForAddon() {
+        return getEnergyStorage();
+    }
+
+    @Override
+    public BaseAddonData getBaseAddonData() {
+        return addonData;
+    }
+
+    @Override
+    public void setBaseAddonData(BaseAddonData data) {
+        this.addonData = data;
+        this.markDirty();
+    }
     
     public DroneTransferData getIncomingPacket() {
         return incomingPacket;
@@ -425,7 +583,64 @@ public class DronePortEntity extends BlockEntity implements InventoryProvider, E
     public AnimatableInstanceCache getAnimatableInstanceCache() {
         return animatableInstanceCache;
     }
-    
+
+    @Override
+    public int getComparatorEnergyAmount() {
+        return (int) ((energyStorage.amount / (float) energyStorage.capacity) * 15);
+    }
+
+    @Override
+    public int getComparatorSlotAmount(int slot) {
+        if (inventory.heldStacks.size() <= slot)
+            return hasFluidAddon ? ComparatorOutputProvider.getFluidStorageComparatorOutput(fluidStorage) : 0;
+
+        var stack = inventory.getStack(slot);
+        if (stack.isEmpty()) return
+                hasFluidAddon ? ComparatorOutputProvider.getFluidStorageComparatorOutput(fluidStorage) : 0;
+
+        return hasFluidAddon ?
+                Math.max(ComparatorOutputProvider.getItemStackComparatorOutput(stack), ComparatorOutputProvider.getFluidStorageComparatorOutput(fluidStorage)) :
+                ComparatorOutputProvider.getItemStackComparatorOutput(stack);
+    }
+
+    @Override
+    public int getComparatorProgress() {
+        if (isSendingDrone()) {
+            return (int) (((world.getTime() - lastSentAt) / (float) takeOffTime) * 15);
+        } else if (incomingPacket != null) {
+            return (int) ((totalFlightTime + (world.getTime() - incomingPacket.arrivesAt)) / (float) (totalFlightTime) * 15);
+        } else {
+            return 0;
+        }
+    }
+
+    @Override
+    public int getComparatorActiveState() {
+        return isSendingDrone() || incomingPacket != null ? 15 : 0;
+    }
+
+    @Override
+    public void onRedstoneEvent(boolean isPowered) {
+        this.disabledViaRedstone = isPowered;
+    }
+
+    @Override
+    public int receivedRedstoneSignal() {
+        if (disabledViaRedstone) return 15;
+        return 0;
+    }
+
+    @Override
+    public String currentRedstoneEffect() {
+        if (disabledViaRedstone) return "tooltip.oritech.redstone_disabled";
+        return "tooltip.oritech.redstone_enabled";
+    }
+
+    @Override
+    public boolean hasRedstoneControlAvailable() {
+        return true;
+    }
+
     private enum DroneAnimState {
         IDLE, TAKEOFF, LANDING
     }
@@ -467,8 +682,8 @@ public class DronePortEntity extends BlockEntity implements InventoryProvider, E
     
     @Override
     public Object getScreenOpeningData(ServerPlayerEntity player) {
-        sendNetworkEnergyUpdate();
-        return new ModScreens.BasicData(pos);
+        sendNetworkUpdate();
+        return new ModScreens.UpgradableData(pos, getUiData(), coreQuality);
     }
     
     @Override
@@ -479,7 +694,7 @@ public class DronePortEntity extends BlockEntity implements InventoryProvider, E
     @Nullable
     @Override
     public ScreenHandler createMenu(int syncId, PlayerInventory playerInventory, PlayerEntity player) {
-        return new DroneScreenHandler(syncId, playerInventory, this);
+        return new DroneScreenHandler(syncId, playerInventory, this, getUiData(), coreQuality);
     }
     
     @Override
@@ -545,5 +760,69 @@ public class DronePortEntity extends BlockEntity implements InventoryProvider, E
     
     public String getStatusMessage() {
         return statusMessage;
+    }
+
+    public record DroneTransferData(List<ItemStack> transferredStacks, FluidVariant transferredFluid, long fluidAmount, long arrivesAt) {
+    }
+
+    public class DronePortItemInventory extends SimpleInventory implements ImplementedInventory {
+
+        public DronePortItemInventory(int size) {
+            super(size);
+        }
+
+        @Override
+        public DefaultedList<ItemStack> getItems() {
+            return heldStacks;
+        }
+
+        @Override
+        public boolean canInsert(int slot, ItemStack stack, @Nullable Direction side) {
+            if (DronePortEntity.this.incomingPacket != null) return false;
+            return ImplementedInventory.super.canInsert(slot, stack, side);
+        }
+
+        @Override
+        public boolean isValid(int slot, ItemStack stack) {
+            return super.isValid(slot, stack);
+        }
+
+        @Override
+        public void markDirty() {
+            DronePortEntity.this.markDirty();
+        }
+    }
+
+    public class DronePortFluidStorage extends SingleVariantStorage<FluidVariant> {
+
+        @Override
+        protected FluidVariant getBlankVariant() {
+            return FluidVariant.blank();
+        }
+
+        @Override
+        protected long getCapacity(FluidVariant variant) {
+            return FLUID_CAPACITY;
+        }
+
+        @Override
+        public long insert(FluidVariant insertedVariant, long maxAmount, TransactionContext transaction) {
+            // Cant use checkInsert because external and drone insertions have different rules
+            if (DronePortEntity.this.incomingPacket != null) return 0;
+            return super.insert(insertedVariant, maxAmount, transaction);
+        }
+
+        /**
+         * Insert from drone, bypasses the incoming packet check
+         */
+        public long insertFromDrone(FluidVariant insertedVariant, long maxAmount, TransactionContext transaction) {
+            return super.insert(insertedVariant, maxAmount, transaction);
+        }
+
+        @Override
+        protected void onFinalCommit() {
+            super.onFinalCommit();
+            DronePortEntity.this.markDirty();
+        }
     }
 }
