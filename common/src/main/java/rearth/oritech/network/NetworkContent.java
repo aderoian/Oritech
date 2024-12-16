@@ -133,6 +133,9 @@ public class NetworkContent {
     public record CentrifugeFluidSyncPacket(BlockPos position, boolean fluidAddon, String fluidTypeIn, long amountIn, String fluidTypeOut,
                                             long amountOut) {
     }
+
+    public record DronePortFluidSyncPacket(BlockPos position, boolean fluidAddon, String fluidType, long amount) {
+    }
     
     public record JetpackUsageUpdatePacket(long energyStored, String fluidType, long fluidAmount) {}
     
@@ -360,6 +363,18 @@ public class NetworkContent {
                 outStorage.variant = FluidVariant.of(Registries.FLUID.get(Identifier.of(message.fluidTypeOut)));
             }
             
+        }));
+
+        MACHINE_CHANNEL.registerClientbound(DronePortFluidSyncPacket.class, ((message, access) -> {
+
+            var entity = access.player().clientWorld.getBlockEntity(message.position);
+
+            if (entity instanceof DronePortEntity dronePort) {
+                dronePort.hasFluidAddon = message.fluidAddon;
+                dronePort.fluidStorage.amount = message.amount;
+                dronePort.fluidStorage.variant = FluidVariant.of(Registries.FLUID.get(Identifier.of(message.fluidType)));
+            }
+
         }));
         
         MACHINE_CHANNEL.registerClientbound(GeneratorUISyncPacket.class, ((message, access) -> {
