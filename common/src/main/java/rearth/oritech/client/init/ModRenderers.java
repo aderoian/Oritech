@@ -56,6 +56,7 @@ public class ModRenderers {
         // cutout renders
         BlockRenderLayerMap.INSTANCE.putBlock(BlockContent.MACHINE_FRAME_BLOCK, RenderLayer.getCutout());
         BlockRenderLayerMap.INSTANCE.putBlock(BlockContent.REACTOR_ABSORBER_PORT, RenderLayer.getCutout());
+        BlockRenderLayerMap.INSTANCE.putBlock(BlockContent.REACTOR_CONTROLLER, RenderLayer.getCutout());
         BlockRenderLayerMap.INSTANCE.putBlock(BlockContent.FRAME_GANTRY_ARM, RenderLayer.getCutout());
         BlockRenderLayerMap.INSTANCE.putBlock(BlockContent.BLOCK_PLACER_HEAD, RenderLayer.getCutout());
         BlockRenderLayerMap.INSTANCE.putBlock(BlockContent.BLOCK_DESTROYER_HEAD, RenderLayer.getCutout());
