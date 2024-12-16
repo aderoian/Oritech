@@ -56,7 +56,6 @@ public class AcceleratorControllerBlockEntity extends BlockEntity implements Blo
     // client data
     public List<Vec3d> displayTrail;
     public LastEventPacket lastEvent = new LastEventPacket(pos, ParticleEvent.IDLE, 0, pos, 1, ItemStack.EMPTY);
-    private MovingSoundInstance movingSound;
     
     public AcceleratorControllerBlockEntity(BlockPos pos, BlockState state) {
         super(BlockEntitiesContent.ACCELERATOR_CONTROLLER_BLOCK_ENTITY, pos, state);
