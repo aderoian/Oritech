@@ -69,6 +69,11 @@ public class FuelGeneratorEntity extends FluidMultiblockGeneratorBlockEntity {
     }
     
     @Override
+    protected float getAnimationSpeed() {
+        return super.getAnimationSpeed() / 3;
+    }
+    
+    @Override
     public List<Vec3i> getAddonSlots() {
         
         return List.of(
