@@ -81,7 +81,7 @@ public abstract class GenericPipeInterfaceEntity extends BlockEntity implements 
             var neighborPos = pos.offset(neighbor);
             var neighborMap = data.machinePipeNeighbors.getOrDefault(neighborPos, new HashSet<>());
             if (block.hasMachineInDirection(neighbor, world, pos, block.apiValidationFunction())) {
-                if (block.isConnectingInDirection(newState, neighbor, false))
+                if (block.isConnectingInDirection(newState, neighbor, pos, world, false))
                     connectedMachines.add(pos.offset(neighbor));
 
                 neighborMap.add(neighbor.getOpposite());
@@ -272,7 +272,7 @@ public abstract class GenericPipeInterfaceEntity extends BlockEntity implements 
                 }
 
                 // check if the target can connect to the neighbor
-                if (!targetBlock.isConnectingInDirection(targetState, direction, false)) continue;
+                if (!targetBlock.isConnectingInDirection(targetState, direction, self, world, false)) continue;
 
                 nextTargets.add(neighbor);
             }
