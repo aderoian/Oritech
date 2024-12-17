@@ -5,8 +5,8 @@
     64
   ],
   "textures": {
-    "0": "oritech:block/framed_pipe",
-    "particle": "oritech:block/framed_pipe"
+    "0": "oritech:block/pipe/framed_pipe",
+    "particle": "oritech:block/pipe/framed_pipe"
   },
   "elements": [
     {

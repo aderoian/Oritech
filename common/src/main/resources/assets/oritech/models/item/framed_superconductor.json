@@ -1,7 +1,7 @@
 {
   "parent": "oritech:block/framed_pipe",
   "textures": {
-    "1": "oritech:block/superconductor"
+    "1": "oritech:block/pipe/superconductor"
   },
   "elements": [
     {
