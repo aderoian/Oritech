@@ -43,6 +43,8 @@ import rearth.oritech.init.recipes.RecipeContent;
 import rearth.oritech.network.NetworkContent;
 import rearth.oritech.util.*;
 
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 
 public class AcceleratorControllerBlockEntity extends BlockEntity implements BlockEntityTicker<AcceleratorControllerBlockEntity>, InventoryProvider, ExtendedScreenHandlerFactory, ScreenProvider {
@@ -152,6 +154,8 @@ public class AcceleratorControllerBlockEntity extends BlockEntity implements Blo
         
         var renderedTrail = List.of(from, to);
         NetworkContent.MACHINE_CHANNEL.serverHandle(this).send(new NetworkContent.AcceleratorParticleRenderPacket(pos, renderedTrail));
+        
+        this.markDirty();
     }
     
     public void onParticleCollided(float relativeSpeed, Vec3d collision, BlockPos secondController, AcceleratorControllerBlockEntity secondControllerEntity) {
@@ -175,6 +179,7 @@ public class AcceleratorControllerBlockEntity extends BlockEntity implements Blo
         createCollisionParticles((int) relativeSpeed, collision, (int) particleCount);
         
         ParticleContent.PARTICLE_COLLIDE.spawn(world, collision);
+        this.markDirty();
     }
     
     private void createCollisionParticles(int collisionEnergy, Vec3d collisionPosition, int shotCount) {
@@ -314,7 +319,30 @@ public class AcceleratorControllerBlockEntity extends BlockEntity implements Blo
         
         if (positions.size() <= 1) return;
         
-        NetworkContent.MACHINE_CHANNEL.serverHandle(this).send(new NetworkContent.AcceleratorParticleRenderPacket(pos, positions));
+        var resultList = new ArrayList<Vec3d>();
+        
+        // deduplicate / shorten list
+        var positionSet = new HashSet<Vec3d>();
+        var lastDirection = new Vec3d(0, 1, 0);
+        var lastPosition = new Vec3d(-1, -1, -1);
+        for (var position : positions) {
+            if (positionSet.contains(position)) {
+                // loop reached, stop the list
+                break;
+            }
+            
+            // check if the direction has changed
+            var newDirection = position.subtract(lastPosition);
+            if (newDirection.squaredDistanceTo(lastDirection) < 0.1) continue;
+            
+            lastDirection = newDirection;
+            lastPosition = position;
+            
+            positionSet.add(position);
+            resultList.add(position);
+        }
+        
+        NetworkContent.MACHINE_CHANNEL.serverHandle(this).send(new NetworkContent.AcceleratorParticleRenderPacket(pos, resultList));
         NetworkContent.MACHINE_CHANNEL.serverHandle(this).send(new LastEventPacket(pos, ParticleEvent.ACCELERATING, particle.velocity, BlockPos.ofFloored(particle.position), particle.lastBendDistance + particle.lastBendDistance2, activeItemParticle));
         
     }
