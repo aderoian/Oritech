@@ -14,6 +14,8 @@ import net.minecraft.item.tooltip.TooltipType;
 import net.minecraft.state.StateManager;
 import net.minecraft.state.property.BooleanProperty;
 import net.minecraft.text.Text;
+import net.minecraft.util.BlockMirror;
+import net.minecraft.util.BlockRotation;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
@@ -92,6 +94,18 @@ public class MachineAddonBlock extends WallMountedBlock implements BlockEntityPr
             builder.add(FACING);
             builder.add(FACE);
         }
+    }
+    
+    @Override
+    protected BlockState rotate(BlockState state, BlockRotation rotation) {
+        if (!constructorAssignmentSupportWorkaround) return state;
+        return super.rotate(state, rotation);
+    }
+    
+    @Override
+    protected BlockState mirror(BlockState state, BlockMirror mirror) {
+        if (!constructorAssignmentSupportWorkaround) return state;
+        return super.mirror(state, mirror);
     }
     
     @Nullable
@@ -215,26 +229,26 @@ public class MachineAddonBlock extends WallMountedBlock implements BlockEntityPr
             var blockType = item.getBlock();
             
             if (blockType == BlockContent.MACHINE_YIELD_ADDON)
-                tooltip.add(Text.translatable("tooltip.oritech.addon_yield_desc").formatted(Formatting.DARK_GRAY));
+                tooltip.add(Text.translatable("tooltip.oritech.addon_yield_desc").formatted(Formatting.GRAY));
             if (blockType == BlockContent.MACHINE_FLUID_ADDON)
-                tooltip.add(Text.translatable("tooltip.oritech.addon_fluid_desc").formatted(Formatting.DARK_GRAY));
+                tooltip.add(Text.translatable("tooltip.oritech.addon_fluid_desc").formatted(Formatting.GRAY));
             if (blockType == BlockContent.MACHINE_ACCEPTOR_ADDON)
-                tooltip.add(Text.translatable("tooltip.oritech.addon_acceptor_desc").formatted(Formatting.DARK_GRAY));
+                tooltip.add(Text.translatable("tooltip.oritech.addon_acceptor_desc").formatted(Formatting.GRAY));
             if (blockType == BlockContent.STEAM_BOILER_ADDON)
-                tooltip.add(Text.translatable("tooltip.oritech.addon_boiler_desc").formatted(Formatting.DARK_GRAY));
+                tooltip.add(Text.translatable("tooltip.oritech.addon_boiler_desc").formatted(Formatting.GRAY));
             if (blockType == BlockContent.CROP_FILTER_ADDON)
-                tooltip.add(Text.translatable("tooltip.oritech.addon_crop_desc").formatted(Formatting.DARK_GRAY));
+                tooltip.add(Text.translatable("tooltip.oritech.addon_crop_desc").formatted(Formatting.GRAY));
             if (blockType == BlockContent.MACHINE_INVENTORY_PROXY_ADDON)
-                tooltip.add(Text.translatable("tooltip.oritech.addon_proxy_desc").formatted(Formatting.DARK_GRAY));
+                tooltip.add(Text.translatable("tooltip.oritech.addon_proxy_desc").formatted(Formatting.GRAY));
             if (blockType == BlockContent.QUARRY_ADDON)
-                tooltip.add(Text.translatable("tooltip.oritech.addon_quarry_desc").formatted(Formatting.DARK_GRAY));
+                tooltip.add(Text.translatable("tooltip.oritech.addon_quarry_desc").formatted(Formatting.GRAY));
             if (blockType == BlockContent.MACHINE_HUNTER_ADDON)
-                tooltip.add(Text.translatable("tooltip.oritech.addon_hunter_desc").formatted(Formatting.DARK_GRAY));
+                tooltip.add(Text.translatable("tooltip.oritech.addon_hunter_desc").formatted(Formatting.GRAY));
             if (blockType == BlockContent.MACHINE_REDSTONE_ADDON)
-                tooltip.add(Text.translatable("tooltip.oritech.addon_redstone_desc").formatted(Formatting.DARK_GRAY));
+                tooltip.add(Text.translatable("tooltip.oritech.addon_redstone_desc").formatted(Formatting.GRAY));
             
             if (addonSettings.extender()) {
-                tooltip.add(Text.translatable("tooltip.oritech.addon_extender_desc").formatted(Formatting.DARK_GRAY));
+                tooltip.add(Text.translatable("tooltip.oritech.addon_extender_desc").formatted(Formatting.GRAY));
             }
             
         } else {

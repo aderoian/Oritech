@@ -4,17 +4,15 @@ import net.minecraft.block.BlockState;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.block.entity.BlockEntityTicker;
 import net.minecraft.block.entity.BlockEntityType;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.nbt.NbtElement;
-import net.minecraft.nbt.NbtList;
-import net.minecraft.nbt.NbtLong;
+import net.minecraft.nbt.*;
 import net.minecraft.registry.RegistryWrapper;
 import net.minecraft.util.Pair;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
+import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.PersistentState;
-import org.jetbrains.annotations.Nullable;
 import net.minecraft.world.World;
+import org.jetbrains.annotations.Nullable;
 import rearth.oritech.Oritech;
 import rearth.oritech.block.blocks.pipes.GenericPipeBlock;
 import rearth.oritech.block.entity.interaction.PipeBoosterBlockEntity;
@@ -77,14 +75,22 @@ public abstract class GenericPipeInterfaceEntity extends BlockEntity implements 
         Oritech.LOGGER.debug("registering/updating node: " + pos);
 
         data.pipes.add(pos);
-        if (isInterface) {
-            var connectedMachines = new HashSet<BlockPos>(6);
-            var block = (GenericPipeBlock) newState.getBlock();
-            for (var neighbor : Direction.values()) {
-                if (block.isConnectingInDirection(newState, neighbor, false) && block.hasMachineInDirection(neighbor, world, pos, block.apiValidationFunction()))
+        var connectedMachines = new HashSet<BlockPos>(6);
+        var block = (GenericPipeBlock) newState.getBlock();
+        for (var neighbor : Direction.values()) {
+            var neighborPos = pos.offset(neighbor);
+            var neighborMap = data.machinePipeNeighbors.getOrDefault(neighborPos, new HashSet<>());
+            if (block.hasMachineInDirection(neighbor, world, pos, block.apiValidationFunction())) {
+                if (block.isConnectingInDirection(newState, neighbor, false))
                     connectedMachines.add(pos.offset(neighbor));
+
+                neighborMap.add(neighbor.getOpposite());
             }
 
+            if (!neighborMap.isEmpty()) data.machinePipeNeighbors.put(neighborPos, neighborMap);
+        }
+
+        if (isInterface) {
             data.machineInterfaces.put(pos, connectedMachines);
         } else {
             data.machineInterfaces.remove(pos);
@@ -94,12 +100,14 @@ public abstract class GenericPipeInterfaceEntity extends BlockEntity implements 
     }
 
     public static void removeNode(World world, BlockPos pos, boolean wasInterface, BlockState oldState, PipeNetworkData data) {
-        Oritech.LOGGER.debug("removing node: " + pos);
+        Oritech.LOGGER.debug("removing node: " + pos + " | " + wasInterface);
 
         var oldNetwork = data.pipeNetworkLinks.getOrDefault(pos, -1);
 
         data.pipes.remove(pos);
         if (wasInterface) data.machineInterfaces.remove(pos);
+
+        removeStaleMachinePipeNeighbors(pos, data);
 
         data.pipeNetworks.remove(oldNetwork);
         data.pipeNetworkInterfaces.remove(oldNetwork);
@@ -176,6 +184,27 @@ public abstract class GenericPipeInterfaceEntity extends BlockEntity implements 
         if (connectedNetwork == -1) return new HashSet<>();
 
         return data.pipeNetworkInterfaces.get(connectedNetwork);
+    }
+
+    /**
+     * Removes any stale machine -> neighboring pipes mappings
+     * Used when a pipe node is destroyed
+     *
+     * @param pos  position of the destroyed node
+     * @param data network data
+     */
+    public static void removeStaleMachinePipeNeighbors(BlockPos pos, PipeNetworkData data) {
+        for (var neighbor : Direction.values()) {
+            var machine = pos.offset(neighbor);
+            var machineNeighbors = data.machinePipeNeighbors.get(machine);
+            if (machineNeighbors == null) continue;
+
+            machineNeighbors.remove(Direction.getFacing(Vec3d.of(pos.subtract(machine))));
+            if (machineNeighbors.isEmpty())
+                data.machinePipeNeighbors.remove(machine);
+            else
+                data.machinePipeNeighbors.put(machine, machineNeighbors);
+        }
     }
 
     private static class FloodFillSearch {
@@ -257,6 +286,8 @@ public abstract class GenericPipeInterfaceEntity extends BlockEntity implements 
         public final HashMap<Integer, Set<BlockPos>> pipeNetworks = new HashMap<>();   // networks are never updated, and instead always replaced by new ones with different ids
         public final HashMap<Integer, Set<Pair<BlockPos, Direction>>> pipeNetworkInterfaces = new HashMap<>(); // list of machines that are connected to the network
 
+        public final HashMap<BlockPos, Set<Direction>> machinePipeNeighbors = new HashMap<>(); // List of neighboring pipes per machine, and the direction they are in. Missing direction means no connection
+
         @Override
         public int hashCode() {
             int result = pipeNetworkLinks.hashCode();
@@ -332,6 +363,21 @@ public abstract class GenericPipeInterfaceEntity extends BlockEntity implements 
                 }
             }
 
+            // Deserialize machinePipeNeighbors
+            if (nbt.contains("machinePipeNeighbors", NbtElement.COMPOUND_TYPE)) {
+                var connectionPipeNeighborsNbt = nbt.getCompound("machinePipeNeighbors");
+                for (var key : connectionPipeNeighborsNbt.getKeys()) {
+                    var pos = BlockPos.fromLong(Long.parseLong(key));
+                    var neighborsList = connectionPipeNeighborsNbt.getList(key, NbtElement.STRING_TYPE);
+                    var neighbors = new HashSet<Direction>();
+                    for (var neighborElement : neighborsList) {
+                        var direction = Direction.byName(neighborElement.asString());
+                        neighbors.add(direction);
+                    }
+                    result.machinePipeNeighbors.put(pos, neighbors);
+                }
+            }
+
             result.markDirty();
 
             return result;
@@ -382,6 +428,18 @@ public abstract class GenericPipeInterfaceEntity extends BlockEntity implements 
                 pipeNetworkInterfacesNbt.put(id.toString(), interfacesList);
             });
             nbt.put("pipeNetworkInterfaces", pipeNetworkInterfacesNbt);
+
+            // Serialize machinePipeNeighbors
+            var connectionPipeNeighborsNbt = new NbtCompound();
+            machinePipeNeighbors.forEach((pos, neighbors) -> {
+                var neighborsList = new NbtList();
+                neighbors.forEach(direction -> {
+                    var nbtElement = NbtString.of(direction.getName());
+                    neighborsList.add(nbtElement);
+                });
+                connectionPipeNeighborsNbt.put(Long.toString(pos.asLong()), neighborsList);
+            });
+            nbt.put("machinePipeNeighbors", connectionPipeNeighborsNbt);
 
             return nbt;
         }

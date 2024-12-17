@@ -55,7 +55,7 @@ public class MachineCoreEntity extends BlockEntity implements InventoryProvider,
     public MultiblockMachineController getCachedController() {
         if (!this.getCachedState().get(MachineCoreBlock.USED)) return null;
         
-        if (controllerEntity == null)
+        if (controllerEntity == null || ((BlockEntity) controllerEntity).isRemoved())
             controllerEntity = (MultiblockMachineController) Objects.requireNonNull(world).getBlockEntity(getControllerPos());
         
         return controllerEntity;

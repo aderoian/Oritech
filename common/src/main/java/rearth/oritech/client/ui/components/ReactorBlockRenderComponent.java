@@ -19,12 +19,12 @@ public class ReactorBlockRenderComponent extends BaseComponent {
     
     private final MinecraftClient client = MinecraftClient.getInstance();
     
-    public final BlockState state;
+    public BlockState state;
     private final @Nullable BlockEntity entity;
-    private final int zIndex;
-    public final BlockPos pos;
+    public float zIndex;
+    public BlockPos pos;
     
-    public ReactorBlockRenderComponent(BlockState state, @Nullable BlockEntity entity, int zIndex, BlockPos pos) {
+    public ReactorBlockRenderComponent(@Nullable BlockState state, @Nullable BlockEntity entity, float zIndex, BlockPos pos) {
         this.state = state;
         this.entity = entity;
         this.zIndex = zIndex;
@@ -33,6 +33,9 @@ public class ReactorBlockRenderComponent extends BaseComponent {
     
     @Override
     public void draw(OwoUIDrawContext context, int mouseX, int mouseY, float partialTicks, float delta) {
+        
+        var usedState = this.state == null ? client.world.getBlockState(pos) : state;
+        
         context.getMatrices().push();
         
         context.getMatrices().translate(x + this.width / 2f, y + this.height / 2f, zIndex * 25 + 1000);
@@ -45,9 +48,9 @@ public class ReactorBlockRenderComponent extends BaseComponent {
         
         RenderSystem.runAsFancy(() -> {
             final var vertexConsumers = client.getBufferBuilders().getEntityVertexConsumers();
-            if (this.state.getRenderType() != BlockRenderType.ENTITYBLOCK_ANIMATED) {
+            if (usedState.getRenderType() != BlockRenderType.ENTITYBLOCK_ANIMATED) {
                 this.client.getBlockRenderManager().renderBlockAsEntity(
-                  this.state, context.getMatrices(), vertexConsumers,
+                  usedState, context.getMatrices(), vertexConsumers,
                   LightmapTextureManager.MAX_LIGHT_COORDINATE, OverlayTexture.DEFAULT_UV
                 );
             }

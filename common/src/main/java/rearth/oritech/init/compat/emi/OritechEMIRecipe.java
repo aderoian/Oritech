@@ -1,5 +1,6 @@
 package rearth.oritech.init.compat.emi;
 
+import dev.architectury.platform.Platform;
 import dev.emi.emi.api.recipe.BasicEmiRecipe;
 import dev.emi.emi.api.recipe.EmiRecipeCategory;
 import dev.emi.emi.api.render.EmiTexture;
@@ -27,14 +28,17 @@ public class OritechEMIRecipe extends BasicEmiRecipe {
     public OritechEMIRecipe(RecipeEntry<OritechRecipe> entry, EmiRecipeCategory category, Class<? extends MachineBlockEntity> screenProviderSource, BlockState machineState) {
         super(category, entry.id(), 150, 66);
         
+        
+        var fluidDivider = Platform.isNeoForge() ? 81 : 1;  // no idea why this is needed
+        
         recipe = entry.value();
         recipe.getInputs().forEach(ingredient -> this.inputs.add(EmiIngredient.of(ingredient)));
         recipe.getResults().forEach(stack -> this.outputs.add(EmiStack.of(stack)));
         
         if (recipe.getFluidInput() != null)
-            this.inputs.add(EmiStack.of(recipe.getFluidInput().getFluid(), recipe.getFluidInput().getAmount()));
+            this.inputs.add(EmiStack.of(recipe.getFluidInput().getFluid(), recipe.getFluidInput().getAmount() / fluidDivider));
         if (recipe.getFluidOutput() != null)
-            this.outputs.add(EmiStack.of(recipe.getFluidOutput().getFluid(), recipe.getFluidInput().getAmount()));
+            this.outputs.add(EmiStack.of(recipe.getFluidOutput().getFluid(), recipe.getFluidInput().getAmount() / fluidDivider));
         
         try {
             this.screenProvider = screenProviderSource.getDeclaredConstructor(BlockPos.class, BlockState.class).newInstance(new BlockPos(0, 0, 0), machineState);

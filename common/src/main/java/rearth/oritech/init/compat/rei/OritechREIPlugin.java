@@ -34,6 +34,7 @@ public class OritechREIPlugin implements REIClientPlugin {
         registerOritechCategory(registry, RecipeContent.GRINDER, BlockContent.FRAGMENT_FORGE_BLOCK, (recipeType, icon) -> new OritechReiDisplay(recipeType, FragmentForgeBlockEntity.class, icon));
         registerOritechCategory(registry, RecipeContent.ASSEMBLER, BlockContent.ASSEMBLER_BLOCK, (recipeType, icon) -> new OritechReiDisplay(recipeType, AssemblerBlockEntity.class, icon));
         registerOritechCategory(registry, RecipeContent.FOUNDRY, BlockContent.FOUNDRY_BLOCK, (recipeType, icon) -> new OritechReiDisplay(recipeType, FoundryBlockEntity.class, icon));
+        registerOritechCategory(registry, RecipeContent.COOLER, BlockContent.COOLER_BLOCK, (recipeType, icon) -> new OritechReiDisplay(recipeType, CoolerBlockEntity.class, icon));
         registerOritechCategory(registry, RecipeContent.CENTRIFUGE, BlockContent.CENTRIFUGE_BLOCK, (recipeType, icon) -> new OritechReiDisplay(recipeType, CentrifugeBlockEntity.class, icon));
         registerOritechCategory(registry, RecipeContent.CENTRIFUGE_FLUID, BlockContent.CENTRIFUGE_BLOCK, (recipeType, icon) -> new OritechReiDisplay(recipeType, CentrifugeBlockEntity.class, icon));
         registerOritechCategory(registry, RecipeContent.ATOMIC_FORGE, BlockContent.ATOMIC_FORGE_BLOCK, (recipeType, icon) -> new OritechReiDisplay(recipeType, AtomicForgeBlockEntity.class, icon));
@@ -52,6 +53,7 @@ public class OritechREIPlugin implements REIClientPlugin {
         registerOriWorkstation(registry, RecipeContent.GRINDER, BlockContent.FRAGMENT_FORGE_BLOCK);
         registerOriWorkstation(registry, RecipeContent.ASSEMBLER, BlockContent.ASSEMBLER_BLOCK);
         registerOriWorkstation(registry, RecipeContent.FOUNDRY, BlockContent.FOUNDRY_BLOCK);
+        registerOriWorkstation(registry, RecipeContent.COOLER, BlockContent.COOLER_BLOCK);
         registerOriWorkstation(registry, RecipeContent.CENTRIFUGE, BlockContent.CENTRIFUGE_BLOCK);
         registerOriWorkstation(registry, RecipeContent.CENTRIFUGE_FLUID, BlockContent.CENTRIFUGE_BLOCK);
         registerOriWorkstation(registry, RecipeContent.ATOMIC_FORGE, BlockContent.ATOMIC_FORGE_BLOCK);
@@ -72,6 +74,7 @@ public class OritechREIPlugin implements REIClientPlugin {
         registerMachineRecipeType(registry, RecipeContent.ASSEMBLER);
         registerMachineRecipeType(registry, RecipeContent.GRINDER);
         registerMachineRecipeType(registry, RecipeContent.FOUNDRY);
+        registerMachineRecipeType(registry, RecipeContent.COOLER);
         registerMachineRecipeType(registry, RecipeContent.CENTRIFUGE);
         registerMachineRecipeType(registry, RecipeContent.CENTRIFUGE_FLUID);
         registerMachineRecipeType(registry, RecipeContent.ATOMIC_FORGE);

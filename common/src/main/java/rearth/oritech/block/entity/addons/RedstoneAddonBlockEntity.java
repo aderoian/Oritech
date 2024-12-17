@@ -18,8 +18,9 @@ import rearth.oritech.client.init.ModScreens;
 import rearth.oritech.client.ui.RedstoneAddonScreenHandler;
 import rearth.oritech.init.BlockEntitiesContent;
 import rearth.oritech.network.NetworkContent;
+import rearth.oritech.util.ComparatorOutputProvider;
 
-public class RedstoneAddonBlockEntity extends AddonBlockEntity implements BlockEntityTicker<RedstoneAddonBlockEntity>, ExtendedScreenHandlerFactory {
+public class RedstoneAddonBlockEntity extends AddonBlockEntity implements BlockEntityTicker<RedstoneAddonBlockEntity>, ExtendedScreenHandlerFactory, ComparatorOutputProvider {
     
     private RedstoneControllable cachedController;
     public RedstoneMode activeMode = RedstoneMode.INPUT_CONTROL;
@@ -93,11 +94,18 @@ public class RedstoneAddonBlockEntity extends AddonBlockEntity implements BlockE
     public void setRedstonePowered(boolean isPowered) {
         this.markDirty();
         
+        if (activeMode != RedstoneMode.INPUT_CONTROL) return;
+        
         if (getCachedController() != null)
             cachedController.onRedstoneEvent(isPowered);
         
     }
-    
+
+    @Override
+    public int getComparatorOutput() {
+        return currentOutput;
+    }
+
     @Override
     public Object getScreenOpeningData(ServerPlayerEntity player) {
         sendDataToClient();
@@ -131,12 +139,21 @@ public class RedstoneAddonBlockEntity extends AddonBlockEntity implements BlockE
         OUTPUT_POWER, OUTPUT_SLOT, OUTPUT_PROGRESS, OUTPUT_ACTIVE, INPUT_CONTROL
     }
     
-    public interface RedstoneControllable {
+    public interface RedstoneControllable extends ComparatorOutputProvider {
         int getComparatorEnergyAmount();
         int getComparatorSlotAmount(int slot);
         int getComparatorProgress();
         int getComparatorActiveState();
         void onRedstoneEvent(boolean isPowered);
+
+        /**
+         * A redstone controllable machine only outputs a readable comparator signal from the controller addon block.
+         * @return 0
+         */
+        @Override
+        default int getComparatorOutput() {
+            return 0;
+        }
     }
     
 }

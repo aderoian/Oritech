@@ -20,6 +20,7 @@ import net.minecraft.item.BucketItem;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.nbt.NbtCompound;
+import net.minecraft.recipe.RecipeEntry;
 import net.minecraft.registry.Registries;
 import net.minecraft.registry.RegistryWrapper;
 import net.minecraft.screen.ScreenHandler;
@@ -44,6 +45,8 @@ import rearth.oritech.util.FluidProvider;
 import rearth.oritech.util.InventorySlotAssignment;
 
 import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
 
 public class CentrifugeBlockEntity extends MultiblockMachineEntity implements FluidProvider {
     
@@ -62,7 +65,7 @@ public class CentrifugeBlockEntity extends MultiblockMachineEntity implements Fl
         public void markDirty() {
             CentrifugeBlockEntity.this.markDirty();
         }
-
+        
         @Override
         public boolean canInsert(ItemStack stack) {
             System.out.println(stack);
@@ -154,20 +157,62 @@ public class CentrifugeBlockEntity extends MultiblockMachineEntity implements Fl
         
         // check if input is available
         var input = recipe.getFluidInput();
-        if (input == null || input.getAmount() <= 0) return false;
-        if (!input.getFluid().equals(inputStorage.variant.getFluid()) || input.getAmount() > inputStorage.amount) return false;
+        if (input != null && input.getAmount() > 0) {   // only verify fluid input match if fluid input exists
+            if (!input.getFluid().equals(inputStorage.variant.getFluid()) || input.getAmount() > inputStorage.amount)   // check if input matches tank
+                return false;   // input tank too low or wrong type
+        }
         
         // check if output fluid fits
         var output = recipe.getFluidOutput();
-        if (output != null && output.getAmount() > 0) {
+        if (output != null && output.getAmount() > 0) { // only verify fluid output if fluid output exists
+            
             if (output.getFluid().equals(Fluids.EMPTY) || outputStorage.amount == 0)
-                return true;  // no output stored
-            if (outputStorage.amount + output.getAmount() > outputStorage.getCapacity()) return false; // output full
-            return outputStorage.variant.getFluid().equals(output.getFluid());  // type check
+                return super.canProceed(recipe);  // no output stored/needed
+            
+            if (outputStorage.amount + output.getAmount() > outputStorage.getCapacity())
+                return false; // output too full
+            
+            if (!outputStorage.variant.getFluid().equals(output.getFluid()))
+                return false;   // output type mismatch
         }
         
-        return true;
+        return super.canProceed(recipe);
         
+    }
+    
+    @Override
+    protected Optional<RecipeEntry<OritechRecipe>> getRecipe() {
+        
+        if (!hasFluidAddon)
+            return super.getRecipe();
+
+        // get recipes matching input items
+        var candidates = Objects.requireNonNull(world).getRecipeManager().getAllMatches(getOwnRecipeType(), getInputInventory(), world);
+        // filter out recipes based on input tank
+        var fluidRecipe = candidates.stream().filter(candidate -> recipeMatchesTank(inputStorage, candidate.value())).findAny();
+        if (fluidRecipe.isPresent()) {
+            return fluidRecipe;
+        }
+        
+        return getNormalRecipe();
+    }
+    
+    // this is provided as fallback for fluid centrifuges that may still process normal stuff
+    private Optional<RecipeEntry<OritechRecipe>> getNormalRecipe() {
+        return world.getRecipeManager().getFirstMatch(RecipeContent.CENTRIFUGE, getInputInventory(), world);
+    }
+    
+    public static boolean recipeMatchesTank(SingleVariantStorage<FluidVariant> checkedTank, OritechRecipe recipe) {
+        
+        var isTankEmpty = checkedTank.isResourceBlank() || checkedTank.amount <= 0;
+        var recipeNeedsFluid = recipe.getFluidInput() != null && recipe.getFluidInput().getAmount() > 0;
+        
+        if (!recipeNeedsFluid) return true;
+        if (isTankEmpty) return false;
+        
+        var recipeFluid = recipe.getFluidInput().getFluid();
+        var tankFluid = checkedTank.variant.getFluid();
+        return recipeFluid.equals(tankFluid) && checkedTank.amount >= recipe.getFluidInput().getAmount();
     }
     
     @Override
@@ -199,6 +244,7 @@ public class CentrifugeBlockEntity extends MultiblockMachineEntity implements Fl
     public void initAddons() {
         super.initAddons();
         world.updateNeighbors(pos, getCachedState().getBlock()); // trigger block update to allow pipes to connect
+        world.updateNeighbors(pos.up(), world.getBlockState(pos.up()).getBlock()); // trigger block update to allow pipes to connect
     }
     
     @Override

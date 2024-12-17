@@ -26,7 +26,9 @@ import rearth.oritech.block.entity.generators.SteamEngineEntity;
 import rearth.oritech.block.entity.interaction.*;
 import rearth.oritech.block.entity.pipes.ItemFilterBlockEntity;
 import rearth.oritech.block.entity.processing.CentrifugeBlockEntity;
+import rearth.oritech.block.entity.reactor.ReactorAbsorberPortEntity;
 import rearth.oritech.block.entity.reactor.ReactorControllerBlockEntity;
+import rearth.oritech.block.entity.reactor.ReactorFuelPortEntity;
 import rearth.oritech.init.ComponentContent;
 import rearth.oritech.init.recipes.OritechRecipe;
 import rearth.oritech.init.recipes.OritechRecipeType;
@@ -75,7 +77,7 @@ public class NetworkContent {
     }
     
     public record MachineFrameMovementPacket(BlockPos position, BlockPos currentTarget, BlockPos lastTarget,
-                                             BlockPos areaMin, BlockPos areaMax) {
+                                             BlockPos areaMin, BlockPos areaMax, boolean redstoneDisable) {
     }   // times are in ticks
     
     public record QuarryTargetPacket(BlockPos position, BlockPos quarryTarget, int range, int yieldAddons, float operationSpeed) {
@@ -131,6 +133,9 @@ public class NetworkContent {
     public record CentrifugeFluidSyncPacket(BlockPos position, boolean fluidAddon, String fluidTypeIn, long amountIn, String fluidTypeOut,
                                             long amountOut) {
     }
+
+    public record DronePortFluidSyncPacket(BlockPos position, boolean fluidAddon, String fluidType, long amount) {
+    }
     
     public record JetpackUsageUpdatePacket(long energyStored, String fluidType, long fluidAmount) {}
     
@@ -140,7 +145,10 @@ public class NetworkContent {
     public record ReactorUIDataPacket(BlockPos position, BlockPos min, BlockPos max, BlockPos previewMax) {
     }
     
-    public record ReactorUISyncPacket(BlockPos position, List<BlockPos> componentPositions, List<ReactorControllerBlockEntity.ComponentStatistics> componentHeats) {
+    public record ReactorPortDataPacket(BlockPos position, int capacity, int remaining) {
+    }
+    
+    public record ReactorUISyncPacket(BlockPos position, List<BlockPos> componentPositions, List<ReactorControllerBlockEntity.ComponentStatistics> componentHeats, long energy) {
     }
     
     @SuppressWarnings("unchecked")
@@ -356,6 +364,18 @@ public class NetworkContent {
             }
             
         }));
+
+        MACHINE_CHANNEL.registerClientbound(DronePortFluidSyncPacket.class, ((message, access) -> {
+
+            var entity = access.player().clientWorld.getBlockEntity(message.position);
+
+            if (entity instanceof DronePortEntity dronePort) {
+                dronePort.hasFluidAddon = message.fluidAddon;
+                dronePort.fluidStorage.amount = message.amount;
+                dronePort.fluidStorage.variant = FluidVariant.of(Registries.FLUID.get(Identifier.of(message.fluidType)));
+            }
+
+        }));
         
         MACHINE_CHANNEL.registerClientbound(GeneratorUISyncPacket.class, ((message, access) -> {
             
@@ -387,6 +407,7 @@ public class NetworkContent {
                 machine.setMoveStartedAt(access.player().getWorld().getTime());
                 machine.setAreaMin(message.areaMin);
                 machine.setAreaMax(message.areaMax);
+                machine.disabledViaRedstone = message.redstoneDisable();
             }
             
         }));
@@ -489,6 +510,22 @@ public class NetworkContent {
             
             if (entity instanceof ReactorControllerBlockEntity reactor) {
                 reactor.uiSyncData = message;
+                reactor.energyStorage.setAmount(message.energy);
+            }
+            
+        }));
+        
+        MACHINE_CHANNEL.registerClientbound(ReactorPortDataPacket.class, ((message, access) -> {
+            
+            var entity = access.player().getWorld().getBlockEntity(message.position);
+            
+            // this is what happens when you're too lazy to add an interface
+            if (entity instanceof ReactorFuelPortEntity port) {
+                port.currentFuelOriginalCapacity = message.capacity;
+                port.availableFuel = message.remaining;
+            } else if (entity instanceof ReactorAbsorberPortEntity port) {
+                port.currentFuelOriginalCapacity = message.capacity;
+                port.availableFuel = message.remaining;
             }
             
         }));

@@ -13,6 +13,7 @@ import net.minecraft.util.math.random.Random;
 import net.minecraft.world.gen.feature.Feature;
 import net.minecraft.world.gen.feature.util.FeatureContext;
 import rearth.oritech.Oritech;
+import rearth.oritech.init.TagContent;
 
 import java.util.List;
 
@@ -30,34 +31,35 @@ public class ResourceNodeFeature extends Feature<ResourceNodeFeatureConfig> {
         
         if (world.isClient()) return false;
         
-        var bedrockFound = false;
+        var solidBlockFound = false;
         var testPos = new BlockPos(origin);
         var deepNodePos = testPos;
-        for (int y = world.getBottomY(); y < world.getHeight(); y++) {
-            testPos = testPos.up();
-            var testState = world.getBlockState(testPos);
-            
-            if (!testState.isOf(Blocks.BEDROCK) && !bedrockFound) {
+        var boulderPos = testPos;
+
+        for (int y = origin.getY(); y > world.getBottomY(); y--) {
+            var downPos = testPos.down();
+            var testState = world.getBlockState(downPos);
+            if (testState.isOf(Blocks.BEDROCK)) {
                 deepNodePos = testPos;
-                bedrockFound = true;
-            } else if (bedrockFound && testState.isOf(Blocks.BEDROCK)) {
-                bedrockFound = false;
-                // reset if another bedrock layer occurs
+                break;
+            } else if (testState.isSolidBlock(world, downPos) && !solidBlockFound) {
+                boulderPos = testPos = downPos;
+                solidBlockFound = true;
+            } else {
+                testPos = downPos;
             }
-            
-            if (testState.isIn(BlockTags.DIRT) || testState.isIn(BlockTags.SAND)) {
-                if (world.getBlockState(testPos.up()).isOf(Blocks.AIR)) {
-                    if (Oritech.CONFIG.easyFindFeatures())
-                        placeSurfaceBoulder(testPos, context);
-                    placeBedrockNode(deepNodePos, context);
-                    Oritech.LOGGER.debug("placing resource node at " + testPos + " with deep " + deepNodePos);
-                    return true;
-                }
-            }
-            
         }
+
+        // edge case: if no solid block was found, or the boulder is too close to the deep node, don't generate
+        if (!solidBlockFound || boulderPos.getY() < (deepNodePos.getY() + 10))
+            return false;
+
+        if (Oritech.CONFIG.easyFindFeatures())
+            placeSurfaceBoulder(boulderPos, context);
+        placeBedrockNode(deepNodePos, context);
+        Oritech.LOGGER.debug("placing resource node at " + boulderPos + " with deep " + deepNodePos);
+        return true;
         
-        return false;
     }
     
     private BlockState getRandomBlockFromList(List<Identifier> list, Random random) {
@@ -107,7 +109,6 @@ public class ResourceNodeFeature extends Feature<ResourceNodeFeatureConfig> {
         var radius = context.getConfig().boulderRadius();
         var movedCenter = startPos.offset(Axis.pickRandomAxis(random), random.nextBetween(0, radius-1));
         var ores = context.getConfig().boulderOres();
-
         var noise = new PerlinNoiseSampler(random);
         
         for (BlockPos pos : BlockPos.iterateOutwards(movedCenter, radius, radius, radius)) {

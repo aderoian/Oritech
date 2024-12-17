@@ -18,6 +18,7 @@ import net.minecraft.world.WorldAccess;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import rearth.oritech.block.entity.addons.RedstoneAddonBlockEntity;
+import rearth.oritech.util.ComparatorOutputProvider;
 
 public class RedstoneAddonBlock extends MachineAddonBlock {
     
@@ -44,7 +45,7 @@ public class RedstoneAddonBlock extends MachineAddonBlock {
     
     @Override
     protected int getComparatorOutput(BlockState state, World world, BlockPos pos) {
-        return ((RedstoneAddonBlockEntity) world.getBlockEntity(pos)).currentOutput;
+        return ((ComparatorOutputProvider) world.getBlockEntity(pos)).getComparatorOutput();
     }
     
     @Override

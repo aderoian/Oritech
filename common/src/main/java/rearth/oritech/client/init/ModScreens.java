@@ -32,11 +32,13 @@ public class ModScreens implements ArchitecturyRegistryContainer<ScreenHandlerTy
     public static final ExtendedScreenHandlerType<BasicMachineScreenHandler, BasicData> TANK_SCREEN = basicHandler();
     public static final ExtendedScreenHandlerType<BasicMachineScreenHandler, BasicData> TREEFELLER_SCREEN = basicHandler();
     public static final ExtendedScreenHandlerType<BasicMachineScreenHandler, BasicData> CHARGER_SCREEN = basicHandler();
+    public static final ExtendedScreenHandlerType<BasicMachineScreenHandler, BasicData> FUEL_PORT_SCREEN = basicHandler();
     
     public static final ExtendedScreenHandlerType<UpgradableMachineScreenHandler, UpgradableData> PULVERIZER_SCREEN = upgradeHandler();
     public static final ExtendedScreenHandlerType<UpgradableMachineScreenHandler, UpgradableData> GRINDER_SCREEN = upgradeHandler();
     public static final ExtendedScreenHandlerType<UpgradableMachineScreenHandler, UpgradableData> ASSEMBLER_SCREEN = upgradeHandler();
     public static final ExtendedScreenHandlerType<UpgradableMachineScreenHandler, UpgradableData> FOUNDRY_SCREEN = upgradeHandler();
+    public static final ExtendedScreenHandlerType<UpgradableMachineScreenHandler, UpgradableData> COOLER_SCREEN = upgradeHandler();
     public static final ExtendedScreenHandlerType<UpgradableMachineScreenHandler, UpgradableData> STORAGE_SCREEN = upgradeHandler();
     public static final ExtendedScreenHandlerType<UpgradableMachineScreenHandler, UpgradableData> POWERED_FURNACE_SCREEN = upgradeHandler();
     public static final ExtendedScreenHandlerType<UpgradableMachineScreenHandler, UpgradableData> BIO_GENERATOR_SCREEN = upgradeHandler();
@@ -51,7 +53,7 @@ public class ModScreens implements ArchitecturyRegistryContainer<ScreenHandlerTy
     public static final ExtendedScreenHandlerType<CatalystScreenHandler, BasicData> CATALYST_SCREEN = new ExtendedScreenHandlerType<>(new BasicFactory<>(CatalystScreenHandler.class), BasicData.PACKET_CODEC);
     public static final ExtendedScreenHandlerType<EnchanterScreenHandler, BasicData> ENCHANTER_SCREEN = new ExtendedScreenHandlerType<>(new BasicFactory<>(EnchanterScreenHandler.class), BasicData.PACKET_CODEC);
     public static final ExtendedScreenHandlerType<AcceleratorScreenHandler, BasicData> ACCELERATOR_SCREEN = new ExtendedScreenHandlerType<>(new BasicFactory<>(AcceleratorScreenHandler.class), BasicData.PACKET_CODEC);
-    public static final ExtendedScreenHandlerType<DroneScreenHandler, BasicData> DRONE_SCREEN = new ExtendedScreenHandlerType<>(new BasicFactory<>(DroneScreenHandler.class), BasicData.PACKET_CODEC);
+    public static final ExtendedScreenHandlerType<DroneScreenHandler, UpgradableData> DRONE_SCREEN = new ExtendedScreenHandlerType<>(new UpgradeFactory<>(DroneScreenHandler.class), UpgradableData.PACKET_CODEC);
     public static final ExtendedScreenHandlerType<RedstoneAddonScreenHandler, BasicData> REDSTONE_ADDON_SCREEN = new ExtendedScreenHandlerType<>(new BasicFactory<>(RedstoneAddonScreenHandler.class), BasicData.PACKET_CODEC);
     public static final ExtendedScreenHandlerType<CentrifugeScreenHandler, UpgradableData> CENTRIFUGE_SCREEN = new ExtendedScreenHandlerType<>(new UpgradeFactory<>(CentrifugeScreenHandler.class), UpgradableData.PACKET_CODEC);
     public static final ExtendedScreenHandlerType<SteamEngineScreenHandler, UpgradableData> STEAM_ENGINE_SCREEN = new ExtendedScreenHandlerType<>(new UpgradeFactory<>(SteamEngineScreenHandler.class), UpgradableData.PACKET_CODEC);
@@ -67,11 +69,13 @@ public class ModScreens implements ArchitecturyRegistryContainer<ScreenHandlerTy
         HandledScreens.register(ENCHANTER_SCREEN, EnchanterScreen::new);
         HandledScreens.register(ACCELERATOR_SCREEN, AcceleratorScreen::new);
         HandledScreens.register(CHARGER_SCREEN, BasicMachineScreen<BasicMachineScreenHandler>::new);
+        HandledScreens.register(FUEL_PORT_SCREEN, BasicMachineScreen<BasicMachineScreenHandler>::new);
         
         HandledScreens.register(PULVERIZER_SCREEN, UpgradableMachineScreen<UpgradableMachineScreenHandler>::new);
         HandledScreens.register(GRINDER_SCREEN, UpgradableMachineScreen<UpgradableMachineScreenHandler>::new);
         HandledScreens.register(ASSEMBLER_SCREEN, UpgradableMachineScreen<UpgradableMachineScreenHandler>::new);
         HandledScreens.register(FOUNDRY_SCREEN, UpgradableMachineScreen<UpgradableMachineScreenHandler>::new);
+        HandledScreens.register(COOLER_SCREEN, UpgradableMachineScreen<UpgradableMachineScreenHandler>::new);
         HandledScreens.register(POWERED_FURNACE_SCREEN, UpgradableMachineScreen<UpgradableMachineScreenHandler>::new);
         HandledScreens.register(BIO_GENERATOR_SCREEN, UpgradableMachineScreen<UpgradableMachineScreenHandler>::new);
         HandledScreens.register(LAVA_GENERATOR_SCREEN, UpgradableMachineScreen<UpgradableMachineScreenHandler>::new);

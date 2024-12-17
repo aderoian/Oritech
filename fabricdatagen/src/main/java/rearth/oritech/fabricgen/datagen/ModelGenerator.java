@@ -3,6 +3,7 @@ package rearth.oritech.fabricgen.datagen;
 import net.fabricmc.fabric.api.datagen.v1.FabricDataOutput;
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricModelProvider;
 import net.minecraft.block.Block;
+import net.minecraft.block.Blocks;
 import net.minecraft.block.CropBlock;
 import net.minecraft.block.enums.BlockFace;
 import net.minecraft.data.client.*;
@@ -64,12 +65,34 @@ public class ModelGenerator extends FabricModelProvider {
         blockStateModelGenerator.registerSimpleState(BlockContent.QUARRY_BEAM_TARGET);
         blockStateModelGenerator.registerSimpleState(BlockContent.QUARRY_BEAM_RING);
         
+        // reactor section
+        blockStateModelGenerator.registerNorthDefaultHorizontalRotation(BlockContent.REACTOR_CONTROLLER);
+        blockStateModelGenerator.registerSimpleState(BlockContent.REACTOR_ENERGY_PORT);
+        blockStateModelGenerator.registerSimpleState(BlockContent.REACTOR_FUEL_PORT);
+        blockStateModelGenerator.registerSimpleState(BlockContent.REACTOR_ABSORBER_PORT);
+        blockStateModelGenerator.registerSimpleState(BlockContent.REACTOR_ROD);
+        blockStateModelGenerator.registerSimpleState(BlockContent.REACTOR_DOUBLE_ROD);
+        blockStateModelGenerator.registerSimpleState(BlockContent.REACTOR_QUAD_ROD);
+        blockStateModelGenerator.registerStateWithModelReference(BlockContent.REACTOR_WALL, Blocks.BRICKS); // this is overridden by athena
+        blockStateModelGenerator.registerStateWithModelReference(BlockContent.REACTOR_VENT, Blocks.NETHER_BRICKS);
+        blockStateModelGenerator.registerSimpleState(BlockContent.REACTOR_REFLECTOR);
+        blockStateModelGenerator.registerSimpleState(BlockContent.REACTOR_HEAT_PIPE);
+        blockStateModelGenerator.registerSimpleCubeAll(BlockContent.REACTOR_CONDENSER);
+        
+        blockStateModelGenerator.registerSimpleCubeAll(BlockContent.LOW_YIELD_NUKE);
+        blockStateModelGenerator.registerSimpleCubeAll(BlockContent.NUKE);
+        
+        blockStateModelGenerator.registerSimpleCubeAll(BlockContent.REACTOR_COLD_INDICATOR_BLOCK);
+        blockStateModelGenerator.registerSimpleCubeAll(BlockContent.REACTOR_MEDIUM_INDICATOR_BLOCK);
+        blockStateModelGenerator.registerSimpleCubeAll(BlockContent.REACTOR_HOT_INDICATOR_BLOCK);
+        
         // these blocks all use geckolib to render/display, so the only thing this really adds are block particles (e.g. when breaking)
         // the machine speed addon has a generic particle references that fits all machines well enough
         blockStateModelGenerator.registerStateWithModelReference(BlockContent.PULVERIZER_BLOCK, BlockContent.MACHINE_SPEED_ADDON);
         blockStateModelGenerator.registerStateWithModelReference(BlockContent.FRAGMENT_FORGE_BLOCK, BlockContent.MACHINE_SPEED_ADDON);
         blockStateModelGenerator.registerStateWithModelReference(BlockContent.ASSEMBLER_BLOCK, BlockContent.MACHINE_SPEED_ADDON);
         blockStateModelGenerator.registerStateWithModelReference(BlockContent.FOUNDRY_BLOCK, BlockContent.MACHINE_SPEED_ADDON);
+        blockStateModelGenerator.registerStateWithModelReference(BlockContent.COOLER_BLOCK, BlockContent.MACHINE_SPEED_ADDON);
         blockStateModelGenerator.registerStateWithModelReference(BlockContent.CENTRIFUGE_BLOCK, BlockContent.MACHINE_SPEED_ADDON);
         blockStateModelGenerator.registerStateWithModelReference(BlockContent.ATOMIC_FORGE_BLOCK, BlockContent.MACHINE_SPEED_ADDON);
         blockStateModelGenerator.registerStateWithModelReference(BlockContent.POWERED_FURNACE_BLOCK, BlockContent.MACHINE_SPEED_ADDON);
@@ -87,6 +110,9 @@ public class ModelGenerator extends FabricModelProvider {
         blockStateModelGenerator.registerStateWithModelReference(BlockContent.STEAM_ENGINE_BLOCK, BlockContent.MACHINE_SPEED_ADDON);
         blockStateModelGenerator.registerStateWithModelReference(BlockContent.PIPE_BOOSTER_BLOCK, BlockContent.MACHINE_SPEED_ADDON);
         blockStateModelGenerator.registerStateWithModelReference(BlockContent.PARTICLE_COLLECTOR_BLOCK, BlockContent.MACHINE_SPEED_ADDON);
+        blockStateModelGenerator.registerStateWithModelReference(BlockContent.REACTOR_EXPLOSION_SMALL, BlockContent.MACHINE_SPEED_ADDON);
+        blockStateModelGenerator.registerStateWithModelReference(BlockContent.REACTOR_EXPLOSION_MEDIUM, BlockContent.MACHINE_SPEED_ADDON);
+        blockStateModelGenerator.registerStateWithModelReference(BlockContent.REACTOR_EXPLOSION_LARGE, BlockContent.MACHINE_SPEED_ADDON);
         
         blockStateModelGenerator.registerSimpleCubeAll(BlockContent.MACHINE_CORE_1);
         blockStateModelGenerator.registerSimpleCubeAll(BlockContent.MACHINE_CORE_2);
