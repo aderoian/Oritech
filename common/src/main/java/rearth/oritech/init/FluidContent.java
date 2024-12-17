@@ -7,6 +7,7 @@ import dev.architectury.core.fluid.SimpleArchitecturyFluidAttributes;
 import dev.architectury.core.item.ArchitecturyBucketItem;
 import dev.architectury.registry.registries.DeferredRegister;
 import dev.architectury.registry.registries.RegistrySupplier;
+import io.wispforest.owo.ui.core.Color;
 import net.minecraft.block.AbstractBlock;
 import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
@@ -27,21 +28,21 @@ public class FluidContent {
                                                                        .bucketItemSupplier(() -> FluidContent.STILL_OIL_BUCKET)
                                                                        .sourceTexture(Oritech.id("block/fluid/fluid_gas_dark"))
                                                                        .flowingTexture(Oritech.id("block/fluid/fluid_gas_dark"))
-                                                                       .color(0x7a7a7a);
+                                                                       .color(new Color(0.478f, 0.478f, 0.478f).argb());
     
     public static final ArchitecturyFluidAttributes FUEL_ATTRIBUTES = SimpleArchitecturyFluidAttributes.ofSupplier(() -> FluidContent.FLOWING_FUEL, () -> FluidContent.STILL_FUEL)
                                                                         .blockSupplier(() -> FluidContent.STILL_FUEL_BLOCK)
                                                                         .bucketItemSupplier(() -> FluidContent.STILL_FUEL_BUCKET)
                                                                         .sourceTexture(Oritech.id("block/fluid/fluid_strange_pale_2"))
                                                                         .flowingTexture(Oritech.id("block/fluid/fluid_strange_pale_2"))
-                                                                        .color(0x2D3D48);
+                                                                        .color(new Color(0.176f, 0.239f, 0.282f).argb());
     
     public static final ArchitecturyFluidAttributes STEAM_ATTRIBUTES = SimpleArchitecturyFluidAttributes.ofSupplier(() -> FluidContent.FLOWING_STEAM, () -> FluidContent.STILL_STEAM)
                                                                          .blockSupplier(() -> FluidContent.STILL_STEAM_BLOCK)
                                                                          .bucketItemSupplier(() -> FluidContent.STILL_STEAM_BUCKET)
                                                                          .sourceTexture(Oritech.id("block/fluid/fluid_steam"))
                                                                          .flowingTexture(Oritech.id("block/fluid/fluid_steam"))
-                                                                         .color(0xFFFFFF);
+                                                                         .color(Color.WHITE.argb());
 
     public static final DeferredRegister<Fluid> FLUIDS = DeferredRegister.create(Oritech.MOD_ID, RegistryKeys.FLUID);
     public static final DeferredRegister<Block> BLOCKS = DeferredRegister.create(Oritech.MOD_ID, RegistryKeys.BLOCK);
