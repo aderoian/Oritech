@@ -2,8 +2,8 @@
 	"credit": "Made with Blockbench",
 	"texture_size": [32, 32],
 	"textures": {
-		"0": "oritech:block/pipe/item_pipe",
-		"particle": "oritech:block/pipe/item_pipe"
+		"0": "oritech:block/item_pipe",
+		"particle": "oritech:block/item_pipe"
 	},
 	"elements": [
 		{

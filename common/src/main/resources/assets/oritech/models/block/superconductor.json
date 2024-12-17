@@ -2,8 +2,8 @@
 	"credit": "Made with Blockbench",
 	"texture_size": [32, 32],
 	"textures": {
-		"0": "oritech:block/pipe/superconductor",
-		"particle": "oritech:block/pipe/machine_particle_texture"
+		"0": "oritech:block/superconductor",
+		"particle": "oritech:block/machine_particle_texture"
 	},
 	"elements": [
 		{
