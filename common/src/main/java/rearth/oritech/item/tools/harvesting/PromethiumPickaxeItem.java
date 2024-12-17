@@ -155,6 +155,7 @@ public class PromethiumPickaxeItem extends MiningToolItem implements GeoItem {
                 var offsetState = world.getBlockState(offsetPos);
                 var offsetEntity = world.getBlockEntity(offsetPos);
                 Block.dropStacks(offsetState, world, offsetPos, offsetEntity, player, handStack);
+                offsetState.getBlock().onBreak(world, offsetPos, offsetState, player);
                 world.breakBlock(offsetPos, false, player);
             }
         } else {
