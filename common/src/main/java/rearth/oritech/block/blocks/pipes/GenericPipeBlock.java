@@ -149,7 +149,7 @@ public abstract class GenericPipeBlock extends AbstractPipeBlock implements Wren
 			var neighborPos = pos.offset(direction);
 			var neighborState = world.getBlockState(neighborPos);
 			// Only update pipes
-			if (neighborState.getBlock() instanceof GenericPipeBlock pipeBlock) {
+			if (neighborState.getBlock() instanceof AbstractPipeBlock pipeBlock) {
 				var updatedState = pipeBlock.addConnectionStates(neighborState, world, neighborPos, false);
 				world.setBlockState(neighborPos, updatedState);
 
@@ -356,7 +356,7 @@ public abstract class GenericPipeBlock extends AbstractPipeBlock implements Wren
 		// Otherwise we check if the other pipe is connecting in the opposite direction
 		if (createConnection) {
 			return isValidConnectionTarget(targetState.getBlock(), world, direction.getOpposite(), targetPos);
-		} else if (targetState.getBlock() instanceof GenericPipeBlock pipeBlock) {
+		} else if (targetState.getBlock() instanceof AbstractPipeBlock pipeBlock) {
 			return pipeBlock.isConnectingInDirection(targetState, direction.getOpposite(), targetPos, world, false);
 		} else
 			return isConnectingInDirection(current, direction, currentPos, world, false) && isValidInterfaceTarget(targetState.getBlock(), world, direction.getOpposite(), targetPos);

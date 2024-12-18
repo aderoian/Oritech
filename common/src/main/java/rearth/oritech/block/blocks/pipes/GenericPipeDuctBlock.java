@@ -32,7 +32,7 @@ public abstract class GenericPipeDuctBlock extends AbstractPipeBlock{
 		// no states need to be added (see getPlacementState)
 		GenericPipeInterfaceEntity.addNode(world, pos, false, state, getNetworkData(world));
 
-		updateNeighbors(world, pos, false);
+		updateNeighbors(world, pos, true);
 	}
 
 	@Override
@@ -41,15 +41,15 @@ public abstract class GenericPipeDuctBlock extends AbstractPipeBlock{
 			var neighborPos = pos.offset(direction);
 			var neighborState = world.getBlockState(neighborPos);
 			// Only update pipes
-			if (neighborState.getBlock() instanceof GenericPipeBlock pipeBlock) {
-				var updatedState = pipeBlock.addConnectionStates(neighborState, world, neighborPos, false);
+			if (neighborState.getBlock() instanceof AbstractPipeBlock pipeBlock) {
+				var updatedState = pipeBlock.addConnectionStates(neighborState, world, neighborPos, neighborToggled);
 				world.setBlockState(neighborPos, updatedState);
 
 				// Update network data if the state was changed
 				if (!neighborState.equals(updatedState)) {
 					boolean interfaceBlock = updatedState.isOf(getConnectionBlock().getBlock());
-					if (neighborToggled)
-						GenericPipeInterfaceEntity.addNode(world, neighborPos, interfaceBlock, updatedState, getNetworkData(world));
+					//if (neighborToggled)
+						//GenericPipeInterfaceEntity.addNode(world, neighborPos, interfaceBlock, updatedState, getNetworkData(world));
 				}
 			}
 		}
@@ -97,6 +97,7 @@ public abstract class GenericPipeDuctBlock extends AbstractPipeBlock{
 
 	@Override
 	protected void onBlockRemoved(BlockPos pos, BlockState oldState, World world) {
-
+		updateNeighbors(world, pos, false);
+		GenericPipeInterfaceEntity.removeNode(world, pos, false, oldState, getNetworkData(world));
 	}
 }
