@@ -39,9 +39,11 @@ public class Wrench extends Item {
 						BlockContent.ENERGY_PIPE_CONNECTION,
 						BlockContent.SUPERCONDUCTOR_CONNECTION,
 						BlockContent.FLUID_PIPE_CONNECTION,
-						BlockContent.ITEM_PIPE_CONNECTION
-				), 25f),
-				ToolComponent.Rule.ofAlwaysDropping(List.of(
+						BlockContent.ITEM_PIPE_CONNECTION,
+						BlockContent.ENERGY_PIPE_DUCT_BLOCK,
+						BlockContent.SUPERCONDUCTOR_DUCT_BLOCK,
+						BlockContent.FLUID_PIPE_DUCT_BLOCK,
+						BlockContent.ITEM_PIPE_DUCT_BLOCK,
 						BlockContent.FRAMED_ENERGY_PIPE,
 						BlockContent.FRAMED_SUPERCONDUCTOR,
 						BlockContent.FRAMED_FLUID_PIPE,
@@ -50,7 +52,7 @@ public class Wrench extends Item {
 						BlockContent.FRAMED_SUPERCONDUCTOR_CONNECTION,
 						BlockContent.FRAMED_FLUID_PIPE_CONNECTION,
 						BlockContent.FRAMED_ITEM_PIPE_CONNECTION
-				), 12.5f)
+				), 25f)
 		), 1.f, 1);
 	}
 

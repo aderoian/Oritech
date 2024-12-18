@@ -1,6 +1,9 @@
 package rearth.oritech.block.blocks.pipes;
 
 import net.minecraft.block.BlockState;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.util.ActionResult;
+import net.minecraft.util.Hand;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
 import net.minecraft.util.shape.VoxelShape;
@@ -8,8 +11,9 @@ import net.minecraft.util.shape.VoxelShapes;
 import net.minecraft.world.World;
 import org.apache.commons.lang3.function.TriFunction;
 import rearth.oritech.block.entity.pipes.GenericPipeInterfaceEntity;
+import rearth.oritech.item.tools.Wrench;
 
-public abstract class GenericPipeDuctBlock extends AbstractPipeBlock{
+public abstract class GenericPipeDuctBlock extends AbstractPipeBlock implements Wrench.Wrenchable {
 
 	public GenericPipeDuctBlock(Settings settings) {
 		super(settings);
@@ -99,5 +103,20 @@ public abstract class GenericPipeDuctBlock extends AbstractPipeBlock{
 	protected void onBlockRemoved(BlockPos pos, BlockState oldState, World world) {
 		updateNeighbors(world, pos, false);
 		GenericPipeInterfaceEntity.removeNode(world, pos, false, oldState, getNetworkData(world));
+	}
+
+	@Override
+	public ActionResult onWrenchUse(BlockState state, World world, BlockPos pos, PlayerEntity player, Hand hand) {
+		if (player.isSneaking()) {
+			world.breakBlock(pos, true, player);
+			return ActionResult.SUCCESS;
+		}
+
+		return ActionResult.PASS;
+	}
+
+	@Override
+	public ActionResult onWrenchUseNeighbor(BlockState state, BlockState neighborState, World world, BlockPos pos, BlockPos neighborPos, Direction neighborFace, PlayerEntity player, Hand hand) {
+		return ActionResult.PASS;
 	}
 }
