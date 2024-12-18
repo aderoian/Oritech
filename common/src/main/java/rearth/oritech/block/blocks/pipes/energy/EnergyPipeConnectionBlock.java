@@ -54,7 +54,7 @@ public class EnergyPipeConnectionBlock extends GenericPipeConnectionBlock {
     
     @Override
     public boolean connectToOwnBlockType(Block block) {
-        return block instanceof EnergyPipeBlock || block instanceof EnergyPipeConnectionBlock;
+        return block instanceof EnergyPipeBlock || block instanceof EnergyPipeConnectionBlock || block instanceof EnergyPipeDuctBlock;
     }
     
     @Override

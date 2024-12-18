@@ -55,7 +55,7 @@ public class ItemPipeConnectionBlock extends ExtractablePipeConnectionBlock {
     
     @Override
     public boolean connectToOwnBlockType(Block block) {
-        return block instanceof ItemPipeBlock || block instanceof ItemPipeConnectionBlock;
+        return block instanceof ItemPipeBlock || block instanceof ItemPipeConnectionBlock || block instanceof ItemPipeDuctBlock;
     }
     
     @Override

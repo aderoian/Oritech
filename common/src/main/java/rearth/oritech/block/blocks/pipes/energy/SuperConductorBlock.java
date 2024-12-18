@@ -55,7 +55,7 @@ public class SuperConductorBlock extends GenericPipeBlock {
     
     @Override
     public boolean connectToOwnBlockType(Block block) {
-        return block instanceof SuperConductorBlock || block instanceof SuperConductorConnectionBlock;
+        return block instanceof SuperConductorBlock || block instanceof SuperConductorConnectionBlock || block instanceof SuperConductorDuctBlock;
     }
     
     @Override

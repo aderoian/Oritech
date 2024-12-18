@@ -57,7 +57,7 @@ public class FluidPipeBlock extends GenericPipeBlock {
     
     @Override
     public boolean connectToOwnBlockType(Block block) {
-        return block instanceof FluidPipeBlock || block instanceof FluidPipeConnectionBlock;
+        return block instanceof FluidPipeBlock || block instanceof FluidPipeConnectionBlock || block instanceof FluidPipeDuctBlock;
     }
     
     @Override
