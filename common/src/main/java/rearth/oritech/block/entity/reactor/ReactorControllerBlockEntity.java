@@ -380,6 +380,7 @@ public class ReactorControllerBlockEntity extends BlockEntity implements BlockEn
     private void outputEnergy() {
         
         var totalMoved = 0;
+        var maxRatePerSlot = 10_000;
         
         var randomOrderedList = new ArrayList<>(energyPorts);
         Collections.shuffle(randomOrderedList);
@@ -387,7 +388,7 @@ public class ReactorControllerBlockEntity extends BlockEntity implements BlockEn
         for (var candidateData : randomOrderedList) {
             var candidate = EnergyApi.BLOCK.find(world, candidateData.getLeft(), candidateData.getRight());
             if (candidate == null) continue;
-            var moved = EnergyApi.transfer(energyStorage, candidate, energyStorage.getAmount(), false);
+            var moved = EnergyApi.transfer(energyStorage, candidate, maxRatePerSlot, false);
             
             if (moved > 0)
                 candidate.update();
