@@ -88,12 +88,16 @@ public class RecipeGenerator extends FabricRecipeProvider {
         addAtomicForgeRecipe(exporter, Ingredient.ofItems(ItemContent.DURATIUM_INGOT), Ingredient.ofItems(Items.DEEPSLATE), Items.REINFORCED_DEEPSLATE, 100, "reinfdeepslate");
         // cobblestone to gravel
         addPulverizerRecipe(exporter, Ingredient.fromTag(ConventionalItemTags.COBBLESTONES), Items.GRAVEL, "gravel");
+        addGrinderRecipe(exporter, Ingredient.fromTag(ConventionalItemTags.COBBLESTONES), Items.GRAVEL, "gravel");
         // gravel to sand
         addPulverizerRecipe(exporter, Ingredient.ofItems(Items.GRAVEL), Items.SAND, "sand_from_gravel");
+        addGrinderRecipe(exporter, Ingredient.ofItems(Items.GRAVEL), Items.SAND, "sand_from_gravel");
         // sandstone to sand
         addPulverizerRecipe(exporter, Ingredient.fromTag(ConventionalItemTags.SANDSTONE_BLOCKS), Items.SAND, "sand_from_sandstone");
+        addGrinderRecipe(exporter, Ingredient.fromTag(ConventionalItemTags.SANDSTONE_BLOCKS), Items.SAND, "sand_from_sandstone");
         // red sandstone to red sand
         addPulverizerRecipe(exporter, Ingredient.fromTag(ConventionalItemTags.RED_SANDSTONE_BLOCKS), Items.RED_SAND, "red_sand");
+        addGrinderRecipe(exporter, Ingredient.fromTag(ConventionalItemTags.RED_SANDSTONE_BLOCKS), Items.RED_SAND, "red_sand");
         // centrifuge dirt into clay
         addCentrifugeFluidRecipe(exporter, Ingredient.fromTag(ItemTags.DIRT), Items.CLAY, Fluids.WATER, 0.25f, null, 0, 1.0f, "clay");
         // create dirt from sand + biomass
@@ -107,15 +111,25 @@ public class RecipeGenerator extends FabricRecipeProvider {
     
     private void addDyes(RecipeExporter exporter) {
         addPulverizerRecipe(exporter, Ingredient.fromTag(TagContent.RAW_WHITE_DYE), Items.WHITE_DYE, "dyes/white");
+        addGrinderRecipe(exporter, Ingredient.fromTag(TagContent.RAW_WHITE_DYE), Items.WHITE_DYE, "dyes/white");
         addPulverizerRecipe(exporter, Ingredient.fromTag(TagContent.RAW_LIGHT_GRAY_DYE), Items.LIGHT_GRAY_DYE, "dyes/light_gray");
+        addGrinderRecipe(exporter, Ingredient.fromTag(TagContent.RAW_LIGHT_GRAY_DYE), Items.LIGHT_GRAY_DYE, "dyes/light_gray");
         addPulverizerRecipe(exporter, Ingredient.fromTag(TagContent.RAW_BLACK_DYE), Items.BLACK_DYE, "dyes/black");
+        addGrinderRecipe(exporter, Ingredient.fromTag(TagContent.RAW_BLACK_DYE), Items.BLACK_DYE, "dyes/black");
         addPulverizerRecipe(exporter, Ingredient.fromTag(TagContent.RAW_RED_DYE), Items.RED_DYE, "dyes/red");
+        addGrinderRecipe(exporter, Ingredient.fromTag(TagContent.RAW_RED_DYE), Items.RED_DYE, "dyes/red");
         addPulverizerRecipe(exporter, Ingredient.fromTag(TagContent.RAW_ORANGE_DYE), Items.ORANGE_DYE, "dyes/orange");
+        addGrinderRecipe(exporter, Ingredient.fromTag(TagContent.RAW_ORANGE_DYE), Items.ORANGE_DYE, "dyes/orange");
         addPulverizerRecipe(exporter, Ingredient.fromTag(TagContent.RAW_YELLOW_DYE), Items.YELLOW_DYE, "dyes/yellow");
+        addGrinderRecipe(exporter, Ingredient.fromTag(TagContent.RAW_YELLOW_DYE), Items.YELLOW_DYE, "dyes/yellow");
         addPulverizerRecipe(exporter, Ingredient.fromTag(TagContent.RAW_CYAN_DYE), Items.CYAN_DYE, "dyes/cyan");
+        addGrinderRecipe(exporter, Ingredient.fromTag(TagContent.RAW_CYAN_DYE), Items.CYAN_DYE, "dyes/cyan");
         addPulverizerRecipe(exporter, Ingredient.fromTag(TagContent.RAW_BLUE_DYE), Items.BLUE_DYE, "dyes/blue");
+        addGrinderRecipe(exporter, Ingredient.fromTag(TagContent.RAW_BLUE_DYE), Items.BLUE_DYE, "dyes/blue");
         addPulverizerRecipe(exporter, Ingredient.fromTag(TagContent.RAW_MAGENTA_DYE), Items.MAGENTA_DYE, "dyes/magenta");
+        addGrinderRecipe(exporter, Ingredient.fromTag(TagContent.RAW_MAGENTA_DYE), Items.MAGENTA_DYE, "dyes/magenta");
         addPulverizerRecipe(exporter, Ingredient.fromTag(TagContent.RAW_PINK_DYE), Items.PINK_DYE, "dyes/pink");
+        addGrinderRecipe(exporter, Ingredient.fromTag(TagContent.RAW_PINK_DYE), Items.PINK_DYE, "dyes/pink");
     }
     
     private void addDeepDrillOres(RecipeExporter exporter) {
@@ -419,7 +433,7 @@ public class RecipeGenerator extends FabricRecipeProvider {
         
         // ai processor tree
         addAtomicForgeRecipe(exporter, Ingredient.fromTag(TagContent.SILICON), Ingredient.fromTag(TagContent.CARBON_FIBRE), ItemContent.SILICON_WAFER, 5, "wafer");
-        addAtomicForgeRecipe(exporter, Ingredient.ofItems(ItemContent.SILICON_WAFER), Ingredient.ofItems(ItemContent.PLASTIC_SHEET), ItemContent.ADVANCED_COMPUTING_ENGINE, 5, "advcomputer");
+        addAtomicForgeRecipe(exporter, Ingredient.ofItems(ItemContent.SILICON_WAFER), Ingredient.ofItems(ItemContent.PROCESSING_UNIT), ItemContent.ADVANCED_COMPUTING_ENGINE, 5, "advcomputer");
         addAtomicForgeRecipe(exporter, Ingredient.ofItems(ItemContent.ADVANCED_COMPUTING_ENGINE), Ingredient.ofItems(ItemContent.DURATIUM_INGOT), ItemContent.SUPER_AI_CHIP, 50, "aicomputer");
         
         // dubios container
@@ -434,11 +448,11 @@ public class RecipeGenerator extends FabricRecipeProvider {
         addAlloyRecipe(exporter, ItemContent.RAW_BIOPOLYMER, Items.IRON_INGOT, ItemContent.BIOSTEEL_INGOT, "biosteel");
         
         // endgame components
-        addAtomicForgeRecipe(exporter, Ingredient.ofItems(ItemContent.ADAMANT_INGOT), Ingredient.ofItems(ItemContent.SUPER_AI_CHIP), ItemContent.HEISENBERG_COMPENSATOR, 100, "compensator");
-        addAtomicForgeRecipe(exporter, Ingredient.ofItems(ItemContent.ADAMANT_INGOT), Ingredient.ofItems(ItemContent.UNHOLY_INTELLIGENCE), ItemContent.HEISENBERG_COMPENSATOR, 100, "compensatoralt");
+        addAtomicForgeRecipe(exporter, Ingredient.ofItems(ItemContent.ADAMANT_INGOT), Ingredient.ofItems(ItemContent.SUPER_AI_CHIP), ItemContent.HEISENBERG_COMPENSATOR, 60, "compensator");
+        addAtomicForgeRecipe(exporter, Ingredient.ofItems(ItemContent.ADAMANT_INGOT), Ingredient.ofItems(ItemContent.UNHOLY_INTELLIGENCE), ItemContent.HEISENBERG_COMPENSATOR, 60, "compensatoralt");
         offerMotorRecipe(exporter, ItemContent.OVERCHARGED_CRYSTAL, Ingredient.ofItems(Items.AMETHYST_BLOCK), Ingredient.ofItems(ItemContent.ADVANCED_BATTERY), Ingredient.ofItems(BlockContent.SUPERCONDUCTOR.asItem()), "overchargedcrystal");
-        addAssemblerRecipe(exporter, Ingredient.ofItems(ItemContent.FLUX_GATE), Ingredient.fromTag(TagContent.WIRES), Ingredient.ofItems(ItemContent.DUBIOS_CONTAINER), Ingredient.ofItems(ItemContent.ENERGITE_INGOT), BlockContent.SUPERCONDUCTOR.asItem(), 2f, "superconductor");
-        addAtomicForgeRecipe(exporter, Ingredient.ofItems(ItemContent.OVERCHARGED_CRYSTAL), Ingredient.ofItems(ItemContent.HEISENBERG_COMPENSATOR), ItemContent.PROMETHEUM_INGOT, 1000, "prometheum");
+        addAssemblerRecipe(exporter, Ingredient.ofItems(ItemContent.FLUX_GATE), Ingredient.fromTag(TagContent.WIRES), Ingredient.ofItems(ItemContent.DUBIOS_CONTAINER), Ingredient.ofItems(ItemContent.ENERGITE_INGOT), BlockContent.SUPERCONDUCTOR.asItem(), 3, 2f, "superconductor");
+        addAtomicForgeRecipe(exporter, Ingredient.ofItems(ItemContent.OVERCHARGED_CRYSTAL), Ingredient.ofItems(ItemContent.HEISENBERG_COMPENSATOR), ItemContent.PROMETHEUM_INGOT, 240, "prometheum");
     
         // ice in cooler
         addCoolerRecipe(exporter, FluidStack.create(Fluids.WATER, FluidConstants.BUCKET), Items.ICE, 3, 1f, "ice");
@@ -690,7 +704,7 @@ public class RecipeGenerator extends FabricRecipeProvider {
     }
     
     public static void addGrinderRecipe(RecipeExporter exporter, Ingredient ingot, List<ItemStack> outputs, String suffix) {
-        var grinderDefaultSpeed = 200;
+        var grinderDefaultSpeed = 140;
         
         var grinder = new OritechRecipe(grinderDefaultSpeed, List.of(ingot), outputs, RecipeContent.GRINDER, null, null);
         exporter.accept(Oritech.id("grinder/dust/" + suffix), grinder, null);
@@ -702,7 +716,7 @@ public class RecipeGenerator extends FabricRecipeProvider {
     }
     
     public static void addPulverizerRecipe(RecipeExporter exporter, Ingredient ingot, Item dust, int dustCount, String suffix) {
-        var pulverizerDefaultSpeed = 300;
+        var pulverizerDefaultSpeed = 200;
         
         var pulverizer = new OritechRecipe(pulverizerDefaultSpeed, List.of(ingot), List.of(new ItemStack(dust, dustCount)), RecipeContent.PULVERIZER, null, null);
         exporter.accept(Oritech.id("pulverizer/dust/" + suffix), pulverizer, null);
@@ -713,7 +727,7 @@ public class RecipeGenerator extends FabricRecipeProvider {
     }
     
     private void addAssemblerRecipe(RecipeExporter exporter, Ingredient A, Ingredient B, Ingredient C, Ingredient D, Item result, int count, float timeMultiplier, String suffix) {
-        var defaultSpeed = 300;
+        var defaultSpeed = 200;
         var speed = (int) (defaultSpeed * timeMultiplier);
         var inputs = new ArrayList<Ingredient>();
         inputs.add(A);
@@ -725,7 +739,6 @@ public class RecipeGenerator extends FabricRecipeProvider {
     }
     
     private void addCompactingRecipe(RecipeExporter exporter, ItemConvertible resBlock, ItemConvertible resItem, Ingredient itemIng, Ingredient blockIng) {
-        
         
         ShapelessRecipeJsonBuilder
           .create(RecipeCategory.MISC, resItem, 9)
@@ -748,14 +761,14 @@ public class RecipeGenerator extends FabricRecipeProvider {
     }
     
     private void addCentrifugeRecipe(RecipeExporter exporter, Ingredient input, Item result, int count, float timeMultiplier, String suffix) {
-        var defaultSpeed = 300;
+        var defaultSpeed = 200;
         var speed = (int) (defaultSpeed * timeMultiplier);
         var entry = new OritechRecipe(speed, List.of(input), List.of(new ItemStack(result, count)), RecipeContent.CENTRIFUGE, null, null);
         exporter.accept(Oritech.id("centrifuge/" + suffix), entry, null);
     }
     
     public static void addCentrifugeFluidRecipe(RecipeExporter exporter, Ingredient input, Item result, Fluid in, float bucketsIn, Fluid out, float bucketsOut, float timeMultiplier, String suffix) {
-        var defaultSpeed = 300;
+        var defaultSpeed = 200;
         var speed = (int) (defaultSpeed * timeMultiplier);
         var inputStack = in != null ? FluidStack.create(in, (long) (bucketsIn * 81000)) : null;
         var outputStack = out != null ? FluidStack.create(out, (long) (bucketsOut * 81000)) : null;
@@ -777,7 +790,7 @@ public class RecipeGenerator extends FabricRecipeProvider {
     }
     
     public static void addAlloyRecipe(RecipeExporter exporter, Ingredient A, Ingredient B, Item result, int count, float speedMultiplier, String suffix) {
-        var foundryDefaultSpeed = (int) (300 * speedMultiplier);
+        var foundryDefaultSpeed = (int) (200 * speedMultiplier);
         
         var entry = new OritechRecipe(foundryDefaultSpeed, List.of(A, B), List.of(new ItemStack(result, count)), RecipeContent.FOUNDRY, null, null);
         exporter.accept(Oritech.id("foundry/alloy/" + suffix), entry, null);
@@ -829,23 +842,23 @@ public class RecipeGenerator extends FabricRecipeProvider {
                                          Item ingot, float timeMultiplier, String suffix, int byproductAmount) {
         
         // ore block -> raw ores
-        var pulverizerOre = new OritechRecipe((int) (400 * timeMultiplier), List.of(oreInput), List.of(new ItemStack(rawMain, 2)), RecipeContent.PULVERIZER, null, null);
-        var grinderOre = new OritechRecipe((int) (400 * timeMultiplier), List.of(oreInput), List.of(new ItemStack(rawMain, 2), new ItemStack(rawSecondary, 1)), RecipeContent.GRINDER, null, null);
+        var pulverizerOre = new OritechRecipe((int) (200 * timeMultiplier), List.of(oreInput), List.of(new ItemStack(rawMain, 2)), RecipeContent.PULVERIZER, null, null);
+        var grinderOre = new OritechRecipe((int) (140 * timeMultiplier), List.of(oreInput), List.of(new ItemStack(rawMain, 2), new ItemStack(rawSecondary, 1)), RecipeContent.GRINDER, null, null);
         
         // raw ores -> dusts / clumps
-        var pulverizerRaw = new OritechRecipe((int) (500 * timeMultiplier), List.of(rawOre), List.of(new ItemStack(dust, 1), new ItemStack(smallDust, 3)), RecipeContent.PULVERIZER, null, null);
-        var grinderRaw = new OritechRecipe((int) (800 * timeMultiplier), List.of(rawOre), List.of(new ItemStack(clump, 1), new ItemStack(smallClump, 3), new ItemStack(smallSecondaryClump, byproductAmount)), RecipeContent.GRINDER, null, null);
+        var pulverizerRaw = new OritechRecipe((int) (200 * timeMultiplier), List.of(rawOre), List.of(new ItemStack(dust, 1), new ItemStack(smallDust, 3)), RecipeContent.PULVERIZER, null, null);
+        var grinderRaw = new OritechRecipe((int) (140 * timeMultiplier), List.of(rawOre), List.of(new ItemStack(clump, 1), new ItemStack(smallClump, 3), new ItemStack(smallSecondaryClump, byproductAmount)), RecipeContent.GRINDER, null, null);
         
         // clump processing into gems
-        var centrifugeClumpDry = new OritechRecipe((int) (400 * timeMultiplier), List.of(Ingredient.ofItems(clump)), List.of(new ItemStack(gem, 1), new ItemStack(smallSecondaryDust, byproductAmount)), RecipeContent.CENTRIFUGE, null, null);
-        var centrifugeClumpWet = new OritechRecipe((int) (600 * timeMultiplier), List.of(Ingredient.ofItems(clump)), List.of(new ItemStack(gem, 2)), RecipeContent.CENTRIFUGE_FLUID, FluidStack.create(Fluids.WATER, 81000), null);
+        var centrifugeClumpDry = new OritechRecipe((int) (200 * timeMultiplier), List.of(Ingredient.ofItems(clump)), List.of(new ItemStack(gem, 1), new ItemStack(smallSecondaryDust, byproductAmount)), RecipeContent.CENTRIFUGE, null, null);
+        var centrifugeClumpWet = new OritechRecipe((int) (300 * timeMultiplier), List.of(Ingredient.ofItems(clump)), List.of(new ItemStack(gem, 2)), RecipeContent.CENTRIFUGE_FLUID, FluidStack.create(Fluids.WATER, 81000), null);
         // gems can either be directly smelted for 1:1 results, atomic forge for 1:2, and foundry for 1:1.5
         
         // gems to dust (doubling)
         var atomicForgeDust = new OritechRecipe(20, List.of(Ingredient.ofItems(gem), gemCatalyst, gemCatalyst), List.of(new ItemStack(dust, 2)), RecipeContent.ATOMIC_FORGE, null, null);
         
         // atomic forge alternative: 2 gems -> 3 ingots
-        var foundryGem = new OritechRecipe(800, List.of(Ingredient.ofItems(gem), Ingredient.ofItems(gem)), List.of(new ItemStack(ingot, 3)), RecipeContent.FOUNDRY, null, null);
+        var foundryGem = new OritechRecipe(200, List.of(Ingredient.ofItems(gem), Ingredient.ofItems(gem)), List.of(new ItemStack(ingot, 3)), RecipeContent.FOUNDRY, null, null);
         
         // smelting/compacting
         RecipeProvider.offerSmelting(exporter, List.of(dust), RecipeCategory.MISC, ingot, 1f, 200, Oritech.MOD_ID);
