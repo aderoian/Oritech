@@ -59,7 +59,11 @@ public class AcceleratorParticleLogic {
             var movedBy = path.normalize().multiply(moveDist);
             
             // check if old position intersects with another particle
-            if (updateParticleCollision(Vec3d.of(particle.nextGate), particle)) {
+            var abTest = movedBy.x > 0  || movedBy.y > 0;
+            var validLastGate = particle.lastGate == null ? particle.nextGate : particle.lastGate;
+            var usedGateForCollision = abTest ? validLastGate : particle.nextGate;
+            
+            if (updateParticleCollision(Vec3d.of(usedGateForCollision), particle)) {
                 return;
             }
             

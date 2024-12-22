@@ -323,20 +323,11 @@ public class AcceleratorControllerBlockEntity extends BlockEntity implements Blo
         
         // deduplicate / shorten list
         var positionSet = new HashSet<Vec3d>();
-        var lastDirection = new Vec3d(0, 1, 0);
-        var lastPosition = new Vec3d(-1, -1, -1);
         for (var position : positions) {
             if (positionSet.contains(position)) {
                 // loop reached, stop the list
                 break;
             }
-            
-            // check if the direction has changed
-            var newDirection = position.subtract(lastPosition);
-            if (newDirection.squaredDistanceTo(lastDirection) < 0.1) continue;
-            
-            lastDirection = newDirection;
-            lastPosition = position;
             
             positionSet.add(position);
             resultList.add(position);
