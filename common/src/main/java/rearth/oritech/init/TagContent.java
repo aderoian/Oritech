@@ -64,6 +64,7 @@ public class TagContent {
     
     // reactor
     public static final TagKey<Block> REACTOR_WALL_BLOCKS = TagKey.of(RegistryKeys.BLOCK, Oritech.id("reactor_wall_blocks"));
+    public static final TagKey<Item> REACTOR_COOLANT = TagKey.of(RegistryKeys.ITEM, Oritech.id("reactor_coolant_items"));
 
     // dyes
     public static final TagKey<Item> RAW_WHITE_DYE = TagKey.of(RegistryKeys.ITEM, Identifier.of("c", "raw_materials/dyes/white"));

@@ -232,6 +232,9 @@ public class ItemTagGenerator extends FabricTagProvider.ItemTagProvider {
         getOrCreateTagBuilder(ItemTags.DURABILITY_ENCHANTABLE)
                 .add(ItemContent.WRENCH);
         
+        getOrCreateTagBuilder(TagContent.REACTOR_COOLANT)
+          .add(Items.ICE, Items.BLUE_ICE, Items.PACKED_ICE);
+        
         // storage blocks
         getOrCreateTagBuilder(ConventionalItemTags.STORAGE_BLOCKS)
           .add(BlockContent.STEEL_BLOCK.asItem())

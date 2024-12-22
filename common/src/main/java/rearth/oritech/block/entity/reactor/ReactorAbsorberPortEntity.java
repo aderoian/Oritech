@@ -7,7 +7,6 @@ import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.inventory.Inventory;
-import net.minecraft.item.Items;
 import net.minecraft.screen.ScreenHandler;
 import net.minecraft.screen.ScreenHandlerType;
 import net.minecraft.server.network.ServerPlayerEntity;
@@ -18,6 +17,7 @@ import org.jetbrains.annotations.Nullable;
 import rearth.oritech.client.init.ModScreens;
 import rearth.oritech.client.ui.BasicMachineScreenHandler;
 import rearth.oritech.init.BlockEntitiesContent;
+import rearth.oritech.init.TagContent;
 import rearth.oritech.network.NetworkContent;
 import rearth.oritech.util.*;
 
@@ -44,7 +44,7 @@ public class ReactorAbsorberPortEntity extends BlockEntity implements ExtendedSc
         var inputStack = inventory.getStack(0);
         if (inputStack.isEmpty()) return 0;
         
-        if (inputStack.getItem().equals(Items.BLUE_ICE)) {
+        if (inputStack.isIn(TagContent.REACTOR_COOLANT)) {
             var capacity = 1000;
             currentFuelOriginalCapacity = capacity;
             availableFuel = capacity;
