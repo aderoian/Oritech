@@ -602,8 +602,8 @@ public class RecipeGenerator extends FabricRecipeProvider {
     private void addParticleCollisions(RecipeExporter exporter) {
         // diamond from coal dust
         addParticleCollisionRecipe(exporter, Ingredient.fromTag(TagContent.COAL_DUSTS), Ingredient.fromTag(TagContent.COAL_DUSTS), new ItemStack(Items.DIAMOND), 500, "diamond");
-        // overcharged crystal from fluxite and electrum dust
-        addParticleCollisionRecipe(exporter, Ingredient.ofItems(ItemContent.FLUXITE), of(TagContent.ELECTRUM_DUSTS), new ItemStack(ItemContent.OVERCHARGED_CRYSTAL), 1000, "overcharged_crystal");
+        // overcharged crystal from fluxite and energite dust
+        addParticleCollisionRecipe(exporter, Ingredient.ofItems(ItemContent.FLUXITE), of(ItemContent.ENERGITE_DUST), new ItemStack(ItemContent.OVERCHARGED_CRYSTAL), 5000, "overcharged_crystal");
         // platinum from gold dust
         addParticleCollisionRecipe(exporter, Ingredient.fromTag(TagContent.GOLD_DUSTS), Ingredient.fromTag(TagContent.GOLD_DUSTS), new ItemStack(ItemContent.PLATINUM_DUST), 500, "platinum_dust");
         // enderic compound from redstone and flesh
