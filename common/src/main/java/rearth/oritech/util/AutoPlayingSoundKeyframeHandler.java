@@ -11,12 +11,15 @@ import software.bernie.geckolib.animatable.GeoAnimatable;
 import software.bernie.geckolib.animation.AnimationController;
 import software.bernie.geckolib.animation.keyframe.event.SoundKeyframeEvent;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.function.Supplier;
 
 // basically of fabric version of this: https://github.com/bernie-g/geckolib/blob/main/common/src/main/java/software/bernie/geckolib/animation/keyframe/event/builtin/AutoPlayingSoundKeyframeHandler.java
 public class AutoPlayingSoundKeyframeHandler<A extends GeoAnimatable> implements AnimationController.SoundKeyframeHandler<A> {
     
     private final Supplier<Float> speedSupplier;
+    private final Map<Identifier, Long> lastPlayedAt = new HashMap<>();
     
     public AutoPlayingSoundKeyframeHandler(Supplier<Float> speedSupplier) {
         this.speedSupplier = speedSupplier;
@@ -36,6 +39,11 @@ public class AutoPlayingSoundKeyframeHandler<A extends GeoAnimatable> implements
         var sound = Registries.SOUND_EVENT.get(Identifier.of(segments[0]));
         
         if (sound != null) {
+            
+            var time = MinecraftClient.getInstance().player.clientWorld.getTime();
+            var age = time - lastPlayedAt.getOrDefault(sound.getId(), 0L);
+            if (age < 30) return;  // don't play sounds if we just played it
+            
             var entity = (BlockEntity) event.getAnimatable();
             var pos = entity.getPos().toCenterPos();
             var distance = Math.sqrt(MinecraftClient.getInstance().gameRenderer.getCamera().getPos().squaredDistanceTo(pos));
@@ -51,6 +59,8 @@ public class AutoPlayingSoundKeyframeHandler<A extends GeoAnimatable> implements
             var source = SoundCategory.BLOCKS;
             
             MinecraftClient.getInstance().player.clientWorld.playSoundAtBlockCenter(entity.getPos(), sound, source, volume, pitch, true);
+            
+            lastPlayedAt.put(sound.getId(), time);
         }
     }
     
