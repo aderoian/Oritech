@@ -46,7 +46,10 @@
   },
   "grinder_working": {
     "sounds": [
-      "oritech:grinder_working"
+      {
+        "name": "oritech:grinder_working",
+        "volume": 0.4
+      }
     ]
   },
   "lava_bubbles": {
