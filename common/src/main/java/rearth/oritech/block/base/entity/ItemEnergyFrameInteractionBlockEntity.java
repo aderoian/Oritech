@@ -122,6 +122,7 @@ public abstract class ItemEnergyFrameInteractionBlockEntity extends FrameInterac
     @Nullable
     @Override
     public ScreenHandler createMenu(int syncId, PlayerInventory playerInventory, PlayerEntity player) {
+        NetworkContent.MACHINE_CHANNEL.serverHandle(this).send(new NetworkContent.FullEnergySyncPacket(pos, energyStorage.amount, energyStorage.capacity, energyStorage.maxInsert, energyStorage.maxExtract));
         return new UpgradableMachineScreenHandler(syncId, playerInventory, this, getUiData(), getCoreQuality());
     }
     
@@ -180,6 +181,11 @@ public abstract class ItemEnergyFrameInteractionBlockEntity extends FrameInterac
     @Override
     public Inventory getDisplayedInventory() {
         return inventory;
+    }
+    
+    @Override
+    public float getDisplayedEnergyTransfer() {
+        return energyStorage.maxInsert;
     }
     
     @Override

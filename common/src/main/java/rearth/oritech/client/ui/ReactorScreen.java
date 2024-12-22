@@ -346,7 +346,7 @@ public class ReactorScreen extends BaseOwoHandledScreen<FlowLayout, ReactorScree
         var amount = handler.reactorEntity.energyStorage.getAmount();
         
         var fillAmount = (float) amount / capacity;
-        var tooltipText = BasicMachineScreen.getEnergyTooltip(amount, capacity, 0);
+        var tooltipText = BasicMachineScreen.getEnergyTooltip(amount, capacity, 0, 0);
         
         energyIndicator.tooltip(tooltipText);
         energyIndicator.visibleArea(PositionedRectangle.of(0, 96 - ((int) (96 * (fillAmount))), 24, (int) (96 * fillAmount)));

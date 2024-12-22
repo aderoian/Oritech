@@ -46,7 +46,7 @@ public class NetworkContent {
     public static final OwoNetChannel UI_CHANNEL = OwoNetChannel.create(Oritech.id("ui_interactions"));
     
     // Server -> Client
-    public record MachineSyncPacket(BlockPos position, long energy, long maxEnergy, long maxInsert, int progress,
+    public record MachineSyncPacket(BlockPos position, long energy, long maxEnergy, long maxInsert, long maxExtract, int progress,
                                     OritechRecipe activeRecipe, InventoryInputMode inputMode, long lastWorkedAt,
                                     boolean disabledViaRedstone) {
     }
@@ -95,6 +95,7 @@ public class NetworkContent {
     
     // for use with addon providers to sync energy state
     public record GenericEnergySyncPacket(BlockPos position, long currentEnergy, long maxEnergy) {}
+    public record FullEnergySyncPacket(BlockPos position, long currentEnergy, long maxEnergy, long maxInsert, long maxExtract) {}
     
     public record GenericRedstoneSyncPacket(BlockPos position, boolean isPowered) {}
     
@@ -246,6 +247,19 @@ public class NetworkContent {
             if (entity instanceof EnergyApi.BlockProvider energyProvider && energyProvider.getStorage(null) instanceof DynamicEnergyStorage storage) {
                 storage.capacity = message.maxEnergy;
                 storage.amount = message.currentEnergy;
+            }
+            
+        }));
+        
+        MACHINE_CHANNEL.registerClientbound(FullEnergySyncPacket.class, ((message, access) -> {
+            
+            var entity = access.player().clientWorld.getBlockEntity(message.position);
+            
+            if (entity instanceof EnergyApi.BlockProvider energyProvider && energyProvider.getStorage(null) instanceof DynamicEnergyStorage storage) {
+                storage.capacity = message.maxEnergy;
+                storage.amount = message.currentEnergy;
+                storage.maxExtract = message.maxExtract;
+                storage.maxInsert = message.maxInsert;
             }
             
         }));

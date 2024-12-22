@@ -210,7 +210,6 @@ public interface MachineAddonController {
         var addonData = getBaseAddonData();
         energyStorage.capacity = getDefaultCapacity() + addonData.energyBonusCapacity;
         energyStorage.maxInsert = getDefaultInsertRate() + addonData.energyBonusTransfer;
-        
         energyStorage.amount = Math.min(energyStorage.amount, energyStorage.capacity);
     }
     
