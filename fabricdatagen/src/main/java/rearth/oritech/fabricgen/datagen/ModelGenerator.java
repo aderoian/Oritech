@@ -66,7 +66,7 @@ public class ModelGenerator extends FabricModelProvider {
         blockStateModelGenerator.registerSimpleState(BlockContent.REACTOR_DOUBLE_ROD);
         blockStateModelGenerator.registerSimpleState(BlockContent.REACTOR_QUAD_ROD);
         blockStateModelGenerator.registerStateWithModelReference(BlockContent.REACTOR_WALL, Blocks.BRICKS); // this is overridden by athena
-        blockStateModelGenerator.registerStateWithModelReference(BlockContent.REACTOR_VENT, Blocks.NETHER_BRICKS);
+        blockStateModelGenerator.registerSimpleState(BlockContent.REACTOR_VENT);
         blockStateModelGenerator.registerSimpleState(BlockContent.REACTOR_REFLECTOR);
         blockStateModelGenerator.registerSimpleState(BlockContent.REACTOR_HEAT_PIPE);
         blockStateModelGenerator.registerSimpleCubeAll(BlockContent.REACTOR_CONDENSER);
