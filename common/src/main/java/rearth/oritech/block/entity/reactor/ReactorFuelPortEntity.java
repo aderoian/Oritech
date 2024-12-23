@@ -35,11 +35,14 @@ public class ReactorFuelPortEntity extends BlockEntity implements ExtendedScreen
         super(BlockEntitiesContent.REACTOR_FUEL_PORT_BLOCK_ENTITY, pos, state);
     }
     
-    public boolean tryConsumeFuel(int amount) {
+    // consumes remaining internal fuel when disabled, but will not consume new input items
+    public boolean tryConsumeFuel(int amount, boolean disabled) {
         if (availableFuel >= amount) {
             availableFuel -= amount;
             return true;
         }
+        
+        if (disabled) return false;
         
         // try consume input
         var inputStack = inventory.getStack(0);

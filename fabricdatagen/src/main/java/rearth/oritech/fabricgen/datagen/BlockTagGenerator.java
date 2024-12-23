@@ -96,6 +96,7 @@ public class BlockTagGenerator extends FabricTagProvider.BlockTagProvider {
           .add(BlockContent.REACTOR_ABSORBER_PORT)
           .add(BlockContent.REACTOR_ENERGY_PORT)
           .add(BlockContent.REACTOR_FUEL_PORT)
+          .add(BlockContent.REACTOR_REDSTONE_PORT)
           .add(BlockContent.REACTOR_CONTROLLER);
     }
 }

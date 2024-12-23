@@ -22,6 +22,7 @@ import org.joml.Vector2i;
 import rearth.oritech.block.blocks.reactor.*;
 import rearth.oritech.client.init.ModScreens;
 import rearth.oritech.client.ui.ReactorScreenHandler;
+import rearth.oritech.init.BlockContent;
 import rearth.oritech.init.BlockEntitiesContent;
 import rearth.oritech.network.NetworkContent;
 import rearth.oritech.util.Geometry;
@@ -32,11 +33,14 @@ import java.util.*;
 
 public class ReactorControllerBlockEntity extends BlockEntity implements BlockEntityTicker<ReactorControllerBlockEntity>, EnergyApi.BlockProvider, ExtendedScreenHandlerFactory {
     
+    // TODO persistence
+    
     public static final int MAX_SIZE = 64;
     public static final int RF_PER_PULSE = 32;
     public static final int ABSORBER_RATE = 10;
     public static final int VENT_BASE_RATE = 4;
     public static final int VENT_RELATIVE_RATE = 100;
+    public static final int MAX_HEAT = 2000;
     
     private final HashMap<Vector2i, BaseReactorBlock> activeComponents = new HashMap<>();   // 2d local position on the first layer containing the reactor blocks
     private final HashMap<Vector2i, ReactorFuelPortEntity> fuelPorts = new HashMap<>();     // same grid, but contains a reference to the port at the ceiling
@@ -44,12 +48,14 @@ public class ReactorControllerBlockEntity extends BlockEntity implements BlockEn
     private final HashMap<Vector2i, Integer> componentHeats = new HashMap<>();              // same grid, contains the current heat of the component
     private final HashMap<Vector2i, ComponentStatistics> componentStats = new HashMap<>(); // mainly for client displays, same grid
     private final HashSet<Pair<BlockPos, Direction>> energyPorts = new HashSet<>();   // list of all energy port outputs (e.g. the targets to output to)
+    private final HashSet<BlockPos> redstonePorts = new HashSet<>();   // list of all redstone ports
     
     public SimpleEnergyStorage energyStorage = new SimpleEnergyStorage(0, 1_000_000, 10_000_000, this::markDirty);
     public boolean active = false;
     private int reactorStackHeight;
     private BlockPos areaMin;
     private BlockPos areaMax;
+    private boolean disabledViaRedstone = false;
     
     // client only
     public NetworkContent.ReactorUIDataPacket uiData;
@@ -69,6 +75,9 @@ public class ReactorControllerBlockEntity extends BlockEntity implements BlockEn
     public void tick(World world, BlockPos pos, BlockState state, ReactorControllerBlockEntity blockEntity) {
         if (world.isClient || !active || activeComponents.isEmpty()) return;
         
+        var activeRods = 0;
+        var hottestHeat = 0;
+        
         for (var localPos : activeComponents.keySet()) {
             var component = activeComponents.get(localPos);
             var componentHeat = componentHeats.get(localPos);
@@ -83,7 +92,7 @@ public class ReactorControllerBlockEntity extends BlockEntity implements BlockEn
                     continue;
                 }
                 
-                var hasFuel = portEntity.tryConsumeFuel(ownRodCount * reactorStackHeight);
+                var hasFuel = portEntity.tryConsumeFuel(ownRodCount * reactorStackHeight, disabledViaRedstone);
                 var heatCreated = 0;
                 
                 setRodBlockState(localPos, hasFuel);
@@ -99,6 +108,8 @@ public class ReactorControllerBlockEntity extends BlockEntity implements BlockEn
                             receivedPulses += rodBlock.getRodCount();
                         }
                     }
+                    
+                    activeRods++;
                     
                     // generate 5 RF per pulse
                     energyStorage.insertIgnoringLimit(RF_PER_PULSE * receivedPulses * reactorStackHeight, false);
@@ -181,9 +192,14 @@ public class ReactorControllerBlockEntity extends BlockEntity implements BlockEn
             }
             
             componentHeats.put(localPos, componentHeat);
+            
+            if (componentHeat > hottestHeat)
+                hottestHeat = componentHeat;
+            
         }
         
         outputEnergy();
+        updateRedstonePorts(hottestHeat, activeRods);
         
         if (world.getTime() % 2 == 0)
             sendUINetworkData();
@@ -219,6 +235,7 @@ public class ReactorControllerBlockEntity extends BlockEntity implements BlockEn
         
         // these get loaded in the next step
         energyPorts.clear();
+        redstonePorts.clear();
         
         // verify edges
         var wallsValid = BlockPos.stream(cornerA, cornerB).allMatch(pos -> {
@@ -234,6 +251,8 @@ public class ReactorControllerBlockEntity extends BlockEntity implements BlockEn
                     var facing = state.get(Properties.FACING);
                     var blockInFront = pos.add(Geometry.getForward(facing));
                     energyPorts.add(new Pair<>(blockInFront, Direction.fromVector(Geometry.getBackward(facing).getX(), Geometry.getBackward(facing).getY(), Geometry.getBackward(facing).getZ())));
+                } else if (block instanceof ReactorRedstonePortBlock) {
+                    redstonePorts.add(pos.toImmutable());
                 }
                 
                 return !(block instanceof BaseReactorBlock reactorBlock) || reactorBlock.validForWalls();
@@ -374,6 +393,41 @@ public class ReactorControllerBlockEntity extends BlockEntity implements BlockEn
         }
         
         return result;
+        
+    }
+    
+    private void updateRedstonePorts(int hottestTemp, int filledRods) {
+        
+        disabledViaRedstone = false;
+        
+        for (var pos : redstonePorts) {
+            var state = world.getBlockState(pos);
+            if (!state.getBlock().equals(BlockContent.REACTOR_REDSTONE_PORT)) continue;
+            
+            var resOutput = 0;
+            
+            var mode = state.get(ReactorRedstonePortBlock.PORT_MODE);
+            if (mode == 0 && hottestTemp > 0) {    // temp of hottest component
+                resOutput = (int) ((hottestTemp / (float) MAX_HEAT) * 15);
+                resOutput = Math.max(resOutput, 1);  // ensure at least level 1 if any component has heat
+            } else if (mode == 1) { // amount of rods with fuel
+                resOutput = Math.min(filledRods, 15);
+            } else if (mode == 2 && energyStorage.getAmount() > 0) { // amount of energy stored
+                var fillPercentage = energyStorage.getAmount() / (float) energyStorage.getCapacity();
+                resOutput = (int) (1 + fillPercentage * 14);
+            }
+            
+            var lastLevel = state.get(Properties.POWER);
+            if (lastLevel != resOutput) {
+                world.setBlockState(pos, state.with(Properties.POWER, resOutput));
+                world.markDirty(pos);
+            }
+            
+            if (world.isReceivingRedstonePower(pos)) {
+                disabledViaRedstone = true;
+            }
+            
+        }
         
     }
     

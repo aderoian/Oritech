@@ -60,6 +60,7 @@ public class ModelGenerator extends FabricModelProvider {
         // reactor section
         blockStateModelGenerator.registerNorthDefaultHorizontalRotation(BlockContent.REACTOR_CONTROLLER);
         blockStateModelGenerator.registerSimpleState(BlockContent.REACTOR_ENERGY_PORT);
+        blockStateModelGenerator.registerSimpleState(BlockContent.REACTOR_REDSTONE_PORT);
         blockStateModelGenerator.registerSimpleState(BlockContent.REACTOR_FUEL_PORT);
         blockStateModelGenerator.registerSimpleState(BlockContent.REACTOR_ABSORBER_PORT);
         blockStateModelGenerator.registerSimpleState(BlockContent.REACTOR_ROD);
