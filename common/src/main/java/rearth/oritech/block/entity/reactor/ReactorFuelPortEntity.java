@@ -7,10 +7,10 @@ import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.inventory.Inventory;
-import net.minecraft.item.Items;
 import net.minecraft.screen.ScreenHandler;
 import net.minecraft.screen.ScreenHandlerType;
 import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.sound.SoundCategory;
 import net.minecraft.text.Text;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
@@ -18,6 +18,8 @@ import org.jetbrains.annotations.Nullable;
 import rearth.oritech.client.init.ModScreens;
 import rearth.oritech.client.ui.BasicMachineScreenHandler;
 import rearth.oritech.init.BlockEntitiesContent;
+import rearth.oritech.init.SoundContent;
+import rearth.oritech.init.recipes.RecipeContent;
 import rearth.oritech.network.NetworkContent;
 import rearth.oritech.util.*;
 
@@ -48,16 +50,23 @@ public class ReactorFuelPortEntity extends BlockEntity implements ExtendedScreen
         var inputStack = inventory.getStack(0);
         if (inputStack.isEmpty()) return false;
         
-        if (inputStack.getItem().equals(Items.LAPIS_LAZULI)) {
-            var capacity = 1000;
-            currentFuelOriginalCapacity = capacity;
-            availableFuel = capacity - amount;
-            inputStack.decrement(1);
-            return true;
-        }
+        var craftingInv = new SimpleCraftingInventory(inputStack);
+        var recipeCandidate = world.getRecipeManager().getFirstMatch(RecipeContent.REACTOR, craftingInv, world);
         
-        return false;
+        if (recipeCandidate.isEmpty()) return false;
         
+        var capacity = recipeCandidate.get().value().getTime();
+        currentFuelOriginalCapacity = capacity;
+        availableFuel = capacity - amount;
+        inputStack.decrement(1);
+        playLoadingSound();
+        return true;
+        
+    }
+    
+    private void playLoadingSound() {
+        var variation = world.random.nextFloat() * 0.6f - 0.2f;
+        world.playSound(null, pos, SoundContent.REACTOR_LOADING, SoundCategory.BLOCKS, 0.5f, 0.8f + variation);
     }
     
     public void updateNetwork() {

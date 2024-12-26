@@ -15,6 +15,7 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
 import org.jetbrains.annotations.Nullable;
 import rearth.oritech.client.init.ModScreens;
+import rearth.oritech.client.init.ParticleContent;
 import rearth.oritech.client.ui.BasicMachineScreenHandler;
 import rearth.oritech.init.BlockEntitiesContent;
 import rearth.oritech.init.TagContent;
@@ -37,6 +38,8 @@ public class ReactorAbsorberPortEntity extends BlockEntity implements ExtendedSc
     
     public int getAvailableFuel() {
         if (availableFuel > 0) {
+            if (world.getTime() % 5 == 0)
+                ParticleContent.COOLER_WORKING.spawn(world, pos.toCenterPos().add(0, 0.5, 0), 1);
             return availableFuel;
         }
         
@@ -49,6 +52,7 @@ public class ReactorAbsorberPortEntity extends BlockEntity implements ExtendedSc
             currentFuelOriginalCapacity = capacity;
             availableFuel = capacity;
             inputStack.decrement(1);
+            onFuelConsumed();
         }
         
         return availableFuel;
@@ -59,6 +63,10 @@ public class ReactorAbsorberPortEntity extends BlockEntity implements ExtendedSc
             availableFuel -= amount;
         }
         
+    }
+    
+    private void onFuelConsumed() {
+        ParticleContent.COOLER_WORKING.spawn(world, pos.toCenterPos().add(0, 0.5, 0), 15);
     }
     
     public void updateNetwork() {

@@ -61,6 +61,7 @@ public class RecipeGenerator extends FabricRecipeProvider {
         addVanillaAdditions(exporter);
         addDyes(exporter);
         addCompactingRecipes(exporter);
+        addReactorFuels(exporter);
         
         TechRebornRecipeGenerator.generateRecipes(this.withConditions(exporter, new AllModsLoadedResourceCondition(List.of(TechReborn.MOD_ID))));
         EnergizedPowerRecipeGenerator.generateRecipes(this.withConditions(exporter, new AllModsLoadedResourceCondition(List.of(EnergizedPowerMod.MODID))));
@@ -669,6 +670,13 @@ public class RecipeGenerator extends FabricRecipeProvider {
         addGrinderRecipe(exporter, Ingredient.ofItems(Items.ANCIENT_DEBRIS), Items.NETHERITE_SCRAP, 2, "netheritescrap");
     }
     
+    private void addReactorFuels(RecipeExporter exporter) {
+        addReactorGen(exporter, of(ItemContent.SMALL_URANIUM_PELLET), 100, "smallpellet");
+        addReactorGen(exporter, of(ItemContent.URANIUM_PELLET), 1000, "pellet");
+        addReactorGen(exporter, of(ItemContent.SMALL_PLUTONIUM_PELLET), 250, "smallplutoniumpellet");
+        addReactorGen(exporter, of(ItemContent.PLUTONIUM_PELLET), 2500, "plutoniumpellet");
+    }
+    
     private Ingredient of(ItemConvertible item) {
         return Ingredient.ofItems(item);
     }
@@ -835,6 +843,11 @@ public class RecipeGenerator extends FabricRecipeProvider {
     private void addSteamEngineGen(RecipeExporter exporter, FluidStack input, int timeInTicks, String suffix) {
         var entry = new OritechRecipe(timeInTicks, List.of(), List.of(), RecipeContent.STEAM_ENGINE, input, null);
         exporter.accept(Oritech.id("steamgen/" + suffix), entry, null);
+    }
+    
+    private void addReactorGen(RecipeExporter exporter, Ingredient input, int timeInTicks, String suffix) {
+        var entry = new OritechRecipe(timeInTicks, List.of(input), List.of(), RecipeContent.REACTOR, null, null);
+        exporter.accept(Oritech.id("reactor/" + suffix), entry, null);
     }
     
     private void addMetalProcessingChain(RecipeExporter exporter, Ingredient oreInput, Ingredient rawOre, Item rawMain, Item rawSecondary, Item clump, Item smallClump,

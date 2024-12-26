@@ -10,6 +10,7 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.screen.ScreenHandler;
 import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.sound.SoundCategory;
 import net.minecraft.state.property.Properties;
 import net.minecraft.text.Text;
 import net.minecraft.util.Pair;
@@ -24,6 +25,7 @@ import rearth.oritech.client.init.ModScreens;
 import rearth.oritech.client.ui.ReactorScreenHandler;
 import rearth.oritech.init.BlockContent;
 import rearth.oritech.init.BlockEntitiesContent;
+import rearth.oritech.init.SoundContent;
 import rearth.oritech.network.NetworkContent;
 import rearth.oritech.util.Geometry;
 import rearth.oritech.util.energy.EnergyApi;
@@ -37,7 +39,7 @@ public class ReactorControllerBlockEntity extends BlockEntity implements BlockEn
     
     public static final int MAX_SIZE = 64;
     public static final int RF_PER_PULSE = 32;
-    public static final int ABSORBER_RATE = 10;
+    public static final int ABSORBER_RATE = 16;
     public static final int VENT_BASE_RATE = 4;
     public static final int VENT_RELATIVE_RATE = 100;
     public static final int MAX_HEAT = 2000;
@@ -201,9 +203,31 @@ public class ReactorControllerBlockEntity extends BlockEntity implements BlockEn
         outputEnergy();
         updateRedstonePorts(hottestHeat, activeRods);
         
+        if (activeRods > 0)
+            playAmbientSound();
+        
+        if (activeRods > 0 && hottestHeat > MAX_HEAT * 0.8f) {
+            playWarningSound();
+        }
+        
         if (world.getTime() % 2 == 0)
             sendUINetworkData();
         
+    }
+    
+    private void playAmbientSound() {
+        var soundDuration = 250;
+        
+        if (world.getTime() % soundDuration == 0)
+            world.playSound(null, pos, SoundContent.REACTOR, SoundCategory.BLOCKS, 0.7f, 0.8f);
+    }
+    
+    
+    private void playWarningSound() {
+        var soundDuration = 50;
+        
+        if (world.getTime() % soundDuration == 0)
+            world.playSound(null, pos, SoundContent.REACTOR_WARNING, SoundCategory.BLOCKS, 4f, 0.8f);
     }
     
     public void init(PlayerEntity player) {
