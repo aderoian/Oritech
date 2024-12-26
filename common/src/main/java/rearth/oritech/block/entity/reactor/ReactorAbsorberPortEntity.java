@@ -6,7 +6,10 @@ import net.minecraft.block.BlockState;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
+import net.minecraft.inventory.Inventories;
 import net.minecraft.inventory.Inventory;
+import net.minecraft.nbt.NbtCompound;
+import net.minecraft.registry.RegistryWrapper;
 import net.minecraft.screen.ScreenHandler;
 import net.minecraft.screen.ScreenHandlerType;
 import net.minecraft.server.network.ServerPlayerEntity;
@@ -36,10 +39,28 @@ public class ReactorAbsorberPortEntity extends BlockEntity implements ExtendedSc
         super(BlockEntitiesContent.REACTOR_ABSORBER_PORT_BLOCK_ENTITY, pos, state);
     }
     
+    @Override
+    protected void writeNbt(NbtCompound nbt, RegistryWrapper.WrapperLookup registryLookup) {
+        super.writeNbt(nbt, registryLookup);
+        
+        nbt.putInt("available", availableFuel);
+        nbt.putInt("capacity", currentFuelOriginalCapacity);
+        
+        Inventories.writeNbt(nbt, inventory.heldStacks, false, registryLookup);
+    }
+    
+    @Override
+    protected void readNbt(NbtCompound nbt, RegistryWrapper.WrapperLookup registryLookup) {
+        super.readNbt(nbt, registryLookup);
+        
+        availableFuel = nbt.getInt("available");
+        currentFuelOriginalCapacity = nbt.getInt("capacity");
+        
+        Inventories.readNbt(nbt, inventory.heldStacks, registryLookup);
+    }
+    
     public int getAvailableFuel() {
         if (availableFuel > 0) {
-            if (world.getTime() % 5 == 0)
-                ParticleContent.COOLER_WORKING.spawn(world, pos.toCenterPos().add(0, 0.5, 0), 1);
             return availableFuel;
         }
         
@@ -61,6 +82,9 @@ public class ReactorAbsorberPortEntity extends BlockEntity implements ExtendedSc
     public void consumeFuel(int amount) {
         if (availableFuel >= amount) {
             availableFuel -= amount;
+            
+            if (world.getTime() % 5 == 0)
+                ParticleContent.COOLER_WORKING.spawn(world, pos.toCenterPos().add(0, 0.5, 0), 1);
         }
         
     }

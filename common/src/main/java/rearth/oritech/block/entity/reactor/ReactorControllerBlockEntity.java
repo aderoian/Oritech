@@ -8,6 +8,8 @@ import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.block.entity.BlockEntityTicker;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
+import net.minecraft.nbt.NbtCompound;
+import net.minecraft.registry.RegistryWrapper;
 import net.minecraft.screen.ScreenHandler;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.sound.SoundCategory;
@@ -36,14 +38,13 @@ import java.util.*;
 
 public class ReactorControllerBlockEntity extends BlockEntity implements BlockEntityTicker<ReactorControllerBlockEntity>, EnergyApi.BlockProvider, ExtendedScreenHandlerFactory {
     
-    // TODO persistence
-    
     public static final int MAX_SIZE = 64;
-    public static final int RF_PER_PULSE = 32;
+    public static final int RF_PER_PULSE = 64;
     public static final int ABSORBER_RATE = 16;
     public static final int VENT_BASE_RATE = 4;
     public static final int VENT_RELATIVE_RATE = 100;
     public static final int MAX_HEAT = 2000;
+    public static final int MAX_UNSTABLE_TICKS = 400;
     
     private final HashMap<Vector2i, BaseReactorBlock> activeComponents = new HashMap<>();   // 2d local position on the first layer containing the reactor blocks
     private final HashMap<Vector2i, ReactorFuelPortEntity> fuelPorts = new HashMap<>();     // same grid, but contains a reference to the port at the ceiling
@@ -59,6 +60,9 @@ public class ReactorControllerBlockEntity extends BlockEntity implements BlockEn
     private BlockPos areaMin;
     private BlockPos areaMax;
     private boolean disabledViaRedstone = false;
+    private int unstableTicks = 0;
+    
+    private boolean doAutoInit = false; // used to auto-init when save is being loaded
     
     // client only
     public NetworkContent.ReactorUIDataPacket uiData;
@@ -76,7 +80,15 @@ public class ReactorControllerBlockEntity extends BlockEntity implements BlockEn
     
     @Override
     public void tick(World world, BlockPos pos, BlockState state, ReactorControllerBlockEntity blockEntity) {
-        if (world.isClient || !active || activeComponents.isEmpty()) return;
+        if (world.isClient) return;
+        
+        if (!active && doAutoInit) {
+            doAutoInit = false;
+            init(null);
+        }
+        
+        
+        if (!active || activeComponents.isEmpty()) return;
         
         var activeRods = 0;
         var hottestHeat = 0;
@@ -140,7 +152,7 @@ public class ReactorControllerBlockEntity extends BlockEntity implements BlockEn
                     var neighborHeat = componentHeats.get(neighbor);
                     if (neighborHeat <= componentHeat) continue;
                     var diff = neighborHeat - componentHeat;
-                    var gainedHeat = (int) Math.min(Math.sqrt(diff) + 6, diff);
+                    var gainedHeat = Math.min(diff / 8 + 6, diff);
                     neighborHeat -= gainedHeat;
                     componentHeats.put(neighbor, neighborHeat);
                     componentHeat += gainedHeat;
@@ -167,6 +179,9 @@ public class ReactorControllerBlockEntity extends BlockEntity implements BlockEn
                         sumRemovedHeat += ABSORBER_RATE;
                         componentHeats.put(neighbor, neighborHeat);
                     }
+                } else if (fuelAvailable > 0) {
+                    // remove last small unusable part
+                    portEntity.consumeFuel(fuelAvailable);
                 }
                 
                 if (sumRemovedHeat > 0) {
@@ -216,8 +231,10 @@ public class ReactorControllerBlockEntity extends BlockEntity implements BlockEn
             playWarningSound();
         }
         
-        if (hottestHeat > MAX_HEAT) {
-            doReactorExplosion(activeRods * reactorStackHeight);
+        if (hottestHeat > MAX_HEAT && activeRods > 0) {
+            unstableTicks++;
+            if (unstableTicks > MAX_UNSTABLE_TICKS)
+                doReactorExplosion(activeRods * reactorStackHeight);
         }
         
         if (world.getTime() % 2 == 0)
@@ -225,8 +242,27 @@ public class ReactorControllerBlockEntity extends BlockEntity implements BlockEn
         
     }
     
+    @Override
+    protected void writeNbt(NbtCompound nbt, RegistryWrapper.WrapperLookup registryLookup) {
+        super.writeNbt(nbt, registryLookup);
+        
+        nbt.putLong("energy_stored", energyStorage.getAmount());
+        nbt.putBoolean("was_active", active);
+        nbt.putBoolean("redstone_disabled", disabledViaRedstone);
+        
+    }
+    
+    @Override
+    protected void readNbt(NbtCompound nbt, RegistryWrapper.WrapperLookup registryLookup) {
+        super.readNbt(nbt, registryLookup);
+        
+        energyStorage.setAmount(nbt.getLong("energy_stored"));
+        doAutoInit = nbt.getBoolean("was_active");
+        disabledViaRedstone = nbt.getBoolean("redstone_disabled");
+    }
+    
     private void playMeltdownAnimation(BlockPos port) {
-        ParticleContent.MELTDOWN_IMMINENT.spawn(world, pos.toCenterPos().add(0, 0.3, 0), 5);
+        ParticleContent.MELTDOWN_IMMINENT.spawn(world, port.toCenterPos().add(0, 0.3, 0), 5);
     }
     
     private void playAmbientSound() {
@@ -256,7 +292,7 @@ public class ReactorControllerBlockEntity extends BlockEntity implements BlockEn
         world.setBlockState(pos, spawnedBlock.getDefaultState());
     }
     
-    public void init(PlayerEntity player) {
+    public void init(@Nullable PlayerEntity player) {
         
         active = false;
         
@@ -273,11 +309,10 @@ public class ReactorControllerBlockEntity extends BlockEntity implements BlockEn
         cornerB = expandWall(cornerB, new Vec3i(1, 0, 0));
         
         if (cornerA == pos || cornerB == pos || cornerA == cornerB || onSameAxis(cornerA, cornerB)) {
-            player.sendMessage(Text.translatable("message.oritech.reactor_invalid"));
+            if (player != null)
+                player.sendMessage(Text.translatable("message.oritech.reactor_edge_invalid"));
             return;
         }
-        
-        System.out.println("corners valid");
         
         // verify and load all blocks in reactor area
         var finalCornerA = cornerA;
@@ -312,7 +347,8 @@ public class ReactorControllerBlockEntity extends BlockEntity implements BlockEn
         });
         
         if (!wallsValid) {
-            player.sendMessage(Text.translatable("message.oritech.reactor_invalid"));
+            if (player != null)
+                player.sendMessage(Text.translatable("message.oritech.reactor_wall_invalid"));
             return;
         }
         
@@ -345,7 +381,6 @@ public class ReactorControllerBlockEntity extends BlockEntity implements BlockEn
             if (requiredCeiling != Blocks.AIR) {
                 var ceilingPos = pos.add(0, interiorHeight, 0);
                 var ceilingBlock = world.getBlockState(ceilingPos).getBlock();
-                System.out.println("ceiling need: " + requiredCeiling + " got: " + ceilingBlock);
                 if (!requiredCeiling.equals(ceilingBlock)) return false;
                 
                 if (block instanceof ReactorRodBlock) {
@@ -357,21 +392,19 @@ public class ReactorControllerBlockEntity extends BlockEntity implements BlockEn
             }
             activeComponents.put(localPos, reactorBlock);
             componentHeats.putIfAbsent(localPos, 0);
-            System.out.println(offset + ": " + reactorBlock);
             
             return true;
         });
         
         if (!interiorStackedRight) {
-            player.sendMessage(Text.translatable("message.oritech.interior_invalid"));
+            if (player != null)
+                player.sendMessage(Text.translatable("message.oritech.reactor_interior_issues"));
             return;
         }
         
         areaMin = finalCornerA;
         areaMax = finalCornerB;
         active = true;
-        
-        System.out.println("walls: " + wallsValid + " interiorStack: " + interiorStackedRight + " height: " + interiorHeight);
         
     }
     
@@ -466,6 +499,8 @@ public class ReactorControllerBlockEntity extends BlockEntity implements BlockEn
                 var fillPercentage = energyStorage.getAmount() / (float) energyStorage.getCapacity();
                 resOutput = (int) (1 + fillPercentage * 14);
             }
+            
+            resOutput = Math.min(resOutput, 15);
             
             var lastLevel = state.get(Properties.POWER);
             if (lastLevel != resOutput) {

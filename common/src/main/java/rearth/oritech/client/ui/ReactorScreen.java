@@ -192,9 +192,11 @@ public class ReactorScreen extends BaseOwoHandledScreen<FlowLayout, ReactorScree
             overlay.state = res;
         }
         
+        var stackHeight = handler.reactorEntity.uiData.max().getY() - handler.reactorEntity.uiData.min().getY() - 1;
+        
         // gather stats
         var sumProducedEnergy = handler.reactorEntity.uiSyncData.componentHeats().stream()
-                                  .mapToInt(data -> data.receivedPulses() * ReactorControllerBlockEntity.RF_PER_PULSE).sum();
+                                  .mapToInt(data -> data.receivedPulses() * ReactorControllerBlockEntity.RF_PER_PULSE * stackHeight).sum();
         
         var sumProducedHeat = handler.reactorEntity.uiSyncData.componentHeats().stream()
                                 .filter(elem -> elem.receivedPulses() > 0)
