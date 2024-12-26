@@ -22,6 +22,7 @@ import org.jetbrains.annotations.Nullable;
 import org.joml.Vector2i;
 import rearth.oritech.block.blocks.reactor.*;
 import rearth.oritech.client.init.ModScreens;
+import rearth.oritech.client.init.ParticleContent;
 import rearth.oritech.client.ui.ReactorScreenHandler;
 import rearth.oritech.init.BlockContent;
 import rearth.oritech.init.BlockEntitiesContent;
@@ -119,6 +120,11 @@ public class ReactorControllerBlockEntity extends BlockEntity implements BlockEn
                     // generate heat per pulse
                     heatCreated = (receivedPulses / 2 * receivedPulses + 4);
                     componentHeat += heatCreated;
+                    
+                    if (componentHeat > MAX_HEAT * 0.85) {
+                        playMeltdownAnimation(portEntity.getPos());
+                    }
+                    
                 } else {
                     receivedPulses = 0;
                 }
@@ -210,9 +216,17 @@ public class ReactorControllerBlockEntity extends BlockEntity implements BlockEn
             playWarningSound();
         }
         
+        if (hottestHeat > MAX_HEAT) {
+            doReactorExplosion(activeRods * reactorStackHeight);
+        }
+        
         if (world.getTime() % 2 == 0)
             sendUINetworkData();
         
+    }
+    
+    private void playMeltdownAnimation(BlockPos port) {
+        ParticleContent.MELTDOWN_IMMINENT.spawn(world, pos.toCenterPos().add(0, 0.3, 0), 5);
     }
     
     private void playAmbientSound() {
@@ -228,6 +242,18 @@ public class ReactorControllerBlockEntity extends BlockEntity implements BlockEn
         
         if (world.getTime() % soundDuration == 0)
             world.playSound(null, pos, SoundContent.REACTOR_WARNING, SoundCategory.BLOCKS, 4f, 0.8f);
+    }
+    
+    // strength is the amount of total active rods (e.g. activeRods * stackHeight)
+    private void doReactorExplosion(int strength) {
+        var spawnedBlock = BlockContent.REACTOR_EXPLOSION_SMALL;
+        if (strength > 8) {
+            spawnedBlock = BlockContent.REACTOR_EXPLOSION_MEDIUM;
+        } else if (strength > 25) {
+            spawnedBlock = BlockContent.REACTOR_EXPLOSION_LARGE;
+        }
+        
+        world.setBlockState(pos, spawnedBlock.getDefaultState());
     }
     
     public void init(PlayerEntity player) {

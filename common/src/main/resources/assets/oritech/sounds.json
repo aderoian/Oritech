@@ -107,6 +107,11 @@
       "oritech:reactor_warning"
     ]
   },
+  "nuke_explosion": {
+    "sounds": [
+      "oritech:nuke_explosion"
+    ]
+  },
   "particle_moving": {
     "sounds": [
       {
