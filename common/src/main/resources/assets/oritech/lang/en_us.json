@@ -66,6 +66,7 @@
   "tooltip.oritech.needs_laser_power": "Must be powered via an enderic laser",
   "tooltip.oritech.steam_engine": "Processes steam into RF and water. Can be chained together",
   "tooltip.oritech.item_filter": "Used to filter which items can be inserted into an inventory.",
+  "tooltip.oritech.machine_frame": "Yes there is a config option to change the bounding box of this.",
   "tooltip.oritech.particle_collector": "Collects the energy of tachyons emitted by particle collisions.",
   "button.oritech.item_filter.whitelist": "Whitelist",
   "title.oritech.item_filter.whitelist": "Whitelist",
