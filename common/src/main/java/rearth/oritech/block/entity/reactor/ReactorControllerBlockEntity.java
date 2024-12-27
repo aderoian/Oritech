@@ -45,6 +45,8 @@ public class ReactorControllerBlockEntity extends BlockEntity implements BlockEn
     public static final int VENT_RELATIVE_RATE = 100;
     public static final int MAX_HEAT = 2000;
     public static final int MAX_UNSTABLE_TICKS = 400;
+    public static final Boolean EASY_MODE = true;   // disables explosions, and instead only disables reactor
+    public static final int EASY_MODE_COOLDOWN = 2400;   // disables explosions, and instead only disables reactor
     
     private final HashMap<Vector2i, BaseReactorBlock> activeComponents = new HashMap<>();   // 2d local position on the first layer containing the reactor blocks
     private final HashMap<Vector2i, ReactorFuelPortEntity> fuelPorts = new HashMap<>();     // same grid, but contains a reference to the port at the ceiling
@@ -61,6 +63,7 @@ public class ReactorControllerBlockEntity extends BlockEntity implements BlockEn
     private BlockPos areaMax;
     private boolean disabledViaRedstone = false;
     private int unstableTicks = 0;
+    public long disabledUntil = 0;
     
     private boolean doAutoInit = false; // used to auto-init when save is being loaded
     
@@ -107,7 +110,7 @@ public class ReactorControllerBlockEntity extends BlockEntity implements BlockEn
                     continue;
                 }
                 
-                var hasFuel = portEntity.tryConsumeFuel(ownRodCount * reactorStackHeight, disabledViaRedstone);
+                var hasFuel = portEntity.tryConsumeFuel(ownRodCount * reactorStackHeight, isDisabled() || disabledViaRedstone);
                 var heatCreated = 0;
                 
                 setRodBlockState(localPos, hasFuel);
@@ -124,10 +127,10 @@ public class ReactorControllerBlockEntity extends BlockEntity implements BlockEn
                         }
                     }
                     
-                    activeRods++;
-                    
-                    // generate 5 RF per pulse
-                    energyStorage.insertIgnoringLimit(RF_PER_PULSE * receivedPulses * reactorStackHeight, false);
+                    if (!isDisabled()) {
+                        activeRods++;
+                        energyStorage.insertIgnoringLimit(RF_PER_PULSE * receivedPulses * reactorStackHeight, false);
+                    }
                     
                     // generate heat per pulse
                     heatCreated = (receivedPulses / 2 * receivedPulses + 4);
@@ -235,11 +238,17 @@ public class ReactorControllerBlockEntity extends BlockEntity implements BlockEn
             unstableTicks++;
             if (unstableTicks > MAX_UNSTABLE_TICKS)
                 doReactorExplosion(activeRods * reactorStackHeight);
+        } else {
+            unstableTicks = 0;
         }
         
         if (world.getTime() % 2 == 0)
             sendUINetworkData();
         
+    }
+    
+    private boolean isDisabled() {
+        return world.getTime() < disabledUntil;
     }
     
     @Override
@@ -282,14 +291,24 @@ public class ReactorControllerBlockEntity extends BlockEntity implements BlockEn
     
     // strength is the amount of total active rods (e.g. activeRods * stackHeight)
     private void doReactorExplosion(int strength) {
+        
+        if (EASY_MODE) {
+            disableReactor();
+            return;
+        }
+        
         var spawnedBlock = BlockContent.REACTOR_EXPLOSION_SMALL;
-        if (strength > 8) {
+        if (strength > 8 && strength <= 25) {
             spawnedBlock = BlockContent.REACTOR_EXPLOSION_MEDIUM;
         } else if (strength > 25) {
             spawnedBlock = BlockContent.REACTOR_EXPLOSION_LARGE;
         }
         
         world.setBlockState(pos, spawnedBlock.getDefaultState());
+    }
+    
+    private void disableReactor() {
+        this.disabledUntil = world.getTime() + EASY_MODE_COOLDOWN;
     }
     
     public void init(@Nullable PlayerEntity player) {
