@@ -72,6 +72,8 @@ public class ModelGenerator extends FabricModelProvider {
         blockStateModelGenerator.registerSimpleState(BlockContent.REACTOR_HEAT_PIPE);
         blockStateModelGenerator.registerSimpleCubeAll(BlockContent.REACTOR_CONDENSER);
         
+        blockStateModelGenerator.registerAmethyst(BlockContent.URANIUM_CRYSTAL);
+        
         blockStateModelGenerator.registerSimpleCubeAll(BlockContent.LOW_YIELD_NUKE);
         blockStateModelGenerator.registerSimpleCubeAll(BlockContent.NUKE);
         

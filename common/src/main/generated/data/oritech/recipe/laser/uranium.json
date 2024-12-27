@@ -1,14 +1,19 @@
 {
-  "type": "oritech:reactor",
+  "type": "oritech:laser",
   "fluidInputAmount": 0,
   "fluidInputVariant": "minecraft:empty",
   "fluidOutputAmount": 0,
   "fluidOutputVariant": "minecraft:empty",
   "ingredients": [
     {
-      "item": "oritech:small_plutonium_pellet"
+      "item": "oritech:uranium_crystal"
     }
   ],
-  "results": [],
-  "time": 1000
+  "results": [
+    {
+      "count": 1,
+      "id": "oritech:uranium_gem"
+    }
+  ],
+  "time": 1
 }

@@ -214,6 +214,9 @@ public class BlockContent implements ArchitecturyBlockRegistryContainer {
     public static final Block REACTOR_ENERGY_PORT = new ReactorEnergyPortBlock(AbstractBlock.Settings.copy(Blocks.IRON_BLOCK));
     public static final Block REACTOR_REDSTONE_PORT = new ReactorRedstonePortBlock(AbstractBlock.Settings.copy(Blocks.IRON_BLOCK).nonOpaque());
     
+    @NoAutoDrop
+    public static final Block URANIUM_CRYSTAL = new AmethystClusterBlock(7, 3, AbstractBlock.Settings.copy(Blocks.AMETHYST_CLUSTER));
+    
     @NoBlockItem
     public static final Block REACTOR_EXPLOSION_SMALL = new NuclearExplosionBlock(AbstractBlock.Settings.copy(Blocks.IRON_BLOCK), 9);
     @NoBlockItem

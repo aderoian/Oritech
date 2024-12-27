@@ -57,6 +57,7 @@ public class OritechJeiPlugin implements IModPlugin {
         registerCustom(registration, RecipeContent.REACTOR, BlockContent.REACTOR_CONTROLLER, true, List.of(new ScreenProvider.GuiSlot(0, 55, 35)), new InventorySlotAssignment(0, 1, 1, 0));
         
         registration.addRecipeCategories(new OritechJeiParticleCollisionRecipe(registration.getJeiHelpers().getGuiHelper()));
+        registration.addRecipeCategories(new OritechJeiLaserRecipe(registration.getJeiHelpers().getGuiHelper()));
         
     }
     
@@ -89,6 +90,7 @@ public class OritechJeiPlugin implements IModPlugin {
         registerRecipe(registration, RecipeContent.STEAM_ENGINE);
         
         registerRecipe(registration, RecipeContent.PARTICLE_COLLISION);
+        registerRecipe(registration, RecipeContent.LASER);
         registerRecipe(registration, RecipeContent.REACTOR);
         
     }
@@ -119,6 +121,7 @@ public class OritechJeiPlugin implements IModPlugin {
         registerCatalyst(registration, RecipeContent.STEAM_ENGINE, BlockContent.STEAM_ENGINE_BLOCK);
         
         registerCatalyst(registration, RecipeContent.PARTICLE_COLLISION, BlockContent.ACCELERATOR_CONTROLLER);
+        registerCatalyst(registration, RecipeContent.LASER, BlockContent.LASER_ARM_BLOCK);
         registerCatalyst(registration, RecipeContent.REACTOR, BlockContent.REACTOR_CONTROLLER);
     }
     

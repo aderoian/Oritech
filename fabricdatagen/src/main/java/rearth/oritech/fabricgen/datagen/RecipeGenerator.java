@@ -62,6 +62,7 @@ public class RecipeGenerator extends FabricRecipeProvider {
         addDyes(exporter);
         addCompactingRecipes(exporter);
         addReactorFuels(exporter);
+        addLaserTransformations(exporter);
         
         TechRebornRecipeGenerator.generateRecipes(this.withConditions(exporter, new AllModsLoadedResourceCondition(List.of(TechReborn.MOD_ID))));
         EnergizedPowerRecipeGenerator.generateRecipes(this.withConditions(exporter, new AllModsLoadedResourceCondition(List.of(EnergizedPowerMod.MODID))));
@@ -673,10 +674,15 @@ public class RecipeGenerator extends FabricRecipeProvider {
     }
     
     private void addReactorFuels(RecipeExporter exporter) {
-        addReactorGen(exporter, of(ItemContent.SMALL_URANIUM_PELLET), 100, "smallpellet");
-        addReactorGen(exporter, of(ItemContent.URANIUM_PELLET), 1000, "pellet");
-        addReactorGen(exporter, of(ItemContent.SMALL_PLUTONIUM_PELLET), 250, "smallplutoniumpellet");
-        addReactorGen(exporter, of(ItemContent.PLUTONIUM_PELLET), 2500, "plutoniumpellet");
+        addReactorGen(exporter, of(ItemContent.SMALL_URANIUM_PELLET), 200, "smallpellet");
+        addReactorGen(exporter, of(ItemContent.URANIUM_PELLET), 2000, "pellet");
+        addReactorGen(exporter, of(ItemContent.SMALL_PLUTONIUM_PELLET), 1000, "smallplutoniumpellet");
+        addReactorGen(exporter, of(ItemContent.PLUTONIUM_PELLET), 10000, "plutoniumpellet");
+    }
+    
+    private void addLaserTransformations(RecipeExporter exporter) {
+        addLaserRecipe(exporter, of(Items.AMETHYST_CLUSTER), ItemContent.FLUXITE, "fluxite");
+        addLaserRecipe(exporter, of(BlockContent.URANIUM_CRYSTAL), ItemContent.URANIUM_GEM, "uranium");
     }
     
     private Ingredient of(ItemConvertible item) {
@@ -850,6 +856,11 @@ public class RecipeGenerator extends FabricRecipeProvider {
     private void addReactorGen(RecipeExporter exporter, Ingredient input, int timeInTicks, String suffix) {
         var entry = new OritechRecipe(timeInTicks, List.of(input), List.of(), RecipeContent.REACTOR, null, null);
         exporter.accept(Oritech.id("reactor/" + suffix), entry, null);
+    }
+    
+    private void addLaserRecipe(RecipeExporter exporter, Ingredient input, ItemConvertible output, String suffix) {
+        var entry = new OritechRecipe(1, List.of(input), List.of(new ItemStack(output)), RecipeContent.LASER, null, null);
+        exporter.accept(Oritech.id("laser/" + suffix), entry, null);
     }
     
     private void addMetalProcessingChain(RecipeExporter exporter, Ingredient oreInput, Ingredient rawOre, Item rawMain, Item rawSecondary, Item clump, Item smallClump,

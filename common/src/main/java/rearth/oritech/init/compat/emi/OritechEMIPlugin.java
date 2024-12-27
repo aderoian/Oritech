@@ -52,6 +52,7 @@ public class OritechEMIPlugin implements EmiPlugin {
         
         // others
         registerParticleAccelerator(registry, manager, RecipeContent.PARTICLE_COLLISION);
+        registerLaser(registry, manager, RecipeContent.LASER);
         
         registry.addWorkstation(VanillaEmiRecipeCategories.SMELTING, EmiStack.of(BlockContent.POWERED_FURNACE_BLOCK));
         
@@ -108,6 +109,23 @@ public class OritechEMIPlugin implements EmiPlugin {
         manager.listAllOfType(recipeType)
           .stream()
           .map(entry -> new OritechEMIParticleCollisionRecipe(entry, category))
+          .forEach(registry::addRecipe);
+        
+    }
+    
+    private void registerLaser(EmiRegistry registry, RecipeManager manager, OritechRecipeType recipeType) {
+        
+        var machine = BlockContent.LASER_ARM_BLOCK;
+        
+        var icon = EmiStack.of(machine);
+        var category = new EmiRecipeCategory(recipeType.getIdentifier(), icon);
+        
+        registry.addCategory(category);
+        registry.addWorkstation(category, icon);
+        
+        manager.listAllOfType(recipeType)
+          .stream()
+          .map(entry -> new OritechEmiLaserRecipe(entry, category))
           .forEach(registry::addRecipe);
         
     }

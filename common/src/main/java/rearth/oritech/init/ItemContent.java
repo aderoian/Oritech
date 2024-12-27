@@ -128,6 +128,11 @@ public class ItemContent implements ArchitecturyRegistryContainer<Item> {
     public static final Item SOLID_BIOFUEL = new Item(new Item.Settings());
     
     // reactor items
+    public static final Item RAW_URANIUM = new Item(new Item.Settings());
+    public static final Item URANIUM_GEM = new Item(new Item.Settings());
+    public static final Item URANIUM_DUST = new Item(new Item.Settings());
+    public static final Item PLUTONIUM_GEM = new Item(new Item.Settings());
+    public static final Item PLUTONIUM_DUST = new Item(new Item.Settings());
     public static final Item SMALL_URANIUM_PELLET = new CustomTooltipItem(new Item.Settings(), "tooltip.oritech.small_uranium_pellet");
     public static final Item URANIUM_PELLET = new CustomTooltipItem(new Item.Settings(), "tooltip.oritech.uranium_pellet");
     public static final Item SMALL_PLUTONIUM_PELLET = new CustomTooltipItem(new Item.Settings(), "tooltip.oritech.small_plutonium_pellet");
