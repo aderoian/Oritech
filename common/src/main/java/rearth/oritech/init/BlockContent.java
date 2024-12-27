@@ -215,6 +215,7 @@ public class BlockContent implements ArchitecturyBlockRegistryContainer {
     public static final Block REACTOR_REDSTONE_PORT = new ReactorRedstonePortBlock(AbstractBlock.Settings.copy(Blocks.IRON_BLOCK).nonOpaque());
     
     @NoAutoDrop
+    @ItemContent.ItemGroupTarget(ItemContent.Groups.decorative)
     public static final Block URANIUM_CRYSTAL = new AmethystClusterBlock(7, 3, AbstractBlock.Settings.copy(Blocks.AMETHYST_CLUSTER));
     
     @NoBlockItem
@@ -247,6 +248,9 @@ public class BlockContent implements ArchitecturyBlockRegistryContainer {
     @NoAutoDrop
     @ItemContent.ItemGroupTarget(ItemContent.Groups.decorative)
     public static final Block DEEPSLATE_PLATINUM_ORE = new Block(AbstractBlock.Settings.copy(Blocks.DEEPSLATE_DIAMOND_ORE));
+    @NoAutoDrop
+    @ItemContent.ItemGroupTarget(ItemContent.Groups.decorative)
+    public static final Block DEEPSLATE_URANIUM_ORE = new Block(AbstractBlock.Settings.copy(Blocks.DEEPSLATE_DIAMOND_ORE));
     //endregion
     
     //region resource nodes
@@ -280,6 +284,9 @@ public class BlockContent implements ArchitecturyBlockRegistryContainer {
     @NoAutoDrop
     @ItemContent.ItemGroupTarget(ItemContent.Groups.decorative)
     public static final Block RESOURCE_NODE_PLATINUM = new Block(AbstractBlock.Settings.copy(Blocks.BEDROCK));
+    @NoAutoDrop
+    @ItemContent.ItemGroupTarget(ItemContent.Groups.decorative)
+    public static final Block RESOURCE_NODE_URANIUM = new Block(AbstractBlock.Settings.copy(Blocks.BEDROCK));
     
     // region decorative
     @ItemContent.ItemGroupTarget(ItemContent.Groups.decorative)

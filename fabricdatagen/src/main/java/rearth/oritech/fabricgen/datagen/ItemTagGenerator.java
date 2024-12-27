@@ -30,6 +30,7 @@ public class ItemTagGenerator extends FabricTagProvider.ItemTagProvider {
         // raw ores
         getOrCreateTagBuilder(ConventionalItemTags.RAW_MATERIALS)
           .add(ItemContent.RAW_NICKEL)
+          .add(ItemContent.RAW_URANIUM)
           .add(ItemContent.RAW_PLATINUM);
         
         // dusts
@@ -41,6 +42,8 @@ public class ItemTagGenerator extends FabricTagProvider.ItemTagProvider {
           .add(ItemContent.ELECTRUM_DUST)
           .add(ItemContent.ADAMANT_DUST)
           .add(ItemContent.ENERGITE_DUST)
+          .add(ItemContent.URANIUM_DUST)
+          .add(ItemContent.PLUTONIUM_DUST)
           .add(ItemContent.STEEL_DUST);
         
         getOrCreateTagBuilder(getDustTag("nickel")).add(ItemContent.NICKEL_DUST);
@@ -51,6 +54,8 @@ public class ItemTagGenerator extends FabricTagProvider.ItemTagProvider {
         getOrCreateTagBuilder(getDustTag("adamant")).add(ItemContent.ADAMANT_DUST);
         getOrCreateTagBuilder(getDustTag("energite")).add(ItemContent.ENERGITE_DUST);
         getOrCreateTagBuilder(getDustTag("steel")).add(ItemContent.STEEL_DUST);
+        getOrCreateTagBuilder(getDustTag("uranium")).add(ItemContent.URANIUM_DUST);
+        getOrCreateTagBuilder(getDustTag("plutonium")).add(ItemContent.PLUTONIUM_DUST);
         
         
         // ingots
@@ -106,6 +111,8 @@ public class ItemTagGenerator extends FabricTagProvider.ItemTagProvider {
         getOrCreateTagBuilder(TagContent.PLATINUM_DUSTS).add(ItemContent.PLATINUM_DUST);
         getOrCreateTagBuilder(TagContent.PLATINUM_NUGGETS).add(ItemContent.PLATINUM_NUGGET);
         getOrCreateTagBuilder(TagContent.PLATINUM_INGOTS).add(ItemContent.PLATINUM_INGOT);
+        
+        getOrCreateTagBuilder(TagContent.URANIUM_RAW_ORES).add(ItemContent.RAW_URANIUM);
         
         // biomass
         getOrCreateTagBuilder(TagContent.BIOMASS)

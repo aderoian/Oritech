@@ -141,6 +141,7 @@ public class ModelGenerator extends FabricModelProvider {
         blockStateModelGenerator.registerSimpleCubeAll(BlockContent.DEEPSLATE_NICKEL_ORE);
         blockStateModelGenerator.registerSimpleCubeAll(BlockContent.ENDSTONE_PLATINUM_ORE);
         blockStateModelGenerator.registerSimpleCubeAll(BlockContent.DEEPSLATE_PLATINUM_ORE);
+        blockStateModelGenerator.registerSimpleCubeAll(BlockContent.DEEPSLATE_URANIUM_ORE);
         
         // NODES
         blockStateModelGenerator.registerSimpleCubeAll(BlockContent.RESOURCE_NODE_REDSTONE);
@@ -153,6 +154,7 @@ public class ModelGenerator extends FabricModelProvider {
         blockStateModelGenerator.registerSimpleCubeAll(BlockContent.RESOURCE_NODE_COPPER);
         blockStateModelGenerator.registerSimpleCubeAll(BlockContent.RESOURCE_NODE_NICKEL);
         blockStateModelGenerator.registerSimpleCubeAll(BlockContent.RESOURCE_NODE_PLATINUM);
+        blockStateModelGenerator.registerSimpleCubeAll(BlockContent.RESOURCE_NODE_URANIUM);
         
         //decorative
         blockStateModelGenerator.registerSimpleCubeAll(BlockContent.INDUSTRIAL_GLASS_BLOCK);

@@ -1,19 +1,19 @@
 {
-  "type": "oritech:laser",
+  "type": "oritech:centrifuge",
   "fluidInputAmount": 0,
   "fluidInputVariant": "minecraft:empty",
   "fluidOutputAmount": 0,
   "fluidOutputVariant": "minecraft:empty",
   "ingredients": [
     {
-      "item": "oritech:uranium_crystal"
+      "item": "minecraft:redstone"
     }
   ],
   "results": [
     {
       "count": 1,
-      "id": "oritech:uranium_gem"
+      "id": "oritech:small_uranium_dust"
     }
   ],
-  "time": 1
+  "time": 200
 }

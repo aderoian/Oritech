@@ -63,6 +63,7 @@ public class RecipeGenerator extends FabricRecipeProvider {
         addCompactingRecipes(exporter);
         addReactorFuels(exporter);
         addLaserTransformations(exporter);
+        addUraniumProcessing(exporter);
         
         TechRebornRecipeGenerator.generateRecipes(this.withConditions(exporter, new AllModsLoadedResourceCondition(List.of(TechReborn.MOD_ID))));
         EnergizedPowerRecipeGenerator.generateRecipes(this.withConditions(exporter, new AllModsLoadedResourceCondition(List.of(EnergizedPowerMod.MODID))));
@@ -145,6 +146,7 @@ public class RecipeGenerator extends FabricRecipeProvider {
         addDeepDrillRecipe(exporter, BlockContent.RESOURCE_NODE_DIAMOND, Items.DIAMOND, 1, "diamond");
         addDeepDrillRecipe(exporter, BlockContent.RESOURCE_NODE_NICKEL, ItemContent.RAW_NICKEL, 1, "nickel");
         addDeepDrillRecipe(exporter, BlockContent.RESOURCE_NODE_PLATINUM, ItemContent.RAW_PLATINUM, 1, "platinum");
+        addDeepDrillRecipe(exporter, BlockContent.RESOURCE_NODE_URANIUM, ItemContent.RAW_URANIUM, 1, "uranium");
     }
     
     private void addFuels(RecipeExporter exporter) {
@@ -673,16 +675,61 @@ public class RecipeGenerator extends FabricRecipeProvider {
         addGrinderRecipe(exporter, Ingredient.ofItems(Items.ANCIENT_DEBRIS), Items.NETHERITE_SCRAP, 2, "netheritescrap");
     }
     
+    private void addUraniumProcessing(RecipeExporter exporter) {
+        
+        // uranium order is:
+        // raw ore -> dust/gem, dust -> gem, gem -> pellets
+        
+        // plutonium can be made via either ender laser on crystals (manually, usually low amount)
+        // or via the particle accelerator
+        
+        // small uranium dust from redstone
+        addCentrifugeRecipe(exporter, of(Items.REDSTONE), ItemContent.SMALL_URANIUM_DUST, 1, "redstoneuran");
+        
+        // uranium ore blocks
+        addGrinderRecipe(exporter, of(BlockContent.DEEPSLATE_URANIUM_ORE), List.of(new ItemStack(ItemContent.RAW_URANIUM, 3), new ItemStack(ItemContent.SMALL_PLUTONIUM_DUST)), "uraniumore");
+        addPulverizerRecipe(exporter, of(BlockContent.DEEPSLATE_URANIUM_ORE), ItemContent.RAW_URANIUM, 2, "uraniumore");
+        
+        // raw uranium in grinder
+        addGrinderRecipe(exporter, of(TagContent.URANIUM_RAW_ORES), List.of(new ItemStack(ItemContent.URANIUM_DUST, 2), new ItemStack(ItemContent.SMALL_PLUTONIUM_DUST)), "uranium");
+        addPulverizerRecipe(exporter, of(TagContent.URANIUM_RAW_ORES), ItemContent.URANIUM_DUST, 2, "uranium");
+        
+        // uranium gem from raw uranium / uranium dust in atomic forge
+        addAtomicForgeRecipe(exporter, of(TagContent.URANIUM_RAW_ORES), of(TagContent.COPPER_DUSTS), ItemContent.URANIUM_GEM, 5, "urandust");
+        addAtomicForgeRecipe(exporter, of(TagContent.URANIUM_DUSTS), of(TagContent.COPPER_DUSTS), ItemContent.URANIUM_GEM, 5, "urandustgem");
+        
+        // uranium pellets in assembler
+        addAssemblerRecipe(exporter, of(ItemContent.URANIUM_GEM), of(ItemContent.URANIUM_GEM), of(ItemContent.PLASTIC_SHEET), of(TagContent.NICKEL_INGOTS), ItemContent.URANIUM_PELLET, 2, 1f, "uranpelletbasic");
+        addAssemblerRecipe(exporter, of(ItemContent.URANIUM_GEM), of(ItemContent.URANIUM_GEM), of(ItemContent.PLASTIC_SHEET), of(ItemContent.ADAMANT_INGOT), ItemContent.URANIUM_PELLET, 3, 1f, "uranpelletbetter");
+        addAssemblerRecipe(exporter, of(ItemContent.URANIUM_GEM), of(ItemContent.URANIUM_GEM), of(ItemContent.PLASTIC_SHEET), of(ItemContent.DURATIUM_INGOT), ItemContent.URANIUM_PELLET, 4, 1f, "uranpelletult");
+        
+        // plutonium pellets in assembler
+        addAssemblerRecipe(exporter, of(ItemContent.PLUTONIUM_DUST), of(ItemContent.PLUTONIUM_DUST), of(ItemContent.PLASTIC_SHEET), of(TagContent.NICKEL_INGOTS), ItemContent.PLUTONIUM_PELLET, 2, 1f, "plutoniumpelletbasic");
+        addAssemblerRecipe(exporter, of(ItemContent.PLUTONIUM_DUST), of(ItemContent.PLUTONIUM_DUST), of(ItemContent.PLASTIC_SHEET), of(ItemContent.ADAMANT_INGOT), ItemContent.PLUTONIUM_PELLET, 3, 1f, "plutoniumpelletbetter");
+        addAssemblerRecipe(exporter, of(ItemContent.PLUTONIUM_DUST), of(ItemContent.PLUTONIUM_DUST), of(ItemContent.PLASTIC_SHEET), of(ItemContent.DURATIUM_INGOT), ItemContent.PLUTONIUM_PELLET, 4, 1f, "plutoniumpelletult");
+        
+        // dust compacting
+        addCompactingRecipe(exporter, ItemContent.URANIUM_DUST, ItemContent.SMALL_URANIUM_DUST, of(ItemContent.SMALL_URANIUM_DUST), of(TagContent.URANIUM_DUSTS));
+        addCompactingRecipe(exporter, ItemContent.PLUTONIUM_DUST, ItemContent.SMALL_PLUTONIUM_DUST, of(ItemContent.SMALL_PLUTONIUM_DUST), of(TagContent.PLUTONIUM_DUSTS));
+        
+        // uranium to plutonium
+        addParticleCollisionRecipe(exporter, of(ItemContent.URANIUM_DUST), of(ItemContent.FLUXITE), new ItemStack(ItemContent.PLUTONIUM_DUST), 2500, "plutonium");
+        
+        // pellet compacting
+        addCompactingRecipe(exporter, ItemContent.URANIUM_PELLET, ItemContent.SMALL_URANIUM_PELLET, of(ItemContent.SMALL_URANIUM_PELLET), of(ItemContent.URANIUM_PELLET));
+        addCompactingRecipe(exporter, ItemContent.PLUTONIUM_PELLET, ItemContent.SMALL_PLUTONIUM_PELLET, of(ItemContent.SMALL_PLUTONIUM_PELLET), of(ItemContent.PLUTONIUM_PELLET));
+    }
+    
     private void addReactorFuels(RecipeExporter exporter) {
         addReactorGen(exporter, of(ItemContent.SMALL_URANIUM_PELLET), 200, "smallpellet");
         addReactorGen(exporter, of(ItemContent.URANIUM_PELLET), 2000, "pellet");
-        addReactorGen(exporter, of(ItemContent.SMALL_PLUTONIUM_PELLET), 1000, "smallplutoniumpellet");
-        addReactorGen(exporter, of(ItemContent.PLUTONIUM_PELLET), 10000, "plutoniumpellet");
+        addReactorGen(exporter, of(ItemContent.SMALL_PLUTONIUM_PELLET), 2000, "smallplutoniumpellet");
+        addReactorGen(exporter, of(ItemContent.PLUTONIUM_PELLET), 20000, "plutoniumpellet");
     }
     
     private void addLaserTransformations(RecipeExporter exporter) {
         addLaserRecipe(exporter, of(Items.AMETHYST_CLUSTER), ItemContent.FLUXITE, "fluxite");
-        addLaserRecipe(exporter, of(BlockContent.URANIUM_CRYSTAL), ItemContent.URANIUM_GEM, "uranium");
+        addLaserRecipe(exporter, of(BlockContent.URANIUM_CRYSTAL), ItemContent.PLUTONIUM_DUST, "plutoniumdust");
     }
     
     private Ingredient of(ItemConvertible item) {
@@ -743,7 +790,7 @@ public class RecipeGenerator extends FabricRecipeProvider {
     }
     
     private void addAssemblerRecipe(RecipeExporter exporter, Ingredient A, Ingredient B, Ingredient C, Ingredient D, Item result, int count, float timeMultiplier, String suffix) {
-        var defaultSpeed = 200;
+        var defaultSpeed = 160;
         var speed = (int) (defaultSpeed * timeMultiplier);
         var inputs = new ArrayList<Ingredient>();
         inputs.add(A);
