@@ -31,6 +31,7 @@ import net.minecraft.util.math.Vec3i;
 import net.minecraft.world.World;
 import org.jetbrains.annotations.Nullable;
 import rearth.oritech.Oritech;
+import rearth.oritech.block.base.entity.FluidMultiblockGeneratorBlockEntity;
 import rearth.oritech.block.base.entity.MachineBlockEntity;
 import rearth.oritech.block.base.entity.MultiblockMachineEntity;
 import rearth.oritech.client.init.ModScreens;
@@ -96,6 +97,8 @@ public class CentrifugeBlockEntity extends MultiblockMachineEntity implements Fl
             var bucketOut = bucketInventory.getStack(1);
             processBucket(bucketIn, bucketOut, inputStorage, outputStorage);
         }
+        
+        FluidMultiblockGeneratorBlockEntity.resetEmptyFluidTank(inputStorage);
         
         super.tick(world, pos, state, blockEntity);
     }
