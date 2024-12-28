@@ -117,6 +117,7 @@ public class ItemTagGenerator extends FabricTagProvider.ItemTagProvider {
         // biomass
         getOrCreateTagBuilder(TagContent.BIOMASS)
           .addOptionalTag(ItemTags.VILLAGER_PLANTABLE_SEEDS)
+          .addOptionalTag(TagKey.of(RegistryKeys.ITEM, Identifier.of("c", "seeds")))
           .addOptionalTag(ItemTags.SAPLINGS)
           .addOptionalTag(ConventionalItemTags.FOODS)
           .addOptionalTag(ConventionalItemTags.CROPS)
@@ -201,6 +202,10 @@ public class ItemTagGenerator extends FabricTagProvider.ItemTagProvider {
         getOrCreateTagBuilder(TagContent.SILICON)
           .add(ItemContent.SILICON);
         
+        // plastic
+        getOrCreateTagBuilder(TagContent.PLASTIC_PLATES)
+          .add(ItemContent.PLASTIC_SHEET);
+        
         // carbon fibre
         getOrCreateTagBuilder(TagContent.CARBON_FIBRE)
           .add(ItemContent.CARBON_FIBRE_STRANDS);
@@ -234,6 +239,19 @@ public class ItemTagGenerator extends FabricTagProvider.ItemTagProvider {
         getOrCreateTagBuilder(ItemTags.LEG_ARMOR_ENCHANTABLE)
           .add(ToolsContent.EXO_LEGGINGS);
         getOrCreateTagBuilder(ItemTags.FOOT_ARMOR_ENCHANTABLE)
+          .add(ToolsContent.EXO_BOOTS);
+        
+        getOrCreateTagBuilder(ItemTags.HEAD_ARMOR)
+          .add(ToolsContent.EXO_HELMET);
+        getOrCreateTagBuilder(ItemTags.CHEST_ARMOR)
+          .add(ToolsContent.JETPACK)
+          .add(ToolsContent.JETPACK_ELYTRA)
+          .add(ToolsContent.JETPACK_EXO_ELYTRA)
+          .add(ToolsContent.EXO_JETPACK)
+          .add(ToolsContent.EXO_CHESTPLATE);
+        getOrCreateTagBuilder(ItemTags.LEG_ARMOR)
+          .add(ToolsContent.EXO_LEGGINGS);
+        getOrCreateTagBuilder(ItemTags.FOOT_ARMOR)
           .add(ToolsContent.EXO_BOOTS);
 
         getOrCreateTagBuilder(ItemTags.DURABILITY_ENCHANTABLE)

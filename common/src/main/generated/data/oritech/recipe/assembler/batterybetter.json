@@ -6,7 +6,7 @@
   "fluidOutputVariant": "minecraft:empty",
   "ingredients": [
     {
-      "item": "oritech:plastic_sheet"
+      "tag": "c:plates/plastic"
     },
     {
       "item": "oritech:fluxite"

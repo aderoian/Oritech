@@ -12,7 +12,7 @@
       "item": "oritech:plutonium_dust"
     },
     {
-      "item": "oritech:plastic_sheet"
+      "tag": "c:plates/plastic"
     },
     {
       "item": "oritech:adamant_ingot"

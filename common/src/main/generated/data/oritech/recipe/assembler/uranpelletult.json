@@ -12,7 +12,7 @@
       "item": "oritech:uranium_gem"
     },
     {
-      "item": "oritech:plastic_sheet"
+      "tag": "c:plates/plastic"
     },
     {
       "item": "oritech:duratium_ingot"
