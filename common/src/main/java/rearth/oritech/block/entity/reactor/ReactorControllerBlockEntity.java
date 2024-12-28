@@ -22,6 +22,7 @@ import net.minecraft.util.math.Vec3i;
 import net.minecraft.world.World;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Vector2i;
+import rearth.oritech.Oritech;
 import rearth.oritech.block.blocks.reactor.*;
 import rearth.oritech.client.init.ModScreens;
 import rearth.oritech.client.init.ParticleContent;
@@ -38,15 +39,13 @@ import java.util.*;
 
 public class ReactorControllerBlockEntity extends BlockEntity implements BlockEntityTicker<ReactorControllerBlockEntity>, EnergyApi.BlockProvider, ExtendedScreenHandlerFactory {
     
-    public static final int MAX_SIZE = 64;
-    public static final int RF_PER_PULSE = 64;
-    public static final int ABSORBER_RATE = 16;
-    public static final int VENT_BASE_RATE = 4;
-    public static final int VENT_RELATIVE_RATE = 100;
-    public static final int MAX_HEAT = 2000;
-    public static final int MAX_UNSTABLE_TICKS = 400;
-    public static final Boolean EASY_MODE = true;   // disables explosions, and instead only disables reactor
-    public static final int EASY_MODE_COOLDOWN = 2400;   // disables explosions, and instead only disables reactor
+    public static final int MAX_SIZE = Oritech.CONFIG.maxSize();
+    public static final int RF_PER_PULSE = Oritech.CONFIG.rfPerPulse();
+    public static final int ABSORBER_RATE = Oritech.CONFIG.absorberRate();
+    public static final int VENT_BASE_RATE = Oritech.CONFIG.ventBaseRate();
+    public static final int VENT_RELATIVE_RATE = Oritech.CONFIG.ventRelativeRate();
+    public static final int MAX_HEAT = Oritech.CONFIG.maxHeat();
+    public static final int MAX_UNSTABLE_TICKS = Oritech.CONFIG.maxUnstableTicks();
     
     private final HashMap<Vector2i, BaseReactorBlock> activeComponents = new HashMap<>();   // 2d local position on the first layer containing the reactor blocks
     private final HashMap<Vector2i, ReactorFuelPortEntity> fuelPorts = new HashMap<>();     // same grid, but contains a reference to the port at the ceiling
@@ -292,7 +291,7 @@ public class ReactorControllerBlockEntity extends BlockEntity implements BlockEn
     // strength is the amount of total active rods (e.g. activeRods * stackHeight)
     private void doReactorExplosion(int strength) {
         
-        if (EASY_MODE) {
+        if (Oritech.CONFIG.safeMode()) {
             disableReactor();
             return;
         }
@@ -308,7 +307,7 @@ public class ReactorControllerBlockEntity extends BlockEntity implements BlockEn
     }
     
     private void disableReactor() {
-        this.disabledUntil = world.getTime() + EASY_MODE_COOLDOWN;
+        this.disabledUntil = world.getTime() + Oritech.CONFIG.safeModeCooldown();
     }
     
     public void init(@Nullable PlayerEntity player) {
