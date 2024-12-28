@@ -1,0 +1,47 @@
+The nuclear update! Adds nuclear reactors, along with a lot of addition new stuff and improvements:
+- Add nuclear reactor variable-sized multiblock (visuals & animation will probably get overhauled soon)
+- Add 2 nuke blocks for different sizes
+- Add uranium ore / crystal / resource node generation
+- Add industrial chiller, new multiblock machine for creating ice
+- Add auxiliary processing chamber addon
+- Add the ability for the centrifuge to process normal and fluid recipes without having to remove the addon
+- Add the option to define a blacklist for the spawner controller (entity tag: 'oritech:spawner_blacklist')
+- Add energy transfer amount label to machine UIs
+- Add missing fragment forge parity recipes
+- Add data driven enderic laser recipes (with JEI/REI/EMI entries)
+- Add data driven enderic laser block boosting (using tag: 'c:budding_blocks')
+
+- Improve metal components textures (@BLOKBUSTR)
+- Reduce processing times for most machines
+- Improve docs for particle accelerators, tree cutters, desert wells, bedrock extractors, and a few more
+- Improve drone ports by adding addon slots and allowing fluid transport with fluid addons
+- Reduce resource node spawn rates
+- Reduce exosuit armor amount to iron-like
+- Improve enderic laser visuals, making the beam more centered on the model
+- Reduce desert oil well generation rates
+- Improve JEI plugin by adding a fluid slot tank background
+- Update overcharged crystal collision recipe to use energite instead of electrum
+- Reduce pulverizer sound volume
+- Update unholy intelligence texture to have a better matching inner color
+- Change plastic plates to use the 'c:plates/plastic' tag, update all recipes accordingly
+
+- Fix arcane catalysts not being boostable with enderic lasers
+- Fix particle accelerator collisions not being guaranteed in the first pass
+- Fix particle accelerator impact energy calculations being affected by gate distance (this might break some existing setups)
+- Fix portable fluid tank content tooltip not showing
+- Fix portable energy storages not auto-updating comparators
+- Fix sounds being played too often for fast/energy-hungry machines
+- Fix sounds not being positioned by converting all sounds to mono channel
+- Fix possible energy pipe crash
+- Fix exo armor / jetpack not having respective armor slot tags
+- Fix lasers not getting drops for AE2 certus quartz cluster (@VasariRulez)
+- Fix possible fluid insertion issues when changing fluids in centrifuge / fluid generators
+- Fix superconductors not always dropping when mined
+- Fix super long fragment forge ore processing times
+- Fix water display amounts in JEI and EMI recipes
+- Fix oritech fluids being fully transparent in some UIs on neoforge (e.g. JEI and Mekanism)
+- Fix invalid pipe extraction state updates on neighbor blockupdates (@aderoian)
+- Fix crash when using comparators on large energy storages (@aderoian)
+- Fix resource node generation issues in some biomes (@aderoian)
+- Fix possible crashes when rotating/mirroring machine addons
+- Fix possible caching issues with machine core connection when rebuilding machines
