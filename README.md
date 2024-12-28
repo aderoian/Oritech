@@ -142,7 +142,8 @@ In detail, these are the following items that are from the above-mentioned sourc
 * jshipley, for a lot of contributions with new features, block, mechanics and bugfixes
 * CrazyMiner34, for improvements to item rendering in 3rd person & the wrench texture
 * NovaKatt, for creating most of the metal / compacted block textures
-* Armen, for making the pipes configurable with the wrench and some more improvements
+* Armen, for making the pipes configurable with the wrench and ton of additional improvements
+* VasariRulez, for improving compatibility of the enderic laser with AE2 quartz clusters
 
 ## Sound Credits
  * Nuke Sound: Atomic Explosion and Sub Rumble.wav by GowlerMusic -- https://freesound.org/s/265459/ -- License: Attribution 4.0
