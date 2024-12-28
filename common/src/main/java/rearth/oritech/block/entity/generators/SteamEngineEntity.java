@@ -288,7 +288,7 @@ public class SteamEngineEntity extends FluidMultiblockGeneratorBlockEntity {
         var worldPosF = (BlockPos) Geometry.offsetToWorldPosition(facing, posF, pos);
         
         res.add(new Pair<>(worldPosA, Geometry.fromVector(Geometry.getForward(facing))));
-        res.add(new Pair<>(worldPosB, Geometry.fromVector(Geometry.getLeft(facing))));  // todo check these directions
+        res.add(new Pair<>(worldPosB, Geometry.fromVector(Geometry.getLeft(facing))));
         res.add(new Pair<>(worldPosC, Geometry.fromVector(Geometry.getRight(facing))));
         res.add(new Pair<>(worldPosD, Geometry.fromVector(Geometry.getLeft(facing))));
         res.add(new Pair<>(worldPosE, Geometry.fromVector(Geometry.getRight(facing))));
