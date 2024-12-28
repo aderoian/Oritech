@@ -690,6 +690,10 @@ public class RecipeGenerator extends FabricRecipeProvider {
         addGrinderRecipe(exporter, of(BlockContent.DEEPSLATE_URANIUM_ORE), List.of(new ItemStack(ItemContent.RAW_URANIUM, 3), new ItemStack(ItemContent.SMALL_PLUTONIUM_DUST)), "uraniumore");
         addPulverizerRecipe(exporter, of(BlockContent.DEEPSLATE_URANIUM_ORE), ItemContent.RAW_URANIUM, 2, "uraniumore");
         
+        // uranium crystal blocks
+        addGrinderRecipe(exporter, of(BlockContent.URANIUM_CRYSTAL), List.of(new ItemStack(ItemContent.RAW_URANIUM, 5), new ItemStack(ItemContent.SMALL_PLUTONIUM_DUST)), "uraniumcrystal");
+        addPulverizerRecipe(exporter, of(BlockContent.URANIUM_CRYSTAL), ItemContent.RAW_URANIUM, 4, "uraniumcrystal");
+        
         // raw uranium in grinder
         addGrinderRecipe(exporter, of(TagContent.URANIUM_RAW_ORES), List.of(new ItemStack(ItemContent.URANIUM_DUST, 2), new ItemStack(ItemContent.SMALL_PLUTONIUM_DUST)), "uranium");
         addPulverizerRecipe(exporter, of(TagContent.URANIUM_RAW_ORES), ItemContent.URANIUM_DUST, 2, "uranium");

@@ -216,7 +216,7 @@ public class BlockContent implements ArchitecturyBlockRegistryContainer {
     
     @NoAutoDrop
     @ItemContent.ItemGroupTarget(ItemContent.Groups.decorative)
-    public static final Block URANIUM_CRYSTAL = new AmethystClusterBlock(7, 3, AbstractBlock.Settings.copy(Blocks.AMETHYST_CLUSTER));
+    public static final Block URANIUM_CRYSTAL = new AmethystClusterBlock(7, 3, AbstractBlock.Settings.copy(Blocks.AMETHYST_CLUSTER).luminance(state -> 5));
     
     @NoBlockItem
     public static final Block REACTOR_EXPLOSION_SMALL = new NuclearExplosionBlock(AbstractBlock.Settings.copy(Blocks.IRON_BLOCK), 9);
