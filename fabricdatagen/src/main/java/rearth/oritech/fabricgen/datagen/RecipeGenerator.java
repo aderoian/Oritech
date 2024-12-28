@@ -64,6 +64,7 @@ public class RecipeGenerator extends FabricRecipeProvider {
         addReactorFuels(exporter);
         addLaserTransformations(exporter);
         addUraniumProcessing(exporter);
+        addReactorBlocks(exporter);
         
         TechRebornRecipeGenerator.generateRecipes(this.withConditions(exporter, new AllModsLoadedResourceCondition(List.of(TechReborn.MOD_ID))));
         EnergizedPowerRecipeGenerator.generateRecipes(this.withConditions(exporter, new AllModsLoadedResourceCondition(List.of(EnergizedPowerMod.MODID))));
@@ -724,6 +725,51 @@ public class RecipeGenerator extends FabricRecipeProvider {
         addCompactingRecipe(exporter, ItemContent.PLUTONIUM_PELLET, ItemContent.SMALL_PLUTONIUM_PELLET, of(ItemContent.SMALL_PLUTONIUM_PELLET), of(ItemContent.PLUTONIUM_PELLET));
     }
     
+    private void addReactorBlocks(RecipeExporter exporter) {
+        
+        // single rod
+        offerRodRecipe(exporter, BlockContent.REACTOR_ROD.asItem(), of(TagContent.PLASTIC_PLATES), of(ItemContent.ENERGITE_INGOT), "singlerod");
+        // dual rod
+        offerRodCombinationRecipe(exporter, BlockContent.REACTOR_DOUBLE_ROD.asItem(), of(BlockContent.REACTOR_REFLECTOR), of(BlockContent.REACTOR_ROD), "doublerod");
+        // quad rod
+        offerRodCombinationRecipe(exporter, BlockContent.REACTOR_QUAD_ROD.asItem(), of(BlockContent.REACTOR_REFLECTOR), of(BlockContent.REACTOR_DOUBLE_ROD), "quadrod");
+        
+        // reactor plating: steel and machine plating in crafting table / assembler
+        offerMachinePlatingRecipe(exporter, BlockContent.REACTOR_WALL.asItem(), of(TagContent.MACHINE_PLATING), of(TagContent.STEEL_INGOTS), of(TagContent.NICKEL_INGOTS), 4, "reactorplatingcrafting");
+        addAssemblerRecipe(exporter, of(TagContent.MACHINE_PLATING), of(TagContent.MACHINE_PLATING),of(TagContent.STEEL_INGOTS), of(TagContent.NICKEL_INGOTS), BlockContent.REACTOR_WALL.asItem(), 3, 1, "reactorplatingalt");
+        
+        // neutron reflectors: expensive, needs duratium core, adamant frame and reactor walls
+        offerMachinePlatingRecipe(exporter, BlockContent.REACTOR_REFLECTOR.asItem(), of(BlockContent.REACTOR_WALL), of(ItemContent.ADAMANT_INGOT), of(ItemContent.DURATIUM_INGOT), 1, "reflector");
+        
+        // reactor controller: reactor wall, processing unit
+        offerRodCombinationRecipe(exporter, BlockContent.REACTOR_CONTROLLER.asItem(), of(BlockContent.REACTOR_WALL), of(ItemContent.PROCESSING_UNIT), "controller");
+        
+        // reactor energy port: reactor wall, storage unit, electrum
+        offerParticleMotorRecipe(exporter, BlockContent.REACTOR_ENERGY_PORT.asItem(), of(TagContent.ELECTRUM_INGOTS), of(BlockContent.ENERGY_PIPE), of(BlockContent.REACTOR_WALL), of(ConventionalItemTags.IRON_INGOTS), "energyport");
+        
+        // reactor redstone port: wall, processing unit, repeater, torch
+        offerParticleMotorRecipe(exporter, BlockContent.REACTOR_REDSTONE_PORT.asItem(), of(ItemContent.PROCESSING_UNIT), of(Items.REPEATER), of(BlockContent.REACTOR_WALL), of(Items.REDSTONE_TORCH), "redstoneport");
+        
+        // reactor fuel port: wall, hopper, motor, item pipe
+        offerParticleMotorRecipe(exporter, BlockContent.REACTOR_FUEL_PORT.asItem(), of(BlockContent.ITEM_PIPE), of(Items.HOPPER), of(BlockContent.REACTOR_WALL), of(ConventionalItemTags.CHESTS), "fuelport");
+        
+        // reactor absorber port: wall, ice, motor, item pipe
+        offerParticleMotorRecipe(exporter, BlockContent.REACTOR_ABSORBER_PORT.asItem(), of(BlockContent.ITEM_PIPE), of(Items.HOPPER), of(BlockContent.REACTOR_WALL), of(Blocks.ICE), "absorberport");
+        
+        // reactor absorber : wall, steel, ice
+        offerBatteryRecipe(exporter, BlockContent.REACTOR_CONDENSER.asItem(), of(Items.ICE), of(ConventionalItemTags.GLASS_BLOCKS), of(TagContent.STEEL_INGOTS), "condenser");
+        
+        // reactor vent: motor, carbon fibre
+        offerStarRecipe(exporter, BlockContent.REACTOR_VENT.asItem(), of(ItemContent.MOTOR), of(TagContent.CARBON_FIBRE), "reactorvent");
+        
+        // reactor heat pipe: electrum, gold
+        offerStarRecipe(exporter, BlockContent.REACTOR_HEAT_PIPE.asItem(), of(TagContent.ELECTRUM_INGOTS), of(ConventionalItemTags.GOLD_INGOTS), "reactorheatpipe");
+        
+        // explosives
+        offerMachinePlatingRecipe(exporter, BlockContent.LOW_YIELD_NUKE.asItem(), of(ItemContent.DUBIOS_CONTAINER), of(ItemContent.URANIUM_PELLET), of(Items.TNT), 1, "nuke");
+        offerMachinePlatingRecipe(exporter, BlockContent.NUKE.asItem(), of(ItemContent.HEISENBERG_COMPENSATOR), of(ItemContent.PLUTONIUM_PELLET), of(Items.TNT), 1, "nukebetter");
+    }
+    
     private void addReactorFuels(RecipeExporter exporter) {
         addReactorGen(exporter, of(ItemContent.SMALL_URANIUM_PELLET), 200, "smallpellet");
         addReactorGen(exporter, of(ItemContent.URANIUM_PELLET), 2000, "pellet");
@@ -1017,6 +1063,14 @@ public class RecipeGenerator extends FabricRecipeProvider {
         builder.criterion(hasItem(output), conditionsFromItem(output)).offerTo(exporter, "crafting/" + suffix);
     }
     
+    public void offerBatteryRecipe(RecipeExporter exporter, Item output, Ingredient inner, Ingredient sides, Ingredient top, String suffix) {
+        var builder = ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, output, 1).input('t', top).input('c', inner).input('f', sides)
+                        .pattern(" t ")
+                        .pattern("fcf")
+                        .pattern("fcf");
+        builder.criterion(hasItem(output), conditionsFromItem(output)).offerTo(exporter, "crafting/" + suffix);
+    }
+    
     public void offerMachineFrameRecipe(RecipeExporter exporter, Item output, Ingredient base, Ingredient alt, int count, String suffix) {
         var builder = ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, output, count).input('s', base).input('c', alt)
                         .pattern(" s ")
@@ -1102,6 +1156,30 @@ public class RecipeGenerator extends FabricRecipeProvider {
                         .pattern("   ")
                         .pattern("p p")
                         .pattern("c c");
+        builder.criterion(hasItem(output), conditionsFromItem(output)).offerTo(exporter, "crafting/" + suffix);
+    }
+    
+    public void offerRodRecipe(RecipeExporter exporter, Item output, Ingredient cap, Ingredient rod, String suffix) {
+        var builder = ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, output, 1).input('c', cap).input('r', rod)
+                        .pattern(" c ")
+                        .pattern(" r ")
+                        .pattern(" r ");
+        builder.criterion(hasItem(output), conditionsFromItem(output)).offerTo(exporter, "crafting/" + suffix);
+    }
+    
+    public void offerRodCombinationRecipe(RecipeExporter exporter, Item output, Ingredient cap, Ingredient rod, String suffix) {
+        var builder = ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, output, 1).input('c', cap).input('r', rod)
+                        .pattern("   ")
+                        .pattern("rcr")
+                        .pattern("   ");
+        builder.criterion(hasItem(output), conditionsFromItem(output)).offerTo(exporter, "crafting/" + suffix);
+    }
+    
+    public void offerStarRecipe(RecipeExporter exporter, Item output, Ingredient inner, Ingredient outer, String suffix) {
+        var builder = ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, output, 1).input('c', inner).input('o', outer)
+                        .pattern(" o ")
+                        .pattern("oco")
+                        .pattern(" o ");
         builder.criterion(hasItem(output), conditionsFromItem(output)).offerTo(exporter, "crafting/" + suffix);
     }
     
