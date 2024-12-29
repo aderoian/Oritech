@@ -146,4 +146,9 @@ In detail, these are the following items that are from the above-mentioned sourc
 * VasariRulez, for improving compatibility of the enderic laser with AE2 quartz clusters
 
 ## Sound Credits
- * Nuke Sound: Atomic Explosion and Sub Rumble.wav by GowlerMusic -- https://freesound.org/s/265459/ -- License: Attribution 4.0
+ * Nuke Explosion: Atomic Explosion and Sub Rumble.wav by GowlerMusic -- https://freesound.org/s/265459/ -- License: Attribution 4.0
+ * Bio Generator: Squishy Gore.mp3 by DigPro120 -- https://freesound.org/s/432653/ -- License: Creative Commons 0
+ * Generators: Spinning reel.wav by tosha73 -- https://freesound.org/s/509902/ -- License: Creative Commons 0
+ * Lava Generator: Heavy Bubbles by casiba842 -- https://freesound.org/s/577880/ -- License: Creative Commons 0
+ * Furnace: burning-fire-steam.wav by laribum -- https://freesound.org/s/213802/ -- License: Creative Commons 0
+ * Drone takeoff: Mini Quadcopter Flying Loop by simeonradivoev -- https://freesound.org/s/383852/ -- License: Creative Commons 0
