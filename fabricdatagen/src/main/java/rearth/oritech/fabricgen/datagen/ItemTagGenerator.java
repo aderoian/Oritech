@@ -90,6 +90,7 @@ public class ItemTagGenerator extends FabricTagProvider.ItemTagProvider {
         
         getOrCreateTagBuilder(TagContent.NICKEL_ORES).add(BlockContent.NICKEL_ORE.asItem(), BlockContent.DEEPSLATE_NICKEL_ORE.asItem());
         getOrCreateTagBuilder(TagContent.PLATINUM_ORES).add(BlockContent.DEEPSLATE_PLATINUM_ORE.asItem(), BlockContent.ENDSTONE_PLATINUM_ORE.asItem());
+        getOrCreateTagBuilder(TagContent.URANIUM_ORES).add(BlockContent.DEEPSLATE_URANIUM_ORE.asItem());
         
         getOrCreateTagBuilder(TagContent.STEEL_INGOTS).add(ItemContent.STEEL_INGOT).add(ItemContent.BIOSTEEL_INGOT);
         getOrCreateTagBuilder(TagContent.QUARTZ_DUSTS).add(ItemContent.QUARTZ_DUST);
@@ -102,17 +103,17 @@ public class ItemTagGenerator extends FabricTagProvider.ItemTagProvider {
         getOrCreateTagBuilder(TagContent.GOLD_DUSTS).add(ItemContent.GOLD_DUST);
         
         // custom ores
-        getOrCreateTagBuilder(TagContent.NICKEL_RAW_ORES).add(ItemContent.RAW_NICKEL);
+        getOrCreateTagBuilder(TagContent.NICKEL_RAW_MATERIALS).add(ItemContent.RAW_NICKEL);
         getOrCreateTagBuilder(TagContent.NICKEL_DUSTS).add(ItemContent.NICKEL_DUST);
         getOrCreateTagBuilder(TagContent.NICKEL_NUGGETS).add(ItemContent.NICKEL_NUGGET);
         getOrCreateTagBuilder(TagContent.NICKEL_INGOTS).add(ItemContent.NICKEL_INGOT);
         
-        getOrCreateTagBuilder(TagContent.PLATINUM_RAW_ORES).add(ItemContent.RAW_PLATINUM);
+        getOrCreateTagBuilder(TagContent.PLATINUM_RAW_MATERIALS).add(ItemContent.RAW_PLATINUM);
         getOrCreateTagBuilder(TagContent.PLATINUM_DUSTS).add(ItemContent.PLATINUM_DUST);
         getOrCreateTagBuilder(TagContent.PLATINUM_NUGGETS).add(ItemContent.PLATINUM_NUGGET);
         getOrCreateTagBuilder(TagContent.PLATINUM_INGOTS).add(ItemContent.PLATINUM_INGOT);
         
-        getOrCreateTagBuilder(TagContent.URANIUM_RAW_ORES).add(ItemContent.RAW_URANIUM);
+        getOrCreateTagBuilder(TagContent.URANIUM_RAW_MATERIALS).add(ItemContent.RAW_URANIUM);
         
         // biomass
         getOrCreateTagBuilder(TagContent.BIOMASS)

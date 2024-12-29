@@ -479,8 +479,8 @@ public class RecipeGenerator extends FabricRecipeProvider {
         addCompactingRecipe(exporter, BlockContent.PLASTIC_BLOCK, ItemContent.PLASTIC_SHEET, of(TagContent.PLASTIC_PLATES), of(ItemTagGenerator.getStorageBlockTag("plastic")));
         addCompactingRecipe(exporter, BlockContent.FLUXITE_BLOCK, ItemContent.FLUXITE, of(ItemContent.FLUXITE), of(ItemTagGenerator.getStorageBlockTag("fluxite")));
         addCompactingRecipe(exporter, BlockContent.SILICON_BLOCK, ItemContent.SILICON, of(TagContent.SILICON), of(ItemTagGenerator.getStorageBlockTag("silicon")));
-        addCompactingRecipe(exporter, BlockContent.RAW_NICKEL_BLOCK, ItemContent.RAW_NICKEL, of(TagContent.NICKEL_RAW_ORES), of(ItemTagGenerator.getStorageBlockTag("raw_nickel")));
-        addCompactingRecipe(exporter, BlockContent.RAW_PLATINUM_BLOCK, ItemContent.RAW_PLATINUM, of(TagContent.PLATINUM_RAW_ORES), of(ItemTagGenerator.getStorageBlockTag("raw_platinum")));
+        addCompactingRecipe(exporter, BlockContent.RAW_NICKEL_BLOCK, ItemContent.RAW_NICKEL, of(TagContent.NICKEL_RAW_MATERIALS), of(ItemTagGenerator.getStorageBlockTag("raw_nickel")));
+        addCompactingRecipe(exporter, BlockContent.RAW_PLATINUM_BLOCK, ItemContent.RAW_PLATINUM, of(TagContent.PLATINUM_RAW_MATERIALS), of(ItemTagGenerator.getStorageBlockTag("raw_platinum")));
         
     }
     
@@ -696,11 +696,11 @@ public class RecipeGenerator extends FabricRecipeProvider {
         addPulverizerRecipe(exporter, of(BlockContent.URANIUM_CRYSTAL), ItemContent.RAW_URANIUM, 4, "uraniumcrystal");
         
         // raw uranium in grinder
-        addGrinderRecipe(exporter, of(TagContent.URANIUM_RAW_ORES), List.of(new ItemStack(ItemContent.URANIUM_DUST, 2), new ItemStack(ItemContent.SMALL_PLUTONIUM_DUST)), "uranium");
-        addPulverizerRecipe(exporter, of(TagContent.URANIUM_RAW_ORES), ItemContent.URANIUM_DUST, 2, "uranium");
+        addGrinderRecipe(exporter, of(TagContent.URANIUM_RAW_MATERIALS), List.of(new ItemStack(ItemContent.URANIUM_DUST, 2), new ItemStack(ItemContent.SMALL_PLUTONIUM_DUST)), "uranium");
+        addPulverizerRecipe(exporter, of(TagContent.URANIUM_RAW_MATERIALS), ItemContent.URANIUM_DUST, 2, "uranium");
         
         // uranium gem from raw uranium / uranium dust in atomic forge
-        addAtomicForgeRecipe(exporter, of(TagContent.URANIUM_RAW_ORES), of(TagContent.COPPER_DUSTS), ItemContent.URANIUM_GEM, 5, "urandust");
+        addAtomicForgeRecipe(exporter, of(TagContent.URANIUM_RAW_MATERIALS), of(TagContent.COPPER_DUSTS), ItemContent.URANIUM_GEM, 5, "urandust");
         addAtomicForgeRecipe(exporter, of(TagContent.URANIUM_DUSTS), of(TagContent.COPPER_DUSTS), ItemContent.URANIUM_GEM, 5, "urandustgem");
         
         // uranium pellets in assembler
@@ -718,7 +718,7 @@ public class RecipeGenerator extends FabricRecipeProvider {
         addCompactingRecipe(exporter, ItemContent.PLUTONIUM_DUST, ItemContent.SMALL_PLUTONIUM_DUST, of(ItemContent.SMALL_PLUTONIUM_DUST), of(TagContent.PLUTONIUM_DUSTS));
         
         // uranium to plutonium
-        addParticleCollisionRecipe(exporter, of(ItemContent.URANIUM_DUST), of(ItemContent.FLUXITE), new ItemStack(ItemContent.PLUTONIUM_DUST), 2500, "plutonium");
+        addParticleCollisionRecipe(exporter, of(TagContent.URANIUM_DUSTS), of(ItemContent.FLUXITE), new ItemStack(ItemContent.PLUTONIUM_DUST), 2500, "plutonium");
         
         // pellet compacting
         addCompactingRecipe(exporter, ItemContent.URANIUM_PELLET, ItemContent.SMALL_URANIUM_PELLET, of(ItemContent.SMALL_URANIUM_PELLET), of(ItemContent.URANIUM_PELLET));

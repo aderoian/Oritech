@@ -6,7 +6,7 @@
   "fluidOutputVariant": "minecraft:empty",
   "ingredients": [
     {
-      "item": "oritech:uranium_dust"
+      "tag": "c:dusts/uranium"
     },
     {
       "item": "oritech:fluxite"

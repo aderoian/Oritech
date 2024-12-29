@@ -6,7 +6,7 @@
   "fluidOutputVariant": "minecraft:empty",
   "ingredients": [
     {
-      "tag": "c:raw_ores/uranium"
+      "tag": "c:raw_materials/uranium"
     }
   ],
   "results": [

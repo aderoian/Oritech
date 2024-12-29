@@ -2,7 +2,7 @@ package rearth.oritech.fabricgen.datagen;
 
 import net.fabricmc.fabric.api.datagen.v1.FabricDataOutput;
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricTagProvider;
-import net.fabricmc.fabric.api.tag.convention.v1.ConventionalBlockTags;
+import net.fabricmc.fabric.api.tag.convention.v2.ConventionalBlockTags;
 import net.minecraft.block.Blocks;
 import net.minecraft.registry.RegistryWrapper;
 import net.minecraft.registry.tag.BlockTags;
@@ -59,6 +59,13 @@ public class BlockTagGenerator extends FabricTagProvider.BlockTagProvider {
           .add(BlockContent.DEEPSLATE_PLATINUM_ORE)
           .add(BlockContent.DEEPSLATE_URANIUM_ORE)
           .add(BlockContent.ENDSTONE_PLATINUM_ORE);
+        
+        getOrCreateTagBuilder(TagContent.NICKEL_ORE_BLOCKS)
+          .add(BlockContent.NICKEL_ORE, BlockContent.DEEPSLATE_NICKEL_ORE);
+        getOrCreateTagBuilder(TagContent.PLATINUM_ORE_BLOCKS)
+          .add(BlockContent.DEEPSLATE_PLATINUM_ORE, BlockContent.ENDSTONE_PLATINUM_ORE);
+        getOrCreateTagBuilder(TagContent.URANIUM_ORE_BLOCKS)
+          .add(BlockContent.DEEPSLATE_URANIUM_ORE);
         
         getOrCreateTagBuilder(TagContent.DRILL_MINEABLE)
           .addOptionalTag(BlockTags.PICKAXE_MINEABLE)

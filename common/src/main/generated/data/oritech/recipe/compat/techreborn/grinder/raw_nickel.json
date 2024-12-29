@@ -10,7 +10,7 @@
   "type": "techreborn:grinder",
   "ingredients": [
     {
-      "tag": "c:raw_ores/nickel"
+      "tag": "c:raw_materials/nickel"
     }
   ],
   "outputs": [

@@ -27,19 +27,23 @@ public class TagContent {
     public static final TagKey<Item> ELECTRUM_INGOTS = TagKey.of(RegistryKeys.ITEM, Identifier.of("c", "ingots/electrum"));
     
     // custom ores
-    public static final TagKey<Item> NICKEL_RAW_ORES = TagKey.of(RegistryKeys.ITEM, Identifier.of("c", "raw_ores/nickel"));
+    public static final TagKey<Item> NICKEL_RAW_MATERIALS = TagKey.of(RegistryKeys.ITEM, Identifier.of("c", "raw_materials/nickel"));
     public static final TagKey<Item> NICKEL_DUSTS = TagKey.of(RegistryKeys.ITEM, Identifier.of("c", "dusts/nickel"));
     public static final TagKey<Item> NICKEL_NUGGETS = TagKey.of(RegistryKeys.ITEM, Identifier.of("c", "nuggets/nickel"));
     public static final TagKey<Item> NICKEL_INGOTS = TagKey.of(RegistryKeys.ITEM, Identifier.of("c", "ingots/nickel"));
     public static final TagKey<Item> NICKEL_ORES = TagKey.of(RegistryKeys.ITEM, Identifier.of("c", "ores/nickel"));
+    public static final TagKey<Block> NICKEL_ORE_BLOCKS = TagKey.of(RegistryKeys.BLOCK, Identifier.of("c", "ores/nickel"));
     
-    public static final TagKey<Item> PLATINUM_RAW_ORES = TagKey.of(RegistryKeys.ITEM, Identifier.of("c", "raw_ores/platinum"));
+    public static final TagKey<Item> PLATINUM_RAW_MATERIALS = TagKey.of(RegistryKeys.ITEM, Identifier.of("c", "raw_materials/platinum"));
     public static final TagKey<Item> PLATINUM_DUSTS = TagKey.of(RegistryKeys.ITEM, Identifier.of("c", "dusts/platinum"));
     public static final TagKey<Item> PLATINUM_NUGGETS = TagKey.of(RegistryKeys.ITEM, Identifier.of("c", "nuggets/platinum"));
     public static final TagKey<Item> PLATINUM_INGOTS = TagKey.of(RegistryKeys.ITEM, Identifier.of("c", "ingots/platinum"));
     public static final TagKey<Item> PLATINUM_ORES = TagKey.of(RegistryKeys.ITEM, Identifier.of("c", "ores/platinum"));
+    public static final TagKey<Block> PLATINUM_ORE_BLOCKS = TagKey.of(RegistryKeys.BLOCK, Identifier.of("c", "ores/platinum"));
     
-    public static final TagKey<Item> URANIUM_RAW_ORES = TagKey.of(RegistryKeys.ITEM, Identifier.of("c", "raw_ores/uranium"));
+    public static final TagKey<Item> URANIUM_RAW_MATERIALS = TagKey.of(RegistryKeys.ITEM, Identifier.of("c", "raw_materials/uranium"));
+    public static final TagKey<Item> URANIUM_ORES = TagKey.of(RegistryKeys.ITEM, Identifier.of("c", "ores/uranium"));
+    public static final TagKey<Block> URANIUM_ORE_BLOCKS = TagKey.of(RegistryKeys.BLOCK, Identifier.of("c", "ores/uranium"));
     
     // plastic
     public static final TagKey<Item> PLASTIC_PLATES = TagKey.of(RegistryKeys.ITEM, Identifier.of("c", "plates/plastic"));
