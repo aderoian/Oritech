@@ -2,7 +2,7 @@
   "multipart": [
     {
       "apply": {
-        "model": "oritech:block/framed_pipe"
+        "model": "oritech:block/framed_pipe_skinny"
       }
     },
     {
