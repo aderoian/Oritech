@@ -74,8 +74,6 @@ public class UraniumPatchFeature extends Feature<UraniumPatchFeatureConfig> {
         var right = Geometry.getRight(facing);
         var up = Geometry.getUp(facing);
         
-        System.out.println("placing at: " + pos);
-        
         var veinCount = 3;
         for (int i = 0; i < veinCount; i++) {
             var randomDir = new Vector2d(random.nextFloat() * 2 - 1, random.nextFloat() * 2 - 1).normalize();
