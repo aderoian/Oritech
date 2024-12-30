@@ -41,9 +41,9 @@ public class OritechEMIRecipe extends BasicEmiRecipe {
         recipe.getResults().forEach(stack -> this.outputs.add(EmiStack.of(stack)));
         
         if (recipe.getFluidInput() != null)
-            this.inputs.add(EmiStack.of(recipe.getFluidInput().getFluid(), recipe.getFluidInput().getAmount() / fluidDivider));
+            this.inputs.add(EmiStack.of(recipe.getFluidInput().getFluid(), Math.max(recipe.getFluidInput().getAmount() / fluidDivider, 1)));
         if (recipe.getFluidOutput() != null)
-            this.outputs.add(EmiStack.of(recipe.getFluidOutput().getFluid(), recipe.getFluidInput().getAmount() / fluidDivider));
+            this.outputs.add(EmiStack.of(recipe.getFluidOutput().getFluid(), Math.max(recipe.getFluidInput().getAmount() / fluidDivider, 1)));
         
         try {
             var screenProvider = screenProviderSource.getDeclaredConstructor(BlockPos.class, BlockState.class).newInstance(new BlockPos(0, 0, 0), machineState);
@@ -111,7 +111,7 @@ public class OritechEMIRecipe extends BasicEmiRecipe {
         var emiStacks = this.outputs;
         for (int i = 0; i < emiStacks.size(); i++) {
             var result = emiStacks.get(i);
-            if (result.isEmpty()) continue;
+            if (result.isEmpty() || result.getAmount() <= 0) continue;
             
             var isFluid = result.getEmiStacks().stream().anyMatch(stack -> stack.getKey() instanceof Fluid);
             if (isFluid && result.getAmount() > 0) {
