@@ -463,6 +463,9 @@ public class RecipeGenerator extends FabricRecipeProvider {
     
         // ice in cooler
         addCoolerRecipe(exporter, FluidStack.create(Fluids.WATER, FluidConstants.BUCKET), Items.ICE, 3, 1f, "ice");
+        
+        // snow from steam in cooler
+        addCoolerRecipe(exporter, FluidStack.create(FluidContent.STILL_STEAM.get(), FluidConstants.BUCKET), Items.SNOW_BLOCK, 3, 1f, "snow");
     
     }
     
