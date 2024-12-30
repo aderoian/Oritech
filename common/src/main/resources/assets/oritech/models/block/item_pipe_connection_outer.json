@@ -8,16 +8,8 @@
 	"elements": [
 		{
 			"name": "machine_interface",
-			"from": [
-				2,
-				2,
-				-0.25
-			],
-			"to": [
-				14,
-				14,
-				1.75
-			],
+			"from": [4, 4, -0.25],
+			"to": [12, 12, 1.75],
 			"faces": {
 				"north": {"uv": [6, 0, 10, 4], "texture": "#0"},
 				"east": {"uv": [6, 6, 7, 10], "texture": "#0"},
