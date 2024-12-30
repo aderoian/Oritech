@@ -9,7 +9,7 @@
       "item": "oritech:fluxite"
     },
     {
-      "tag": "c:dusts/electrum"
+      "item": "oritech:energite_dust"
     }
   ],
   "results": [
@@ -18,5 +18,5 @@
       "id": "oritech:overcharged_crystal"
     }
   ],
-  "time": 1000
+  "time": 5000
 }

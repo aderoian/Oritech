@@ -202,12 +202,12 @@ public abstract class ExpandableEnergyStorageBlockEntity extends BlockEntity imp
     
     @Override
     public SimpleInventory getInventoryForAddon() {
-        return null;
+        return inventory;
     }
     
     @Override
     public ScreenProvider getScreenProvider() {
-        return null;
+        return this;
     }
     
     @Override
@@ -220,6 +220,20 @@ public abstract class ExpandableEnergyStorageBlockEntity extends BlockEntity imp
         this.addonData = data;
     }
     
+    @Override
+    public void updateEnergyContainer() {
+        
+        MachineAddonController.super.updateEnergyContainer();
+        
+        energyStorage.maxExtract = getDefaultExtractionRate() + addonData.energyBonusTransfer();
+        
+    }
+    
+    @Override
+    public float getDisplayedEnergyTransfer() {
+        return energyStorage.maxInsert;
+    }
+    
     public abstract long getDefaultExtractionRate();
     
     @Override
@@ -230,8 +244,7 @@ public abstract class ExpandableEnergyStorageBlockEntity extends BlockEntity imp
     
     @Override
     public void markDirty() {
-        if (world != null)
-            world.markDirty(pos);
+        super.markDirty();
         networkDirty = true;
     }
     
@@ -242,7 +255,7 @@ public abstract class ExpandableEnergyStorageBlockEntity extends BlockEntity imp
     
     protected void sendNetworkEntry() {
         
-        if (world.getTime() % 5 != 0 && !isActivelyViewed()) return;
+        if (world.getTime() % 15 != 0 && !isActivelyViewed()) return;
         
         NetworkContent.MACHINE_CHANNEL.serverHandle(this).send(new NetworkContent.GenericEnergySyncPacket(pos, energyStorage.amount, energyStorage.capacity));
         networkDirty = false;
@@ -256,6 +269,8 @@ public abstract class ExpandableEnergyStorageBlockEntity extends BlockEntity imp
     @Nullable
     @Override
     public ScreenHandler createMenu(int syncId, PlayerInventory playerInventory, PlayerEntity player) {
+        NetworkContent.MACHINE_CHANNEL.serverHandle(this).send(new NetworkContent.FullEnergySyncPacket(pos, energyStorage.amount, energyStorage.capacity, energyStorage.maxInsert, energyStorage.maxExtract));
+        
         return new UpgradableMachineScreenHandler(syncId, playerInventory, this, getUiData(), getCoreQuality());
     }
     

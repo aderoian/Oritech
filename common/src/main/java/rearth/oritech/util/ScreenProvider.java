@@ -33,6 +33,10 @@ public interface ScreenProvider {
     }
     
     float getDisplayedEnergyUsage();
+    
+    default float getDisplayedEnergyTransfer() {
+        return getDisplayedEnergyUsage() * 10;
+    }
 
     float getProgress();
     

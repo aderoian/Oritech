@@ -42,7 +42,9 @@ public class BlockLootGenerator extends FabricBlockLootTableProvider {
         addOreDrop(BlockContent.DEEPSLATE_NICKEL_ORE, ItemContent.RAW_NICKEL);
         addOreDrop(BlockContent.DEEPSLATE_PLATINUM_ORE, ItemContent.RAW_PLATINUM);
         addOreDrop(BlockContent.ENDSTONE_PLATINUM_ORE, ItemContent.RAW_PLATINUM);
-        
+        addOreDrop(BlockContent.DEEPSLATE_URANIUM_ORE, ItemContent.RAW_URANIUM);
+        addOreDrop(BlockContent.URANIUM_CRYSTAL, ItemContent.RAW_URANIUM);
+
         for (var block : BlockContent.autoRegisteredDrops) {
             addDrop(block);
         }
@@ -51,6 +53,7 @@ public class BlockLootGenerator extends FabricBlockLootTableProvider {
         addDrop(BlockContent.FLUID_PIPE_CONNECTION, BlockContent.FLUID_PIPE);
         addDrop(BlockContent.ENERGY_PIPE_CONNECTION, BlockContent.ENERGY_PIPE);
         addDrop(BlockContent.SUPERCONDUCTOR_CONNECTION, BlockContent.SUPERCONDUCTOR);
+		addDrop(BlockContent.SUPERCONDUCTOR_CONNECTION, BlockContent.SUPERCONDUCTOR);
 
         addDrop(BlockContent.FRAMED_ITEM_PIPE_CONNECTION, BlockContent.FRAMED_ITEM_PIPE);
         addDrop(BlockContent.FRAMED_FLUID_PIPE_CONNECTION, BlockContent.FRAMED_FLUID_PIPE);
@@ -68,7 +71,7 @@ public class BlockLootGenerator extends FabricBlockLootTableProvider {
         
         RegistryWrapper.Impl<Enchantment> impl = this.registryLookup.getWrapperOrThrow(RegistryKeys.ENCHANTMENT);
         // similar to BlockLootTableGenerator.oakLeavesDrops()
-        addDrop(Blocks.JUNGLE_LEAVES, this.leavesDrops(Blocks.JUNGLE_LEAVES, Blocks.JUNGLE_SAPLING, BlockLootTableGenerator.SAPLING_DROP_CHANCE).pool(LootPool.builder().rolls(ConstantLootNumberProvider.create(1.0F)).conditionally(this.createWithoutShearsOrSilkTouchCondition()).with(((LeafEntry.Builder)this.addSurvivesExplosionCondition(Blocks.JUNGLE_LEAVES, ItemEntry.builder(ItemContent.BANANA))).conditionally(TableBonusLootCondition.builder(impl.getOrThrow(Enchantments.FORTUNE), 0.005F, 0.0055555557F, 0.00625F, 0.008333334F, 0.025F)))));
+        addDrop(Blocks.JUNGLE_LEAVES, this.leavesDrops(Blocks.JUNGLE_LEAVES, Blocks.JUNGLE_SAPLING, BlockLootTableGenerator.SAPLING_DROP_CHANCE).pool(LootPool.builder().rolls(ConstantLootNumberProvider.create(1.0F)).conditionally(this.createWithoutShearsOrSilkTouchCondition()).with(((LeafEntry.Builder)this.addSurvivesExplosionCondition(Blocks.JUNGLE_LEAVES, ItemEntry.builder(ItemContent.BANANA))).conditionally(TableBonusLootCondition.builder(impl.getOrThrow(Enchantments.FORTUNE), new float[]{0.005F, 0.0055555557F, 0.00625F, 0.008333334F, 0.025F})))));
     }
     
     private void addOreDrop(Block block, Item item) {
@@ -78,8 +81,8 @@ public class BlockLootGenerator extends FabricBlockLootTableProvider {
     private void addCustomDataDrop(Block block) {
         // similar to shulkerBoxDrops
         addDrop(block, LootTable.builder().pool(
-				this.addSurvivesExplosionCondition(block, LootPool.builder()
-									  .rolls(ConstantLootNumberProvider.create(1.0F))
-									  .with(ItemEntry.builder(block).apply(NbtBlockLootFunction.builder())))));
+            (LootPool.Builder)this.addSurvivesExplosionCondition(block, LootPool.builder()
+                                  .rolls(ConstantLootNumberProvider.create(1.0F))
+                                  .with(ItemEntry.builder(block).apply(NbtBlockLootFunction.builder())))));
     }
 }

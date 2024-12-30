@@ -28,9 +28,9 @@ public class Config {
     
     @SectionHeader("storageBlocks")
     @Nest
-    public BasicEnergyMachineData smallEnergyStorage = new BasicEnergyMachineData(1_000_000, 1000, 1000, 0);
+    public BasicEnergyMachineData smallEnergyStorage = new BasicEnergyMachineData(1_000_000, 5000, 5000, 0);
     @Nest
-    public BasicEnergyMachineData largeEnergyStorage = new BasicEnergyMachineData(20_000_000, 5000, 5000, 0);
+    public BasicEnergyMachineData largeEnergyStorage = new BasicEnergyMachineData(20_000_000, 10_000, 10_000, 0);
     public int portableTankCapacityBuckets = 256;
     public int overchargedCrystalChargeRate = 10;
     
@@ -45,7 +45,7 @@ public class Config {
     
     @SectionHeader("equipment")
     @Nest
-    public BasicEnergyMachineData charger = new BasicEnergyMachineData(500_000, 10_000, 5000, 0);
+    public BasicEnergyMachineData charger = new BasicEnergyMachineData(500_000, 10_000, 5_000, 0);
     @Nest
     public JetpackData basicJetpack = new JetpackData(100_000, 4 * FluidConstants.BUCKET, 128, (int) (10 * (FluidConstants.BUCKET / 1000)), 1024, 0.4f);
     @Nest
@@ -64,6 +64,19 @@ public class Config {
     @SectionHeader("worldGeneration")
     public boolean generateOres = true;
     public boolean easyFindFeatures = true;
+    
+    @SectionHeader("reactor")
+    public boolean safeMode = false;
+    public int safeModeCooldown = 2400;
+    public int maxSize = 64;
+    public int reactorMaxEnergyStored = 50_000_000;
+    public int reactorMaxEnergyOutput = 25_000;
+    public int rfPerPulse = 64;
+    public int absorberRate = 16;
+    public int ventBaseRate = 4;
+    public int ventRelativeRate = 100;
+    public int maxHeat = 2000;
+    public int maxUnstableTicks = 400;
     
     @SectionHeader("arcane")
     public int enchanterCostMultiplier = 5;
@@ -107,21 +120,21 @@ public class Config {
         public int machineFrameMaxLength = 64;
         
         @Nest
-        public BasicEnergyMachineData assemblerData = new BasicEnergyMachineData(50000, 1024, 0, 128);
+        public BasicEnergyMachineData assemblerData = new BasicEnergyMachineData(50000, 128 * 8, 0, 128);
         @Nest
         public BasicEnergyMachineData atomicForgeData = new BasicEnergyMachineData(1024, 0, 0, 1024);
         @Nest
         public CentrifugeConfig centrifugeData = new CentrifugeConfig();
         @Nest
-        public BasicEnergyMachineData foundryData = new BasicEnergyMachineData(50000, 1024, 0, 128);
+        public BasicEnergyMachineData foundryData = new BasicEnergyMachineData(50000, 128 * 8, 0, 128);
         @Nest
-        public BasicEnergyMachineData coolerData = new BasicEnergyMachineData(50000, 1024, 0, 32);
+        public BasicEnergyMachineData coolerData = new BasicEnergyMachineData(50000, 32 * 8, 0, 32);
         @Nest
-        public BasicEnergyMachineData fragmentForgeData = new BasicEnergyMachineData(50000, 2048, 0, 256);
+        public BasicEnergyMachineData fragmentForgeData = new BasicEnergyMachineData(50000, 256 * 8, 0, 256);
         @Nest
         public FurnaceConfig furnaceData = new FurnaceConfig();
         @Nest
-        public BasicEnergyMachineData pulverizerData = new BasicEnergyMachineData(25000, 256, 0, 32);
+        public BasicEnergyMachineData pulverizerData = new BasicEnergyMachineData(25000, 32 * 8, 0, 32);
     }
     
     public static class Generators {
@@ -130,22 +143,22 @@ public class Config {
         public float rfToSteamRation = 2;
         
         @Nest
-        public BasicEnergyMachineData basicGeneratorData = new BasicEnergyMachineData(50_000, 0, 512, 32);
+        public BasicEnergyMachineData basicGeneratorData = new BasicEnergyMachineData(50_000, 0, 32 * 8, 32);
         @Nest
-        public BasicEnergyMachineData bioGeneratorData = new BasicEnergyMachineData(100_000, 0, 1024, 64);
+        public BasicEnergyMachineData bioGeneratorData = new BasicEnergyMachineData(100_000, 0, 64 * 8, 64);
         @Nest
-        public BasicEnergyMachineData lavaGeneratorData = new BasicEnergyMachineData(100_000, 0, 1024, 64);
+        public BasicEnergyMachineData lavaGeneratorData = new BasicEnergyMachineData(100_000, 0, 64 * 8, 64);
         @Nest
-        public BasicEnergyMachineData fuelGeneratorData = new BasicEnergyMachineData(250_000, 0, 2048, 256);
+        public BasicEnergyMachineData fuelGeneratorData = new BasicEnergyMachineData(250_000, 0, 256 * 8, 256);
         @Nest
         public BasicEnergyMachineData steamEngineData = new BasicEnergyMachineData(100_000, 0, 10_000, 1);
         @Nest
-        public BasicEnergyMachineData solarGeneratorData = new BasicEnergyMachineData(100_000, 0, 1024, 32);
+        public BasicEnergyMachineData solarGeneratorData = new BasicEnergyMachineData(100_000, 0, 32 * 8, 32);
     }
     
     public static class LaserArmConfig {
         public long energyCapacity = 20000;
-        public long maxEnergyInsertion = 512;
+        public long maxEnergyInsertion = 128 * 8;
         public long energyPerTick = 128;
         public int blockBreakEnergyBase = 1024; // multiplied by block hardness
         public float damageTickBase = 2;
@@ -160,14 +173,14 @@ public class Config {
     
     public static class CentrifugeConfig {
         public long energyCapacity = 10000;
-        public long maxEnergyInsertion = 512;
+        public long maxEnergyInsertion = 64 * 8;
         public int energyPerTick = 64;
         public long tankSizeInBuckets = 8;
     }
     
     public static class FurnaceConfig {
         public long energyCapacity = 10000;
-        public long maxEnergyInsertion = 256;
+        public long maxEnergyInsertion = 32 * 8;
         public int energyPerTick = 32;
         public float speedMultiplier = 0.5f;
     }
