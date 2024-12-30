@@ -3,11 +3,11 @@
   "category": "misc",
   "ingredients": [
     {
-      "item": "oritech:framed_energy_pipe"
+      "item": "oritech:item_pipe_duct_block"
     }
   ],
   "result": {
-    "count": 1,
-    "id": "oritech:energy_pipe"
+    "count": 4,
+    "id": "oritech:item_pipe"
   }
 }

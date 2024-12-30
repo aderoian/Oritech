@@ -329,6 +329,19 @@ public class RecipeGenerator extends FabricRecipeProvider {
         offerFramedCableRecipe(exporter, new ItemStack(BlockContent.FRAMED_ITEM_PIPE, 8), Ingredient.ofItems(BlockContent.ITEM_PIPE), "item");
         offerCableFromFrameRecipe(exporter, new ItemStack(BlockContent.ITEM_PIPE, 1), Ingredient.ofItems(BlockContent.FRAMED_ITEM_PIPE), "item");
 
+        // energy pipe duct
+        offerCableDuctRecipe(exporter, new ItemStack(BlockContent.ENERGY_PIPE_DUCT_BLOCK, 4), Ingredient.ofItems(BlockContent.ENERGY_PIPE), "energy");
+        offerCableFromDuctRecipe(exporter, new ItemStack(BlockContent.ENERGY_PIPE, 4), Ingredient.ofItems(BlockContent.ENERGY_PIPE_DUCT_BLOCK), "energy");
+        // superconductor duct
+        offerCableDuctRecipe(exporter, new ItemStack(BlockContent.SUPERCONDUCTOR_DUCT_BLOCK, 4), Ingredient.ofItems(BlockContent.SUPERCONDUCTOR.asItem()), "superconductor");
+        offerCableFromDuctRecipe(exporter, new ItemStack(BlockContent.SUPERCONDUCTOR.asItem(), 4), Ingredient.ofItems(BlockContent.SUPERCONDUCTOR_DUCT_BLOCK), "superconductor");
+        // fluid pipe duct
+        offerCableDuctRecipe(exporter, new ItemStack(BlockContent.FLUID_PIPE_DUCT_BLOCK, 4), Ingredient.ofItems(BlockContent.FLUID_PIPE), "fluid");
+        offerCableFromDuctRecipe(exporter, new ItemStack(BlockContent.FLUID_PIPE, 4), Ingredient.ofItems(BlockContent.FLUID_PIPE_DUCT_BLOCK), "fluid");
+        // item pipe duct
+        offerCableDuctRecipe(exporter, new ItemStack(BlockContent.ITEM_PIPE_DUCT_BLOCK, 4), Ingredient.ofItems(BlockContent.ITEM_PIPE), "item");
+        offerCableFromDuctRecipe(exporter, new ItemStack(BlockContent.ITEM_PIPE, 4), Ingredient.ofItems(BlockContent.ITEM_PIPE_DUCT_BLOCK), "item");
+
         // deep drill
         offerAtomicForgeRecipe(exporter, BlockContent.DEEP_DRILL_BLOCK.asItem(), Ingredient.fromTag(TagContent.MACHINE_PLATING), Ingredient.ofItems(ItemContent.MOTOR), Ingredient.ofItems(ItemContent.HEISENBERG_COMPENSATOR), Ingredient.ofItems(ItemContent.OVERCHARGED_CRYSTAL), Ingredient.ofItems(ItemContent.DURATIUM_INGOT), "deepdrill");
         // drone port
@@ -1040,11 +1053,17 @@ public class RecipeGenerator extends FabricRecipeProvider {
 
     public void offerCableFromFrameRecipe(RecipeExporter exporter, ItemStack output, Ingredient frame, String suffix) {
         var item = output.getItem();
-        var builder = ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, item, output.getCount()).input('#', frame)
-                .pattern("   ")
-                .pattern(" # ")
-                .pattern("   ");
-        builder.criterion(hasItem(item), conditionsFromItem(item)).offerTo(exporter, "crafting/unframe_" + suffix);
+        ShapelessRecipeJsonBuilder.create(RecipeCategory.MISC, item, output.getCount()).input(frame).criterion(hasItem(item), conditionsFromItem(item)).offerTo(exporter, "crafting/unframe_" + suffix);
+    }
+
+    public void offerCableDuctRecipe(RecipeExporter exporter, ItemStack output, Ingredient input, String suffix) {
+        var item = output.getItem();
+        createCableDuctRecipe(RecipeCategory.MISC, item, output.getCount(), input).criterion(hasItem(item), conditionsFromItem(item)).offerTo(exporter, "crafting/duct_" + suffix);
+    }
+
+    public void offerCableFromDuctRecipe(RecipeExporter exporter, ItemStack output, Ingredient duct, String suffix) {
+        var item = output.getItem();
+        ShapelessRecipeJsonBuilder.create(RecipeCategory.MISC, item, output.getCount()).input(duct).criterion(hasItem(item), conditionsFromItem(item)).offerTo(exporter, "crafting/unduct_" + suffix);
     }
     
     public CraftingRecipeJsonBuilder createCableRecipe(RecipeCategory category, Item output, int count, Ingredient input) {
@@ -1057,6 +1076,10 @@ public class RecipeGenerator extends FabricRecipeProvider {
 
     public CraftingRecipeJsonBuilder createFramedCableRecipe(RecipeCategory category, Item output, int count, Ingredient input) {
         return ShapedRecipeJsonBuilder.create(category, output, count).input('c', input).input('p', Ingredient.fromTag(TagContent.MACHINE_PLATING)).pattern("ccc").pattern("cpc").pattern("ccc");
+    }
+
+    public CraftingRecipeJsonBuilder createCableDuctRecipe(RecipeCategory category, Item output, int count, Ingredient input) {
+        return ShapedRecipeJsonBuilder.create(category, output, count).input('c', input).input('p', Ingredient.fromTag(TagContent.MACHINE_PLATING)).input('s', Ingredient.ofItems(Blocks.STONE)).pattern("csc").pattern("sps").pattern("csc");
     }
     
     public void offerMotorRecipe(RecipeExporter exporter, Item output, Ingredient shaft, Ingredient core, Ingredient wall, String suffix) {
