@@ -55,7 +55,7 @@ public class ReactorControllerBlockEntity extends BlockEntity implements BlockEn
     private final HashSet<Pair<BlockPos, Direction>> energyPorts = new HashSet<>();   // list of all energy port outputs (e.g. the targets to output to)
     private final HashSet<BlockPos> redstonePorts = new HashSet<>();   // list of all redstone ports
     
-    public SimpleEnergyStorage energyStorage = new SimpleEnergyStorage(0, 1_000_000, 10_000_000, this::markDirty);
+    public SimpleEnergyStorage energyStorage = new SimpleEnergyStorage(0, Oritech.CONFIG.reactorMaxEnergyStored(), Oritech.CONFIG.reactorMaxEnergyStored(), this::markDirty);
     public boolean active = false;
     private int reactorStackHeight;
     private BlockPos areaMin;
@@ -154,7 +154,7 @@ public class ReactorControllerBlockEntity extends BlockEntity implements BlockEn
                     var neighborHeat = componentHeats.get(neighbor);
                     if (neighborHeat <= componentHeat) continue;
                     var diff = neighborHeat - componentHeat;
-                    var gainedHeat = Math.min(diff / 8 + 6, diff);
+                    var gainedHeat = Math.min(diff / 4 + 10, diff);
                     neighborHeat -= gainedHeat;
                     componentHeats.put(neighbor, neighborHeat);
                     componentHeat += gainedHeat;
@@ -537,7 +537,7 @@ public class ReactorControllerBlockEntity extends BlockEntity implements BlockEn
     private void outputEnergy() {
         
         var totalMoved = 0;
-        var maxRatePerSlot = 10_000;
+        var maxRatePerSlot = Oritech.CONFIG.reactorMaxEnergyOutput();
         
         var randomOrderedList = new ArrayList<>(energyPorts);
         Collections.shuffle(randomOrderedList);

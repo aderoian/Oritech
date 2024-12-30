@@ -69,6 +69,8 @@ public class Config {
     public boolean safeMode = false;
     public int safeModeCooldown = 2400;
     public int maxSize = 64;
+    public int reactorMaxEnergyStored = 50_000_000;
+    public int reactorMaxEnergyOutput = 25_000;
     public int rfPerPulse = 64;
     public int absorberRate = 16;
     public int ventBaseRate = 4;
