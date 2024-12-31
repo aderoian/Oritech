@@ -318,16 +318,16 @@ public class RecipeGenerator extends FabricRecipeProvider {
 
         // framed energy pipe
         offerFramedCableRecipe(exporter, new ItemStack(BlockContent.FRAMED_ENERGY_PIPE, 8), Ingredient.ofItems(BlockContent.ENERGY_PIPE), "energy");
-        offerCableFromFrameRecipe(exporter, new ItemStack(BlockContent.ENERGY_PIPE, 1), Ingredient.ofItems(BlockContent.FRAMED_ENERGY_PIPE), "energy");
+        offerCableFromFrameRecipe(exporter, new ItemStack(BlockContent.ENERGY_PIPE, 8), Ingredient.ofItems(BlockContent.FRAMED_ENERGY_PIPE), "energy");
         // framed superconductor
         offerFramedCableRecipe(exporter, new ItemStack(BlockContent.FRAMED_SUPERCONDUCTOR, 8), Ingredient.ofItems(BlockContent.SUPERCONDUCTOR.asItem()), "superconductor");
-        offerCableFromFrameRecipe(exporter, new ItemStack(BlockContent.SUPERCONDUCTOR.asItem(), 1), Ingredient.ofItems(BlockContent.FRAMED_SUPERCONDUCTOR), "superconductor");
+        offerCableFromFrameRecipe(exporter, new ItemStack(BlockContent.SUPERCONDUCTOR.asItem(), 8), Ingredient.ofItems(BlockContent.FRAMED_SUPERCONDUCTOR), "superconductor");
         // framed fluid pipe
         offerFramedCableRecipe(exporter, new ItemStack(BlockContent.FRAMED_FLUID_PIPE, 8), Ingredient.ofItems(BlockContent.FLUID_PIPE), "fluid");
-        offerCableFromFrameRecipe(exporter, new ItemStack(BlockContent.FLUID_PIPE, 1), Ingredient.ofItems(BlockContent.FRAMED_FLUID_PIPE), "fluid");
+        offerCableFromFrameRecipe(exporter, new ItemStack(BlockContent.FLUID_PIPE, 8), Ingredient.ofItems(BlockContent.FRAMED_FLUID_PIPE), "fluid");
         // framed item pipe
         offerFramedCableRecipe(exporter, new ItemStack(BlockContent.FRAMED_ITEM_PIPE, 8), Ingredient.ofItems(BlockContent.ITEM_PIPE), "item");
-        offerCableFromFrameRecipe(exporter, new ItemStack(BlockContent.ITEM_PIPE, 1), Ingredient.ofItems(BlockContent.FRAMED_ITEM_PIPE), "item");
+        offerCableFromFrameRecipe(exporter, new ItemStack(BlockContent.ITEM_PIPE, 8), Ingredient.ofItems(BlockContent.FRAMED_ITEM_PIPE), "item");
 
         // energy pipe duct
         offerCableDuctRecipe(exporter, new ItemStack(BlockContent.ENERGY_PIPE_DUCT_BLOCK, 4), Ingredient.ofItems(BlockContent.ENERGY_PIPE), "energy");
