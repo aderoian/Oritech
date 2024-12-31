@@ -55,7 +55,7 @@ public class BlockContent implements ArchitecturyBlockRegistryContainer {
     public static final Block MACHINE_FRAME_BLOCK = new MachineFrameBlock(AbstractBlock.Settings.copy(Blocks.IRON_BARS));
     
     public static final Block FLUID_PIPE = new FluidPipeBlock(AbstractBlock.Settings.copy(Blocks.IRON_BARS).strength(1.0f, 2.0f));
-	public static final Block FRAMED_FLUID_PIPE = new FluidPipeBlock.FramedFluidPipeBlock(AbstractBlock.Settings.copy(Blocks.GLASS).strength(1.0f, 2.0f).nonOpaque().solidBlock(Blocks::never));
+	public static final Block FRAMED_FLUID_PIPE = new FluidPipeBlock.FramedFluidPipeBlock(AbstractBlock.Settings.copy(Blocks.IRON_BARS).strength(1.0f, 2.0f));
     public static final Block FLUID_PIPE_DUCT_BLOCK = new FluidPipeDuctBlock(AbstractBlock.Settings.copy(Blocks.IRON_BLOCK));
     public static final Block ENERGY_PIPE = new EnergyPipeBlock(AbstractBlock.Settings.copy(Blocks.IRON_BARS).strength(1.0f, 2.0f));
 	public static final Block FRAMED_ENERGY_PIPE = new EnergyPipeBlock.FramedEnergyPipeBlock(AbstractBlock.Settings.copy(Blocks.IRON_BARS).strength(1.0f, 2.0f));
