@@ -154,7 +154,7 @@ public abstract class GenericPipeBlock extends AbstractPipeBlock implements Wren
 				world.setBlockState(neighborPos, updatedState);
 
 				// Update network data if the state was changed
-				if (!neighborState.equals(updatedState)) {
+				if (!neighborState.equals(updatedState) || pipeBlock instanceof GenericPipeDuctBlock) {
 					boolean interfaceBlock = updatedState.isOf(getConnectionBlock().getBlock());
 					if (neighborToggled)
 						GenericPipeInterfaceEntity.addNode(world, neighborPos, interfaceBlock, updatedState, getNetworkData(world));

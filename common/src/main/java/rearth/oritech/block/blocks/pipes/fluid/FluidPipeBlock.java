@@ -90,5 +90,10 @@ public class FluidPipeBlock extends GenericPipeBlock {
 		public BlockState getConnectionBlock() {
 			return BlockContent.FRAMED_FLUID_PIPE_CONNECTION.getDefaultState();
 		}
-	}
+
+        @Override
+        protected boolean isTransparent(BlockState state, BlockView world, BlockPos pos) {
+            return true;
+        }
+    }
 }

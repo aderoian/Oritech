@@ -9,6 +9,7 @@ import net.minecraft.util.math.Direction;
 import net.minecraft.util.shape.VoxelShape;
 import net.minecraft.util.shape.VoxelShapes;
 import net.minecraft.world.World;
+import net.minecraft.world.WorldAccess;
 import org.apache.commons.lang3.function.TriFunction;
 import rearth.oritech.block.entity.pipes.GenericPipeInterfaceEntity;
 import rearth.oritech.item.tools.Wrench;
@@ -33,10 +34,9 @@ public abstract class GenericPipeDuctBlock extends AbstractPipeBlock implements 
 	public void onBlockAdded(BlockState state, World world, BlockPos pos, BlockState oldState, boolean notify) {
 		if (oldState.getBlock().equals(state.getBlock())) return;
 
+		updateNeighbors(world, pos, true);
 		// no states need to be added (see getPlacementState)
 		GenericPipeInterfaceEntity.addNode(world, pos, false, state, getNetworkData(world));
-
-		updateNeighbors(world, pos, true);
 	}
 
 	@Override

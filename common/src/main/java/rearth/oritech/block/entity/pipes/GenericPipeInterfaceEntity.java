@@ -122,9 +122,7 @@ public abstract class GenericPipeInterfaceEntity extends BlockEntity implements 
         if (oldNetwork != -1) {
             var block = oldState.getBlock();
             for (var direction : Direction.values()) {
-                if (block instanceof GenericPipeDuctBlock pipeDuct && !pipeDuct.isConnectingInDirection(oldState, direction, pos, world, false)) {
-                    continue;
-                } else if (block instanceof GenericPipeBlock pipeBlock && oldState.get(pipeBlock.directionToProperty(direction)) == NO_CONNECTION) {
+                if (block instanceof GenericPipeBlock pipeBlock && oldState.get(pipeBlock.directionToProperty(direction)) == NO_CONNECTION) {
                     continue;
                 }
 
