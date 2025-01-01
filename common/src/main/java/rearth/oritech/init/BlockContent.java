@@ -123,7 +123,7 @@ public class BlockContent implements ArchitecturyBlockRegistryContainer {
     @UseGeoBlockItem(scale = 0.7f)
     public static final Block BIG_SOLAR_PANEL_BLOCK = new BigSolarPanelBlock(AbstractBlock.Settings.copy(Blocks.IRON_BLOCK).nonOpaque(), Oritech.CONFIG.generators.solarGeneratorData.energyPerTick());
     @UseGeoBlockItem(scale = 0.7f)
-    public static final Block POWERED_FURNACE_BLOCK = new PoweredFurnaceBlock(AbstractBlock.Settings.copy(Blocks.IRON_BLOCK).nonOpaque());
+    public static final Block POWERED_FURNACE_BLOCK = new PoweredFurnaceBlock(AbstractBlock.Settings.copy(Blocks.IRON_BLOCK).nonOpaque().luminance(Blocks.createLightLevelFromLitBlockState(15)));
     @UseGeoBlockItem(scale = 0.5f)
     public static final Block LASER_ARM_BLOCK = new LaserArmBlock(AbstractBlock.Settings.copy(Blocks.IRON_BLOCK).nonOpaque());
     @UseGeoBlockItem(scale = 0.25f)
