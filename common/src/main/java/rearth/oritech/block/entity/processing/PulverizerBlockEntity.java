@@ -118,7 +118,7 @@ public class PulverizerBlockEntity extends UpgradableMachineBlockEntity {
             var effect = new ItemStackParticleEffect(ParticleTypes.ITEM, inventory.getStack(0));
             var spawnAt = pos.toCenterPos().add(0, 0.3, 0);
             var offsetX = (world.random.nextFloat() - 0.5) * 0.1;
-            var offsetY = (world.random.nextFloat() - 0.5) * 0.1;
+            var offsetY = (world.random.nextFloat()) * 0.1;
             var offsetZ = (world.random.nextFloat() - 0.5) * 0.1;
             ((ServerWorld) world).spawnParticles(effect, spawnAt.getX(), spawnAt.getY(), spawnAt.getZ(), 3, offsetX, offsetY, offsetZ, 0.08);
         }

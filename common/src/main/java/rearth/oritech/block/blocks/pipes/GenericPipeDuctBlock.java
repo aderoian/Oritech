@@ -2,7 +2,12 @@ package rearth.oritech.block.blocks.pipes;
 
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.item.Item;
+import net.minecraft.item.ItemStack;
+import net.minecraft.item.tooltip.TooltipType;
+import net.minecraft.text.Text;
 import net.minecraft.util.ActionResult;
+import net.minecraft.util.Formatting;
 import net.minecraft.util.Hand;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
@@ -13,6 +18,8 @@ import net.minecraft.world.WorldAccess;
 import org.apache.commons.lang3.function.TriFunction;
 import rearth.oritech.block.entity.pipes.GenericPipeInterfaceEntity;
 import rearth.oritech.item.tools.Wrench;
+
+import java.util.List;
 
 public abstract class GenericPipeDuctBlock extends AbstractPipeBlock implements Wrench.Wrenchable {
 
@@ -114,7 +121,13 @@ public abstract class GenericPipeDuctBlock extends AbstractPipeBlock implements 
 
 		return ActionResult.PASS;
 	}
-
+	
+	@Override
+	public void appendTooltip(ItemStack stack, Item.TooltipContext context, List<Text> tooltip, TooltipType options) {
+		super.appendTooltip(stack, context, tooltip, options);
+		tooltip.add(Text.translatable("tooltip.oritech.pipe_duct_warning").formatted(Formatting.GRAY, Formatting.ITALIC));
+	}
+	
 	@Override
 	public ActionResult onWrenchUseNeighbor(BlockState state, BlockState neighborState, World world, BlockPos pos, BlockPos neighborPos, Direction neighborFace, PlayerEntity player, Hand hand) {
 		return ActionResult.PASS;
