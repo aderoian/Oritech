@@ -10,22 +10,20 @@
 						"0.0": {
 							"vector": [0, 0, -40]
 						},
-						"2.8333": {
+						"2.875": {
 							"vector": [0, 0, -760],
-							"easing": "easeInOutBack",
-							"easingArgs": [0.5]
+							"easing": "easeInOutQuad"
 						}
 					}
 				},
 				"b": {
 					"rotation": {
-						"0.1667": {
+						"0.125": {
 							"vector": [0, 0, 40]
 						},
 						"3.0": {
 							"vector": [0, 0, 760],
-							"easing": "easeInOutBack",
-							"easingArgs": [0.5]
+							"easing": "easeInOutQuad"
 						}
 					}
 				}
