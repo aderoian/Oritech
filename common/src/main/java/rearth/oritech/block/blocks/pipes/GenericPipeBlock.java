@@ -13,6 +13,7 @@ import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.shape.VoxelShape;
 import net.minecraft.util.shape.VoxelShapes;
+import net.minecraft.world.BlockView;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldAccess;
 import org.apache.commons.lang3.function.TriFunction;
@@ -425,6 +426,11 @@ public abstract class GenericPipeBlock extends AbstractPipeBlock implements Wren
 	protected void onBlockRemoved(BlockPos pos, BlockState oldState, World world) {
 		updateNeighbors(world, pos, false);
 		GenericPipeInterfaceEntity.removeNode(world, pos, false, oldState, getNetworkData(world));
+	}
+
+	@Override
+	protected float getAmbientOcclusionLightLevel(BlockState state, BlockView world, BlockPos pos) {
+		return 1.0f;
 	}
 
 	/*
