@@ -391,18 +391,18 @@ public class DronePortEntity extends BlockEntity implements InventoryProvider, F
         
         var distance = targetPos.getManhattanDistance(pos);
         if (distance < 50) {
-            sendNetworkStatusMessage(I18n.translate("message.oritech.drone.invalid_distance", distance));
+            sendNetworkStatusMessage("message.oritech.drone.invalid_distance");
             return false;
         }
         
         if (world.getBlockState(targetPos).getBlock() instanceof DronePortBlock) {
             // store position
             this.targetPosition = targetPos;
-            sendNetworkStatusMessage(I18n.translate("message.oritech.drone.target_set"));
+            sendNetworkStatusMessage("message.oritech.drone.target_set");
             return true;
         }
         
-        sendNetworkStatusMessage(I18n.translate("message.oritech.drone.target_invalid"));
+        sendNetworkStatusMessage("message.oritech.drone.target_invalid");
         return false;
         
     }

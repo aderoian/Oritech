@@ -29,7 +29,7 @@ public class DroneScreen extends UpgradableMachineScreen<DroneScreenHandler> {
             var message = dronePort.getStatusMessage();
             dronePort.setStatusMessage(null);
             
-            var label = Components.label(Text.literal(message).formatted(Formatting.BLACK));
+            var label = Components.label(Text.translatable(message).formatted(Formatting.BLACK));
             label.horizontalTextAlignment(HorizontalAlignment.CENTER);
             label.verticalTextAlignment(VerticalAlignment.CENTER);
             label.margins(Insets.of(8));
