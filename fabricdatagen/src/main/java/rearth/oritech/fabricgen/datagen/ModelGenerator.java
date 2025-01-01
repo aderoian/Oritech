@@ -33,6 +33,18 @@ public class ModelGenerator extends FabricModelProvider {
         blockStateModelGenerator.registerSimpleState(BlockContent.ENERGY_PIPE_CONNECTION);
         blockStateModelGenerator.registerSimpleState(BlockContent.SUPERCONDUCTOR_CONNECTION);
         blockStateModelGenerator.registerSimpleState(BlockContent.ITEM_PIPE_CONNECTION);
+        blockStateModelGenerator.registerSimpleState(BlockContent.FRAMED_FLUID_PIPE);
+        blockStateModelGenerator.registerSimpleState(BlockContent.FRAMED_ENERGY_PIPE);
+        blockStateModelGenerator.registerSimpleState(BlockContent.FRAMED_SUPERCONDUCTOR);
+        blockStateModelGenerator.registerSimpleState(BlockContent.FRAMED_ITEM_PIPE);
+        blockStateModelGenerator.registerSimpleState(BlockContent.FRAMED_FLUID_PIPE_CONNECTION);
+        blockStateModelGenerator.registerSimpleState(BlockContent.FRAMED_ENERGY_PIPE_CONNECTION);
+        blockStateModelGenerator.registerSimpleState(BlockContent.FRAMED_SUPERCONDUCTOR_CONNECTION);
+        blockStateModelGenerator.registerSimpleState(BlockContent.FRAMED_ITEM_PIPE_CONNECTION);
+        blockStateModelGenerator.registerSimpleCubeAll(BlockContent.FLUID_PIPE_DUCT_BLOCK);
+        blockStateModelGenerator.registerSimpleCubeAll(BlockContent.ENERGY_PIPE_DUCT_BLOCK);
+        blockStateModelGenerator.registerSimpleCubeAll(BlockContent.SUPERCONDUCTOR_DUCT_BLOCK);
+        blockStateModelGenerator.registerSimpleCubeAll(BlockContent.ITEM_PIPE_DUCT_BLOCK);
         blockStateModelGenerator.registerSimpleState(BlockContent.ITEM_FILTER_BLOCK);
         
         blockStateModelGenerator.registerSimpleState(BlockContent.SMALL_STORAGE_BLOCK);

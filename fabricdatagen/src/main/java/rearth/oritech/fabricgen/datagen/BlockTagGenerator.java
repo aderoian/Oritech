@@ -6,8 +6,8 @@ import net.fabricmc.fabric.api.tag.convention.v2.ConventionalBlockTags;
 import net.minecraft.block.Blocks;
 import net.minecraft.registry.RegistryWrapper;
 import net.minecraft.registry.tag.BlockTags;
-import rearth.oritech.init.TagContent;
 import rearth.oritech.init.BlockContent;
+import rearth.oritech.init.TagContent;
 
 import java.util.concurrent.CompletableFuture;
 
@@ -26,8 +26,13 @@ public class BlockTagGenerator extends FabricTagProvider.BlockTagProvider {
             pickaxeBuilder.add(block);
         }
         pickaxeBuilder.add(BlockContent.ENERGY_PIPE_CONNECTION);
+        pickaxeBuilder.add(BlockContent.SUPERCONDUCTOR_CONNECTION);
         pickaxeBuilder.add(BlockContent.FLUID_PIPE_CONNECTION);
         pickaxeBuilder.add(BlockContent.ITEM_PIPE_CONNECTION);
+        pickaxeBuilder.add(BlockContent.FRAMED_ENERGY_PIPE_CONNECTION);
+        pickaxeBuilder.add(BlockContent.FRAMED_SUPERCONDUCTOR_CONNECTION);
+        pickaxeBuilder.add(BlockContent.FRAMED_FLUID_PIPE_CONNECTION);
+        pickaxeBuilder.add(BlockContent.FRAMED_ITEM_PIPE_CONNECTION);
         pickaxeBuilder.add(BlockContent.SMALL_TANK_BLOCK);
         pickaxeBuilder.add(BlockContent.SMALL_STORAGE_BLOCK);
         pickaxeBuilder.add(BlockContent.PUMP_TRUNK_BLOCK);

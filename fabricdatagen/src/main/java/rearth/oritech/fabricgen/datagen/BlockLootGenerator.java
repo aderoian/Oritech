@@ -44,7 +44,7 @@ public class BlockLootGenerator extends FabricBlockLootTableProvider {
         addOreDrop(BlockContent.ENDSTONE_PLATINUM_ORE, ItemContent.RAW_PLATINUM);
         addOreDrop(BlockContent.DEEPSLATE_URANIUM_ORE, ItemContent.RAW_URANIUM);
         addOreDrop(BlockContent.URANIUM_CRYSTAL, ItemContent.RAW_URANIUM);
-        
+
         for (var block : BlockContent.autoRegisteredDrops) {
             addDrop(block);
         }
@@ -53,6 +53,12 @@ public class BlockLootGenerator extends FabricBlockLootTableProvider {
         addDrop(BlockContent.FLUID_PIPE_CONNECTION, BlockContent.FLUID_PIPE);
         addDrop(BlockContent.ENERGY_PIPE_CONNECTION, BlockContent.ENERGY_PIPE);
         addDrop(BlockContent.SUPERCONDUCTOR_CONNECTION, BlockContent.SUPERCONDUCTOR);
+		addDrop(BlockContent.SUPERCONDUCTOR_CONNECTION, BlockContent.SUPERCONDUCTOR);
+
+        addDrop(BlockContent.FRAMED_ITEM_PIPE_CONNECTION, BlockContent.FRAMED_ITEM_PIPE);
+        addDrop(BlockContent.FRAMED_FLUID_PIPE_CONNECTION, BlockContent.FRAMED_FLUID_PIPE);
+        addDrop(BlockContent.FRAMED_ENERGY_PIPE_CONNECTION, BlockContent.FRAMED_ENERGY_PIPE);
+        addDrop(BlockContent.FRAMED_SUPERCONDUCTOR_CONNECTION, BlockContent.FRAMED_SUPERCONDUCTOR);
 
         addCustomDataDrop(BlockContent.SMALL_TANK_BLOCK);
         addCustomDataDrop(BlockContent.CREATIVE_TANK_BLOCK);

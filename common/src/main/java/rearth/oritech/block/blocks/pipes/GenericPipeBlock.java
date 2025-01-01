@@ -2,7 +2,6 @@ package rearth.oritech.block.blocks.pipes;
 
 import net.minecraft.block.*;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.ItemPlacementContext;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.state.StateManager;
 import net.minecraft.state.property.BooleanProperty;
@@ -18,8 +17,6 @@ import net.minecraft.world.BlockView;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldAccess;
 import org.apache.commons.lang3.function.TriFunction;
-import org.jetbrains.annotations.Nullable;
-import rearth.oritech.Oritech;
 import rearth.oritech.block.entity.pipes.GenericPipeInterfaceEntity;
 import rearth.oritech.item.tools.Wrench;
 
@@ -27,7 +24,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 
-public abstract class GenericPipeBlock extends Block implements Wrench.Wrenchable {
+public abstract class GenericPipeBlock extends AbstractPipeBlock implements Wrench.Wrenchable {
 
 	// 0 = no connection, 1 = connection (pipe->pipe or pipe->machine)
 	public static int NO_CONNECTION = 0;
@@ -40,9 +37,6 @@ public abstract class GenericPipeBlock extends Block implements Wrench.Wrenchabl
 	public static final IntProperty UP = IntProperty.of("up", 0, 1);
 	public static final IntProperty DOWN = IntProperty.of("down", 0, 1);
     public static final BooleanProperty STRAIGHT = BooleanProperty.of("straight");
-
-    private static final Boolean USE_ACCURATE_OUTLINES = Oritech.CONFIG.tightCableHitboxes();
-	protected VoxelShape[] boundingShapes;
     
     public GenericPipeBlock(Settings settings) {
         super(settings);
@@ -54,7 +48,6 @@ public abstract class GenericPipeBlock extends Block implements Wrench.Wrenchabl
 				.with(getUpProperty(), 0)
 				.with(getDownProperty(), 0)
 				.with(STRAIGHT, false));
-		boundingShapes = createShapes();
     }
     
     @Override
@@ -62,12 +55,7 @@ public abstract class GenericPipeBlock extends Block implements Wrench.Wrenchabl
 		builder.add(getNorthProperty(), getEastProperty(), getSouthProperty(), getWestProperty(), getUpProperty(), getDownProperty(), STRAIGHT);
     }
     
-    @Override
-    public BlockRenderType getRenderType(BlockState state) {
-        return BlockRenderType.MODEL;
-    }
-    
-    private VoxelShape getShape(BlockState state) {
+    protected VoxelShape getShape(BlockState state) {
         var shape = boundingShapes[0];
 
 		if (state.get(getNorthProperty()) != NO_CONNECTION)
@@ -84,18 +72,6 @@ public abstract class GenericPipeBlock extends Block implements Wrench.Wrenchabl
             shape = VoxelShapes.union(shape, boundingShapes[6]);
         
         return shape;
-    }
-    
-    @Override
-    public VoxelShape getOutlineShape(BlockState state, BlockView world, BlockPos pos, ShapeContext context) {
-        if (!USE_ACCURATE_OUTLINES)
-            return super.getOutlineShape(state, world, pos, context);
-        return getShape(state);
-    }
-    
-    @Override
-    public VoxelShape getCollisionShape(BlockState state, BlockView world, BlockPos pos, ShapeContext context) {
-        return getShape(state);
     }
 
 	protected VoxelShape[] createShapes() {
@@ -129,13 +105,6 @@ public abstract class GenericPipeBlock extends Block implements Wrench.Wrenchabl
         }
 
 		updateNeighbors(world, pos, false);
-	}
-
-	@Nullable
-	@Override
-	public BlockState getPlacementState(ItemPlacementContext ctx) {
-		var baseState = super.getPlacementState(ctx);
-		return addConnectionStates(baseState, ctx.getWorld(), ctx.getBlockPos(), true);
 	}
 
 	@Override
@@ -181,12 +150,12 @@ public abstract class GenericPipeBlock extends Block implements Wrench.Wrenchabl
 			var neighborPos = pos.offset(direction);
 			var neighborState = world.getBlockState(neighborPos);
 			// Only update pipes
-			if (neighborState.getBlock() instanceof GenericPipeBlock pipeBlock) {
+			if (neighborState.getBlock() instanceof AbstractPipeBlock pipeBlock) {
 				var updatedState = pipeBlock.addConnectionStates(neighborState, world, neighborPos, false);
 				world.setBlockState(neighborPos, updatedState);
 
 				// Update network data if the state was changed
-				if (!neighborState.equals(updatedState)) {
+				if (!neighborState.equals(updatedState) || pipeBlock instanceof GenericPipeDuctBlock) {
 					boolean interfaceBlock = updatedState.isOf(getConnectionBlock().getBlock());
 					if (neighborToggled)
 						GenericPipeInterfaceEntity.addNode(world, neighborPos, interfaceBlock, updatedState, getNetworkData(world));
@@ -388,86 +357,25 @@ public abstract class GenericPipeBlock extends Block implements Wrench.Wrenchabl
 		// Otherwise we check if the other pipe is connecting in the opposite direction
 		if (createConnection) {
 			return isValidConnectionTarget(targetState.getBlock(), world, direction.getOpposite(), targetPos);
-		} else if (targetState.getBlock() instanceof GenericPipeBlock pipeBlock) {
-			return pipeBlock.isConnectingInDirection(targetState, direction.getOpposite(), false);
+		} else if (targetState.getBlock() instanceof AbstractPipeBlock pipeBlock) {
+			return pipeBlock.isConnectingInDirection(targetState, direction.getOpposite(), targetPos, world, false);
 		} else
-			return isConnectingInDirection(current, direction, false) && isValidInterfaceTarget(targetState.getBlock(), world, direction.getOpposite(), targetPos);
+			return isConnectingInDirection(current, direction, currentPos, world, false) && isValidInterfaceTarget(targetState.getBlock(), world, direction.getOpposite(), targetPos);
 	}
 
 	/**
 	 * Check if the pipe is connecting in a specific direction.
 	 *
-	 * @param state            The target pipe block-state
+	 * @param current            The target pipe block-state
 	 * @param direction        The direction to check
 	 * @param createConnection Whether to create a connection
 	 * @return Boolean whether the pipe is connecting
 	 */
-	public boolean isConnectingInDirection(BlockState state, Direction direction, boolean createConnection) {
-		var block = state.getBlock();
+	public boolean isConnectingInDirection(BlockState current, Direction direction, BlockPos currentPos, World world, boolean createConnection) {
+		var block = current.getBlock();
 		if (!(block instanceof GenericPipeBlock pipeBlock)) return false;
 		var property = pipeBlock.directionToProperty(direction);
-		return state.get(property) >= CONNECTION || createConnection && state.get(property) == NO_CONNECTION;
-	}
-
-	/**
-	 * Check if the pipe node has a neighboring machine.
-	 *
-	 * @param state The target pipe block-state
-	 * @param world The target world
-	 * @param pos   The target pipe position
-	 * @return Boolean whether a machine is connected
-	 */
-	public boolean hasNeighboringMachine(BlockState state, World world, BlockPos pos, boolean createConnection) {
-		var lookup = apiValidationFunction();
-		return (isConnectingInDirection(state, Direction.NORTH, createConnection) && hasMachineInDirection(Direction.NORTH, world, pos, lookup))
-				|| (isConnectingInDirection(state, Direction.EAST, createConnection) && hasMachineInDirection(Direction.EAST, world, pos, lookup))
-				|| (isConnectingInDirection(state, Direction.SOUTH, createConnection) && hasMachineInDirection(Direction.SOUTH, world, pos, lookup))
-				|| (isConnectingInDirection(state, Direction.WEST, createConnection) && hasMachineInDirection(Direction.WEST, world, pos, lookup))
-				|| (isConnectingInDirection(state, Direction.UP, createConnection) && hasMachineInDirection(Direction.UP, world, pos, lookup))
-				|| (isConnectingInDirection(state, Direction.DOWN, createConnection) && hasMachineInDirection(Direction.DOWN, world, pos, lookup));
-	}
-
-	/**
-	 * Check if a machine is connected in a specific direction.
-	 *
-	 * @param direction The direction to check
-	 * @param world     The target world
-	 * @param ownPos    The target pipe position
-	 * @param lookup    The lookup function {@link GenericPipeBlock#apiValidationFunction()}
-	 * @return Boolean whether a machine is connected
-	 */
-	public boolean hasMachineInDirection(Direction direction, World world, BlockPos ownPos, TriFunction<World, BlockPos, Direction, Boolean> lookup) {
-		var neighborPos = ownPos.add(direction.getVector());
-		var neighborState = world.getBlockState(neighborPos);
-		return !(neighborState.getBlock() instanceof GenericPipeBlock) && lookup.apply(world, neighborPos, direction.getOpposite());
-	}
-
-	/**
-	 * Check if the target block is a valid connection target.
-	 *
-	 * @param target    The target block
-	 * @param world     The target world
-	 * @param direction The direction to check (IMPORTANT: This is the direction from the target to the current pipe)
-	 * @param pos       The target pipe position
-	 * @return Boolean whether the target is a valid connection target
-	 */
-	public boolean isValidConnectionTarget(Block target, World world, Direction direction, BlockPos pos) {
-		var lookupFunction = apiValidationFunction();
-		return connectToOwnBlockType(target) || (lookupFunction.apply(world, pos, direction) && isCompatibleTarget(target));
-	}
-
-	/**
-	 * Check if the target block is a valid interface target.
-	 *
-	 * @param target    The target block
-	 * @param world     The target world
-	 * @param direction The direction to check (IMPORTANT: This is the direction from the target to the current pipe)
-	 * @param pos       The target pipe position
-	 * @return Boolean whether the target is a valid interface target
-	 */
-	public boolean isValidInterfaceTarget(Block target, World world, Direction direction, BlockPos pos) {
-		var lookupFunction = apiValidationFunction();
-		return (lookupFunction.apply(world, pos, direction) && isCompatibleTarget(target));
+		return current.get(property) >= CONNECTION || createConnection && current.get(property) == NO_CONNECTION;
 	}
 
 	/**
@@ -511,33 +419,6 @@ public abstract class GenericPipeBlock extends Block implements Wrench.Wrenchabl
 		else return getDownProperty();
 	}
 
-	/**
-	 * Check if the target block is compatible with the pipe block.
-	 *
-	 * @param block The target block
-	 * @return Boolean whether the block is compatible
-	 */
-	public boolean isCompatibleTarget(Block block) {
-		return true;
-	}
-
-	/**
-	 * Validation function which utilizes lookup API's to check if a block is a valid connection target.
-	 *
-	 * @return The validation function for the pipe block
-	 */
-	public abstract TriFunction<World, BlockPos, Direction, Boolean> apiValidationFunction();
-
-	public abstract BlockState getConnectionBlock();
-
-	public abstract BlockState getNormalBlock();
-
-	public abstract String getPipeTypeName();
-
-	public abstract boolean connectToOwnBlockType(Block block);
-
-	public abstract GenericPipeInterfaceEntity.PipeNetworkData getNetworkData(World world);
-
 	protected int getNextConnectionState(BlockState state, Direction side, World world, BlockPos pos, int current) {
 		return current == NO_CONNECTION ? CONNECTION : NO_CONNECTION;
 	}
@@ -545,6 +426,11 @@ public abstract class GenericPipeBlock extends Block implements Wrench.Wrenchabl
 	protected void onBlockRemoved(BlockPos pos, BlockState oldState, World world) {
 		updateNeighbors(world, pos, false);
 		GenericPipeInterfaceEntity.removeNode(world, pos, false, oldState, getNetworkData(world));
+	}
+
+	@Override
+	protected float getAmbientOcclusionLightLevel(BlockState state, BlockView world, BlockPos pos) {
+		return 1.0f;
 	}
 
 	/*
