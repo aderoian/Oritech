@@ -154,7 +154,9 @@ public class BlockEntitiesContent implements ArchitecturyRegistryContainer<Block
     public static final BlockEntityType<SpawnerControllerBlockEntity> SPAWNER_CONTROLLER_BLOCK_ENTITY = FabricBlockEntityTypeBuilder.create(SpawnerControllerBlockEntity::new, BlockContent.SPAWNER_CONTROLLER_BLOCK).build();
     
     public static final BlockEntityType<ReactorControllerBlockEntity> REACTOR_CONTROLLER_BLOCK_ENTITY = FabricBlockEntityTypeBuilder.create(ReactorControllerBlockEntity::new, BlockContent.REACTOR_CONTROLLER).build();
+    @AssignSidedInventory
     public static final BlockEntityType<ReactorFuelPortEntity> REACTOR_FUEL_PORT_BLOCK_ENTITY = FabricBlockEntityTypeBuilder.create(ReactorFuelPortEntity::new, BlockContent.REACTOR_FUEL_PORT).build();
+    @AssignSidedInventory
     public static final BlockEntityType<ReactorAbsorberPortEntity> REACTOR_ABSORBER_PORT_BLOCK_ENTITY = FabricBlockEntityTypeBuilder.create(ReactorAbsorberPortEntity::new, BlockContent.REACTOR_ABSORBER_PORT).build();
     @AssignSidedEnergy
     public static final BlockEntityType<ReactorEnergyPortEntity> REACTOR_ENERGY_PORT_BLOCK_ENTITY = FabricBlockEntityTypeBuilder.create(ReactorEnergyPortEntity::new, BlockContent.REACTOR_ENERGY_PORT).build();
@@ -190,16 +192,17 @@ public class BlockEntitiesContent implements ArchitecturyRegistryContainer<Block
     public static final BlockEntityType<SmallFluidTankEntity> CREATIVE_TANK_ENTITY = FabricBlockEntityTypeBuilder.create((pos, state) -> new SmallFluidTankEntity(pos, state, true), BlockContent.CREATIVE_TANK_BLOCK).build();
     
     @AssignSidedFluid
-    public static final BlockEntityType<FluidPipeInterfaceEntity> FLUID_PIPE_ENTITY = FabricBlockEntityTypeBuilder.create(FluidPipeInterfaceEntity::new, BlockContent.FLUID_PIPE_CONNECTION).build();
+	public static final BlockEntityType<FluidPipeInterfaceEntity> FLUID_PIPE_ENTITY = FabricBlockEntityTypeBuilder.create(FluidPipeInterfaceEntity::new, BlockContent.FLUID_PIPE_CONNECTION, BlockContent.FRAMED_FLUID_PIPE_CONNECTION).build();
     @AssignSidedEnergy
-    public static final BlockEntityType<EnergyPipeInterfaceEntity> ENERGY_PIPE_ENTITY = FabricBlockEntityTypeBuilder.create(EnergyPipeInterfaceEntity::new, BlockContent.ENERGY_PIPE_CONNECTION, BlockContent.SUPERCONDUCTOR_CONNECTION).build();
-    public static final BlockEntityType<ItemPipeInterfaceEntity> ITEM_PIPE_ENTITY = FabricBlockEntityTypeBuilder.create(ItemPipeInterfaceEntity::new, BlockContent.ITEM_PIPE_CONNECTION).build();
+	public static final BlockEntityType<EnergyPipeInterfaceEntity> ENERGY_PIPE_ENTITY = FabricBlockEntityTypeBuilder.create(EnergyPipeInterfaceEntity::new, BlockContent.ENERGY_PIPE_CONNECTION, BlockContent.SUPERCONDUCTOR_CONNECTION, BlockContent.FRAMED_ENERGY_PIPE_CONNECTION, BlockContent.FRAMED_SUPERCONDUCTOR_CONNECTION).build();
+	public static final BlockEntityType<ItemPipeInterfaceEntity> ITEM_PIPE_ENTITY = FabricBlockEntityTypeBuilder.create(ItemPipeInterfaceEntity::new, BlockContent.ITEM_PIPE_CONNECTION, BlockContent.FRAMED_ITEM_PIPE_CONNECTION).build();
     @AssignSidedInventory
     public static final BlockEntityType<ItemFilterBlockEntity> ITEM_FILTER_ENTITY = FabricBlockEntityTypeBuilder.create(ItemFilterBlockEntity::new, BlockContent.ITEM_FILTER_BLOCK).build();
     
     
     public static final BlockEntityType<AddonBlockEntity> ADDON_ENTITY = FabricBlockEntityTypeBuilder.create(AddonBlockEntity::new,
       BlockContent.MACHINE_SPEED_ADDON,
+      BlockContent.MACHINE_PROCESSING_ADDON,
       BlockContent.MACHINE_EFFICIENCY_ADDON,
       BlockContent.MACHINE_FLUID_ADDON,
       BlockContent.MACHINE_HUNTER_ADDON,

@@ -2,6 +2,7 @@ package rearth.oritech.block.blocks.pipes.energy;
 
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
+import net.minecraft.block.ShapeContext;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.tooltip.TooltipType;
@@ -10,6 +11,9 @@ import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
+import net.minecraft.util.shape.VoxelShape;
+import net.minecraft.util.shape.VoxelShapes;
+import net.minecraft.world.BlockView;
 import net.minecraft.world.World;
 import org.apache.commons.lang3.function.TriFunction;
 import rearth.oritech.Oritech;
@@ -31,7 +35,7 @@ public class SuperConductorBlock extends GenericPipeBlock {
     
     @Override
     public TriFunction<World, BlockPos, Direction, Boolean> apiValidationFunction() {
-        return ((world, pos, direction) -> EnergyApi.BLOCK.find(world, pos, direction) != null);   // TODO check if this loads null values
+        return ((world, pos, direction) -> EnergyApi.BLOCK.find(world, pos, direction) != null);
     }
     
     @Override
@@ -51,7 +55,7 @@ public class SuperConductorBlock extends GenericPipeBlock {
     
     @Override
     public boolean connectToOwnBlockType(Block block) {
-        return block instanceof SuperConductorBlock || block instanceof SuperConductorConnectionBlock;
+        return block instanceof SuperConductorBlock || block instanceof SuperConductorConnectionBlock || block instanceof SuperConductorDuctBlock;
     }
     
     @Override
@@ -72,4 +76,31 @@ public class SuperConductorBlock extends GenericPipeBlock {
         tooltip.add(Text.translatable("tooltip.oritech.superconductor").formatted(Formatting.GRAY));
         super.appendTooltip(stack, context, tooltip, options);
     }
+
+	public static class FramedSuperConductorBlock extends SuperConductorBlock {
+
+		public FramedSuperConductorBlock(Settings settings) {
+			super(settings);
+		}
+
+		@Override
+		public VoxelShape getOutlineShape(BlockState state, BlockView world, BlockPos pos, ShapeContext context) {
+			return VoxelShapes.fullCube();
+		}
+
+		@Override
+		public VoxelShape getCollisionShape(BlockState state, BlockView world, BlockPos pos, ShapeContext context) {
+			return state.getOutlineShape(world, pos);
+		}
+
+		@Override
+		public BlockState getNormalBlock() {
+			return BlockContent.FRAMED_SUPERCONDUCTOR.getDefaultState();
+		}
+
+		@Override
+		public BlockState getConnectionBlock() {
+			return BlockContent.FRAMED_SUPERCONDUCTOR_CONNECTION.getDefaultState();
+		}
+	}
 }

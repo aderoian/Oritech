@@ -59,7 +59,11 @@ public class AcceleratorParticleLogic {
             var movedBy = path.normalize().multiply(moveDist);
             
             // check if old position intersects with another particle
-            if (updateParticleCollision(particle.position, particle)) {
+            var abTest = movedBy.x > 0  || movedBy.y > 0;
+            var validLastGate = particle.lastGate == null ? particle.nextGate : particle.lastGate;
+            var usedGateForCollision = abTest ? validLastGate : particle.nextGate;
+            
+            if (updateParticleCollision(Vec3d.of(usedGateForCollision), particle)) {
                 return;
             }
             
@@ -68,11 +72,6 @@ public class AcceleratorParticleLogic {
             
             renderedTrail.add(particle.position);
             particle.lastBendDistance += moveDist;
-            
-            // check if new position intersects with another particle
-            if (updateParticleCollision(particle.position, particle)) {
-                return;
-            }
             
             checkParticleEntityCollision(particle.position, particle, checkedPositions);
             
@@ -194,8 +193,8 @@ public class AcceleratorParticleLogic {
                 return false;
             
             var secondParticle = secondAccelerator.getParticle();
-            var ownVelocity = particle.nextGate.toCenterPos().subtract(particle.lastGate.toCenterPos()).multiply(particle.velocity);
-            var secondVelocity = secondParticle.nextGate.toCenterPos().subtract(secondParticle.lastGate.toCenterPos()).multiply(secondParticle.velocity);
+            var ownVelocity = particle.nextGate.toCenterPos().subtract(particle.lastGate.toCenterPos()).normalize().multiply(particle.velocity);
+            var secondVelocity = secondParticle.nextGate.toCenterPos().subtract(secondParticle.lastGate.toCenterPos()).normalize().multiply(secondParticle.velocity);
             var impactSpeed = ownVelocity.distanceTo(secondVelocity);
             
             entity.onParticleCollided((float) impactSpeed, particle.position, secondControllerPos, secondAccelerator);
@@ -346,7 +345,7 @@ public class AcceleratorParticleLogic {
         toRemove.forEach(cachedGates::remove);
     }
     
-    public static void resetNearbyCache(BlockPos pos ) {
+    public static void resetNearbyCache(BlockPos pos) {
         var toRemove = cachedGates.keySet().stream().filter(blockPos -> blockPos.getLeft().getManhattanDistance(pos) < Oritech.CONFIG.maxGateDist() + 1).toList();
         toRemove.forEach(cachedGates::remove);
     }

@@ -66,6 +66,7 @@ public class ModRenderers {
         BlockRenderLayerMap.INSTANCE.putBlock(BlockContent.LARGE_STORAGE_BLOCK, RenderLayer.getCutout());
         BlockRenderLayerMap.INSTANCE.putBlock(BlockContent.FERTILIZER_BLOCK, RenderLayer.getCutout());
         BlockRenderLayerMap.INSTANCE.putBlock(BlockContent.PLACER_BLOCK, RenderLayer.getCutout());
+        BlockRenderLayerMap.INSTANCE.putBlock(BlockContent.URANIUM_CRYSTAL, RenderLayer.getCutout());
         BlockRenderLayerMap.INSTANCE.putBlock(BlockContent.DESTROYER_BLOCK, RenderLayer.getCutout());
         BlockRenderLayerMap.INSTANCE.putBlock(BlockContent.SMALL_TANK_BLOCK, RenderLayer.getCutout());
         BlockRenderLayerMap.INSTANCE.putBlock(BlockContent.CREATIVE_TANK_BLOCK, RenderLayer.getCutout());
@@ -85,6 +86,7 @@ public class ModRenderers {
         BlockRenderLayerMap.INSTANCE.putBlock(BlockContent.REACTOR_ROD, RenderLayer.getTranslucent());
         BlockRenderLayerMap.INSTANCE.putBlock(BlockContent.REACTOR_DOUBLE_ROD, RenderLayer.getTranslucent());
         BlockRenderLayerMap.INSTANCE.putBlock(BlockContent.REACTOR_QUAD_ROD, RenderLayer.getTranslucent());
+        BlockRenderLayerMap.INSTANCE.putBlock(BlockContent.REACTOR_REDSTONE_PORT, RenderLayer.getTranslucent());
 
         Oritech.LOGGER.info("Registering Entities Renderers for " + Oritech.MOD_ID);
     }

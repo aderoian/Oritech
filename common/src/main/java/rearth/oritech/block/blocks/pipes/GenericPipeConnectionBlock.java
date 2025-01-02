@@ -57,10 +57,10 @@ public abstract class GenericPipeConnectionBlock extends GenericPipeBlock implem
         }
 
         var interfaceState = state;
-        if (!(neighborState.getBlock() instanceof GenericPipeBlock)) {
+        if (!(neighborState.getBlock() instanceof AbstractPipeBlock)) {
             // only update connection if neighbor is a new machine
-            var hadMachine = getNetworkData(worldImp).machinePipeNeighbors.getOrDefault(neighborPos, HashSet.newHashSet(0)).contains(direction.getOpposite());
-            if (state.isOf(Blocks.AIR) || !hadMachine) {
+            var hasMachine = getNetworkData(worldImp).machinePipeNeighbors.getOrDefault(neighborPos, HashSet.newHashSet(0)).contains(direction.getOpposite());
+            if (neighborState.isOf(Blocks.AIR) || !hasMachine) {
                 interfaceState = addConnectionStates(state, worldImp, pos, direction);
             }
 

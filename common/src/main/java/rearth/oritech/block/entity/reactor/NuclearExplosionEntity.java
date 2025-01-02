@@ -5,12 +5,22 @@ import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.block.entity.BlockEntityTicker;
+import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.TntEntity;
+import net.minecraft.entity.damage.DamageSource;
+import net.minecraft.entity.damage.DamageTypes;
+import net.minecraft.predicate.entity.EntityPredicates;
+import net.minecraft.registry.RegistryKeys;
 import net.minecraft.registry.tag.BlockTags;
+import net.minecraft.sound.SoundCategory;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Vec3d;
+import net.minecraft.util.math.Vec3i;
 import net.minecraft.world.World;
 import rearth.oritech.block.blocks.reactor.NuclearExplosionBlock;
 import rearth.oritech.init.BlockEntitiesContent;
+import rearth.oritech.init.SoundContent;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -44,6 +54,7 @@ public class NuclearExplosionEntity extends BlockEntity implements BlockEntityTi
         if (startTime == -1) {
             startTime = world.getTime();
             explosionSphere(initialRadius + 7, 200, pos);
+            world.playSound(null, pos, SoundContent.NUKE_EXPLOSION, SoundCategory.BLOCKS, 30f, 1f);
         }
         
         var age = world.getTime() - startTime;
@@ -65,6 +76,7 @@ public class NuclearExplosionEntity extends BlockEntity implements BlockEntityTi
     }
     
     private void createExplosionWaves(int initialRadius) {
+        
         var rayCount = initialRadius / 2 + 3;
         var directions = getRandomRayDirections(rayCount);
         for (var direction : directions) {
@@ -168,6 +180,7 @@ public class NuclearExplosionEntity extends BlockEntity implements BlockEntityTi
     }
     
     // remove all blocks in X radius below hardness 'power', return amount of hardness used in total
+    // also damage entities
     private int explosionSphere(int radius, int power, BlockPos pos) {
         
         var radiusSq = radius * radius;
@@ -175,7 +188,7 @@ public class NuclearExplosionEntity extends BlockEntity implements BlockEntityTi
         var usedPower = 0;
         var hardBusters = radius;
         
-        for (var target : BlockPos.iterateOutwards(pos, radius + 2, radius + 2, radius + 2)) {
+        for (var target : BlockPos.iterateOutwards(pos, radius + 3, radius + 3, radius + 3)) {
             if (removedBlocks.contains(target)) continue;
             var distSq = target.getSquaredDistance(pos);
             
@@ -210,6 +223,20 @@ public class NuclearExplosionEntity extends BlockEntity implements BlockEntityTi
             world.setBlockState(target, Blocks.AIR.getDefaultState(), Block.SKIP_DROPS | Block.NOTIFY_LISTENERS, 0);
             removedBlocks.add(target.toImmutable());
             borderBlocks.remove(target.toImmutable());
+            
+            // damages all entities in radius based on distance
+            var entityCandidates = world.getEntitiesByClass(
+              LivingEntity.class,
+              new Box(pos.subtract(new Vec3i(radius, radius, radius)).toCenterPos(), pos.add(new Vec3i(radius, radius, radius)).toCenterPos()),
+              EntityPredicates.VALID_LIVING_ENTITY.and(EntityPredicates.EXCEPT_CREATIVE_OR_SPECTATOR));
+            
+            entityCandidates.forEach(entity -> {
+                var entityDist = entity.squaredDistanceTo(pos.toCenterPos());
+                var distPercentage = entityDist / radiusSq;
+                var damage = radiusSq / distPercentage; // closer entities take much more damage
+                System.out.println(entityDist + ":" + damage);
+                entity.damage(new DamageSource(world.getRegistryManager().get(RegistryKeys.DAMAGE_TYPE).entryOf(DamageTypes.EXPLOSION)), (float) damage);
+            });
             
         }
         

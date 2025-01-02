@@ -2,10 +2,13 @@ package rearth.oritech.block.blocks.pipes.energy;
 
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
+import net.minecraft.block.ShapeContext;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
 import net.minecraft.util.shape.VoxelShape;
+import net.minecraft.util.shape.VoxelShapes;
+import net.minecraft.world.BlockView;
 import net.minecraft.world.World;
 import org.apache.commons.lang3.function.TriFunction;
 import org.jetbrains.annotations.Nullable;
@@ -53,7 +56,7 @@ public class EnergyPipeConnectionBlock extends GenericPipeConnectionBlock {
         VoxelShape west = Block.createCuboidShape(10, 6, 6, 16, 10, 10);
         VoxelShape up = Block.createCuboidShape(6, 10, 6, 10, 16, 10);
         VoxelShape down = Block.createCuboidShape(6, 0, 6, 10, 6, 10);
-        
+
         return new VoxelShape[]{inner, north, west, south, east, up, down};
     }
     
@@ -64,7 +67,7 @@ public class EnergyPipeConnectionBlock extends GenericPipeConnectionBlock {
     
     @Override
     public boolean connectToOwnBlockType(Block block) {
-        return block instanceof EnergyPipeBlock || block instanceof EnergyPipeConnectionBlock;
+        return block instanceof EnergyPipeBlock || block instanceof EnergyPipeConnectionBlock || block instanceof EnergyPipeDuctBlock;
     }
     
     @Override
@@ -76,4 +79,31 @@ public class EnergyPipeConnectionBlock extends GenericPipeConnectionBlock {
     public GenericPipeInterfaceEntity.PipeNetworkData getNetworkData(World world) {
         return ENERGY_PIPE_DATA.computeIfAbsent(world.getRegistryKey().getValue(), data -> new GenericPipeInterfaceEntity.PipeNetworkData());
     }
+
+	public static class FramedEnergyPipeConnectionBlock extends EnergyPipeConnectionBlock {
+
+		public FramedEnergyPipeConnectionBlock(Settings settings) {
+			super(settings);
+		}
+
+		@Override
+		public VoxelShape getOutlineShape(BlockState state, BlockView world, BlockPos pos, ShapeContext context) {
+			return VoxelShapes.fullCube();
+		}
+
+		@Override
+		public VoxelShape getCollisionShape(BlockState state, BlockView world, BlockPos pos, ShapeContext context) {
+			return state.getOutlineShape(world, pos);
+		}
+
+		@Override
+		public BlockState getNormalBlock() {
+			return BlockContent.FRAMED_ENERGY_PIPE.getDefaultState();
+		}
+
+		@Override
+		public BlockState getConnectionBlock() {
+			return BlockContent.FRAMED_ENERGY_PIPE_CONNECTION.getDefaultState();
+		}
+	}
 }

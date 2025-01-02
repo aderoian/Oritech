@@ -33,6 +33,18 @@ public class ModelGenerator extends FabricModelProvider {
         blockStateModelGenerator.registerSimpleState(BlockContent.ENERGY_PIPE_CONNECTION);
         blockStateModelGenerator.registerSimpleState(BlockContent.SUPERCONDUCTOR_CONNECTION);
         blockStateModelGenerator.registerSimpleState(BlockContent.ITEM_PIPE_CONNECTION);
+        blockStateModelGenerator.registerSimpleState(BlockContent.FRAMED_FLUID_PIPE);
+        blockStateModelGenerator.registerSimpleState(BlockContent.FRAMED_ENERGY_PIPE);
+        blockStateModelGenerator.registerSimpleState(BlockContent.FRAMED_SUPERCONDUCTOR);
+        blockStateModelGenerator.registerSimpleState(BlockContent.FRAMED_ITEM_PIPE);
+        blockStateModelGenerator.registerSimpleState(BlockContent.FRAMED_FLUID_PIPE_CONNECTION);
+        blockStateModelGenerator.registerSimpleState(BlockContent.FRAMED_ENERGY_PIPE_CONNECTION);
+        blockStateModelGenerator.registerSimpleState(BlockContent.FRAMED_SUPERCONDUCTOR_CONNECTION);
+        blockStateModelGenerator.registerSimpleState(BlockContent.FRAMED_ITEM_PIPE_CONNECTION);
+        blockStateModelGenerator.registerSimpleCubeAll(BlockContent.FLUID_PIPE_DUCT_BLOCK);
+        blockStateModelGenerator.registerSimpleCubeAll(BlockContent.ENERGY_PIPE_DUCT_BLOCK);
+        blockStateModelGenerator.registerSimpleCubeAll(BlockContent.SUPERCONDUCTOR_DUCT_BLOCK);
+        blockStateModelGenerator.registerSimpleCubeAll(BlockContent.ITEM_PIPE_DUCT_BLOCK);
         blockStateModelGenerator.registerSimpleState(BlockContent.ITEM_FILTER_BLOCK);
         
         blockStateModelGenerator.registerSimpleState(BlockContent.SMALL_STORAGE_BLOCK);
@@ -60,16 +72,19 @@ public class ModelGenerator extends FabricModelProvider {
         // reactor section
         blockStateModelGenerator.registerNorthDefaultHorizontalRotation(BlockContent.REACTOR_CONTROLLER);
         blockStateModelGenerator.registerSimpleState(BlockContent.REACTOR_ENERGY_PORT);
+        blockStateModelGenerator.registerSimpleState(BlockContent.REACTOR_REDSTONE_PORT);
         blockStateModelGenerator.registerSimpleState(BlockContent.REACTOR_FUEL_PORT);
         blockStateModelGenerator.registerSimpleState(BlockContent.REACTOR_ABSORBER_PORT);
         blockStateModelGenerator.registerSimpleState(BlockContent.REACTOR_ROD);
         blockStateModelGenerator.registerSimpleState(BlockContent.REACTOR_DOUBLE_ROD);
         blockStateModelGenerator.registerSimpleState(BlockContent.REACTOR_QUAD_ROD);
-        blockStateModelGenerator.registerStateWithModelReference(BlockContent.REACTOR_WALL, Blocks.BRICKS);
-        blockStateModelGenerator.registerStateWithModelReference(BlockContent.REACTOR_VENT, Blocks.NETHER_BRICKS);
-        blockStateModelGenerator.registerStateWithModelReference(BlockContent.REACTOR_REFLECTOR, Blocks.TARGET);
-        blockStateModelGenerator.registerStateWithModelReference(BlockContent.REACTOR_HEAT_PIPE, Blocks.GOLD_BLOCK);
-        blockStateModelGenerator.registerStateWithModelReference(BlockContent.REACTOR_CONDENSER, Blocks.LAPIS_BLOCK);
+        blockStateModelGenerator.registerStateWithModelReference(BlockContent.REACTOR_WALL, Blocks.BRICKS); // this is overridden by athena
+        blockStateModelGenerator.registerSimpleState(BlockContent.REACTOR_VENT);
+        blockStateModelGenerator.registerSimpleState(BlockContent.REACTOR_REFLECTOR);
+        blockStateModelGenerator.registerSimpleState(BlockContent.REACTOR_HEAT_PIPE);
+        blockStateModelGenerator.registerSimpleCubeAll(BlockContent.REACTOR_CONDENSER);
+        
+        blockStateModelGenerator.registerAmethyst(BlockContent.URANIUM_CRYSTAL);
         
         blockStateModelGenerator.registerSimpleCubeAll(BlockContent.LOW_YIELD_NUKE);
         blockStateModelGenerator.registerSimpleCubeAll(BlockContent.NUKE);
@@ -138,6 +153,7 @@ public class ModelGenerator extends FabricModelProvider {
         blockStateModelGenerator.registerSimpleCubeAll(BlockContent.DEEPSLATE_NICKEL_ORE);
         blockStateModelGenerator.registerSimpleCubeAll(BlockContent.ENDSTONE_PLATINUM_ORE);
         blockStateModelGenerator.registerSimpleCubeAll(BlockContent.DEEPSLATE_PLATINUM_ORE);
+        blockStateModelGenerator.registerSimpleCubeAll(BlockContent.DEEPSLATE_URANIUM_ORE);
         
         // NODES
         blockStateModelGenerator.registerSimpleCubeAll(BlockContent.RESOURCE_NODE_REDSTONE);
@@ -150,6 +166,7 @@ public class ModelGenerator extends FabricModelProvider {
         blockStateModelGenerator.registerSimpleCubeAll(BlockContent.RESOURCE_NODE_COPPER);
         blockStateModelGenerator.registerSimpleCubeAll(BlockContent.RESOURCE_NODE_NICKEL);
         blockStateModelGenerator.registerSimpleCubeAll(BlockContent.RESOURCE_NODE_PLATINUM);
+        blockStateModelGenerator.registerSimpleCubeAll(BlockContent.RESOURCE_NODE_URANIUM);
         
         //decorative
         blockStateModelGenerator.registerSimpleCubeAll(BlockContent.INDUSTRIAL_GLASS_BLOCK);

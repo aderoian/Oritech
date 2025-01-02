@@ -14,7 +14,9 @@ import net.minecraft.world.PersistentState;
 import net.minecraft.world.World;
 import org.jetbrains.annotations.Nullable;
 import rearth.oritech.Oritech;
+import rearth.oritech.block.blocks.pipes.AbstractPipeBlock;
 import rearth.oritech.block.blocks.pipes.GenericPipeBlock;
+import rearth.oritech.block.blocks.pipes.GenericPipeDuctBlock;
 import rearth.oritech.block.entity.interaction.PipeBoosterBlockEntity;
 
 import java.util.*;
@@ -76,18 +78,21 @@ public abstract class GenericPipeInterfaceEntity extends BlockEntity implements 
 
         data.pipes.add(pos);
         var connectedMachines = new HashSet<BlockPos>(6);
-        var block = (GenericPipeBlock) newState.getBlock();
+        var block = (AbstractPipeBlock) newState.getBlock();
         for (var neighbor : Direction.values()) {
             var neighborPos = pos.offset(neighbor);
             var neighborMap = data.machinePipeNeighbors.getOrDefault(neighborPos, new HashSet<>());
             if (block.hasMachineInDirection(neighbor, world, pos, block.apiValidationFunction())) {
-                if (block.isConnectingInDirection(newState, neighbor, false))
+                if (block.isConnectingInDirection(newState, neighbor, pos, world, false))
                     connectedMachines.add(pos.offset(neighbor));
 
                 neighborMap.add(neighbor.getOpposite());
+            } else {
+                neighborMap.remove(neighbor.getOpposite());
             }
 
             if (!neighborMap.isEmpty()) data.machinePipeNeighbors.put(neighborPos, neighborMap);
+            else data.machinePipeNeighbors.remove(neighborPos);
         }
 
         if (isInterface) {
@@ -114,20 +119,15 @@ public abstract class GenericPipeInterfaceEntity extends BlockEntity implements 
         data.pipeNetworkLinks.remove(pos);
 
         // re-calculate old network, is either shorter or split into multiple ones (starting from ones this block was connected to)
-        var block = (GenericPipeBlock) oldState.getBlock();
         if (oldNetwork != -1) {
-            if (oldState.get(block.getNorthProperty()) != NO_CONNECTION)
-                updateFromNode(world, pos.north(), data);
-            if (oldState.get(block.getSouthProperty()) != NO_CONNECTION)
-                updateFromNode(world, pos.south(), data);
-            if (oldState.get(block.getEastProperty()) != NO_CONNECTION)
-                updateFromNode(world, pos.east(), data);
-            if (oldState.get(block.getWestProperty()) != NO_CONNECTION)
-                updateFromNode(world, pos.west(), data);
-            if (oldState.get(block.getUpProperty()) != NO_CONNECTION)
-                updateFromNode(world, pos.up(), data);
-            if (oldState.get(block.getDownProperty()) != NO_CONNECTION)
-                updateFromNode(world, pos.down(), data);
+            var block = oldState.getBlock();
+            for (var direction : Direction.values()) {
+                if (block instanceof GenericPipeBlock pipeBlock && oldState.get(pipeBlock.directionToProperty(direction)) == NO_CONNECTION) {
+                    continue;
+                }
+
+                updateFromNode(world, pos.offset(direction), data);
+            }
         }
 
         data.markDirty();
@@ -262,7 +262,7 @@ public abstract class GenericPipeInterfaceEntity extends BlockEntity implements 
         private void addNeighborsToQueue(BlockPos self) {
             var targetState = world.getBlockState(self);
 
-            if (!(targetState.getBlock() instanceof GenericPipeBlock targetBlock)) return;
+            if (!(targetState.getBlock() instanceof AbstractPipeBlock targetBlock)) return;
             for (var direction : Direction.values()) {
                 var neighbor = self.offset(direction);
                 if (checkedPositions.contains(neighbor)) continue;
@@ -272,7 +272,7 @@ public abstract class GenericPipeInterfaceEntity extends BlockEntity implements 
                 }
 
                 // check if the target can connect to the neighbor
-                if (!targetBlock.isConnectingInDirection(targetState, direction, false)) continue;
+                if (!targetBlock.isConnectingInDirection(targetState, direction, self, world, false)) continue;
 
                 nextTargets.add(neighbor);
             }

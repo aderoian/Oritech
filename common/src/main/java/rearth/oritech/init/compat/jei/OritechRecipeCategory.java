@@ -1,5 +1,6 @@
 package rearth.oritech.init.compat.jei;
 
+import dev.architectury.platform.Platform;
 import mezz.jei.api.gui.builder.IRecipeLayoutBuilder;
 import mezz.jei.api.gui.drawable.IDrawable;
 import mezz.jei.api.gui.drawable.IDrawableAnimated;
@@ -19,18 +20,27 @@ import net.minecraft.util.math.BlockPos;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import rearth.oritech.block.base.entity.MachineBlockEntity;
+import rearth.oritech.block.base.entity.UpgradableGeneratorBlockEntity;
 import rearth.oritech.init.recipes.OritechRecipe;
 import rearth.oritech.init.recipes.OritechRecipeType;
+import rearth.oritech.util.InventorySlotAssignment;
+import rearth.oritech.util.ScreenProvider;
 
 import java.lang.reflect.InvocationTargetException;
+import java.util.List;
+
+import static rearth.oritech.client.ui.BasicMachineScreen.GUI_COMPONENTS;
 
 public class OritechRecipeCategory implements IRecipeCategory<OritechRecipe> {
     
     public final OritechRecipeType type;
-    public final MachineBlockEntity screenProvider;
+    private final Boolean isGenerator;
+    private final List<ScreenProvider.GuiSlot> slots;
+    private final InventorySlotAssignment slotOffsets;
     public final IDrawable icon;
     public final IDrawableAnimated arrow;
     public final IDrawableStatic background;
+    public final IDrawableStatic fluidBackground;
     
     // JEI really feels like the worst of the 3 recipe viewers here
     public OritechRecipeCategory(OritechRecipeType type, Class<? extends MachineBlockEntity> screenProviderSource, Block machine, IGuiHelper helper) {
@@ -38,7 +48,10 @@ public class OritechRecipeCategory implements IRecipeCategory<OritechRecipe> {
         this.icon = helper.createDrawableItemStack(new ItemStack(machine.asItem()));
         
         try {
-            this.screenProvider = screenProviderSource.getDeclaredConstructor(BlockPos.class, BlockState.class).newInstance(new BlockPos(0, 0, 0), machine.getDefaultState());
+            var screenProvider = screenProviderSource.getDeclaredConstructor(BlockPos.class, BlockState.class).newInstance(new BlockPos(0, 0, 0), machine.getDefaultState());
+            this.isGenerator = screenProvider instanceof UpgradableGeneratorBlockEntity;
+            this.slots = screenProvider.getGuiSlots();
+            this.slotOffsets = screenProvider.getSlots();
         } catch (InstantiationException | IllegalAccessException | InvocationTargetException |
                  NoSuchMethodException e) {
             throw new RuntimeException(e);
@@ -46,6 +59,21 @@ public class OritechRecipeCategory implements IRecipeCategory<OritechRecipe> {
         
         this.arrow = helper.createAnimatedRecipeArrow(40);
         this.background = helper.getSlotDrawable();
+        this.fluidBackground = helper.drawableBuilder(GUI_COMPONENTS, 48, 0, 14, 50).setTextureSize(98, 96).build();
+        
+    }
+    
+    public OritechRecipeCategory(OritechRecipeType type, Block machine, IGuiHelper helper, Boolean isGenerator, List<ScreenProvider.GuiSlot> slots, InventorySlotAssignment slotOffsets) {
+        this.type = type;
+        this.icon = helper.createDrawableItemStack(new ItemStack(machine.asItem()));
+        
+        this.arrow = helper.createAnimatedRecipeArrow(40);
+        this.background = helper.getSlotDrawable();
+        this.fluidBackground = helper.drawableBuilder(GUI_COMPONENTS, 48, 0, 14, 50).setTextureSize(98, 96).build();
+        
+        this.isGenerator = isGenerator;
+        this.slots = slots;
+        this.slotOffsets = slotOffsets;
         
     }
     
@@ -88,10 +116,10 @@ public class OritechRecipeCategory implements IRecipeCategory<OritechRecipe> {
     @Override
     public void setRecipe(IRecipeLayoutBuilder builder, OritechRecipe recipe, IFocusGroup focuses) {
         
-        var slots = screenProvider.getGuiSlots();
-        var slotOffsets = screenProvider.getSlots();
         var offsetX = 23;
         var offsetY = 17;
+        
+        var fluidDivider = Platform.isNeoForge() ? 81 : 1;  // no idea why this is needed
         
         // inputs
         var inputs = recipe.getInputs();
@@ -106,7 +134,7 @@ public class OritechRecipeCategory implements IRecipeCategory<OritechRecipe> {
         // fluid inputs
         if (!(recipe.getFluidInput() != null && recipe.getFluidInput().isEmpty())) {
             var stack = recipe.getFluidInput();
-            builder.addInputSlot(10, 6).addFluidStack(stack.getFluid(), stack.getAmount()).setFluidRenderer(stack.getAmount(), true, 18, 50);
+            builder.addInputSlot(10, 6).addFluidStack(stack.getFluid(), stack.getAmount() / fluidDivider).setBackground(fluidBackground, -2, -2).setFluidRenderer(stack.getAmount() / 81, false, 10, 46);
         }
         
         // results
@@ -122,7 +150,7 @@ public class OritechRecipeCategory implements IRecipeCategory<OritechRecipe> {
         // fluid outputs
         if (!(recipe.getFluidOutput() != null && recipe.getFluidOutput().isEmpty())) {
             var stack = recipe.getFluidOutput();
-            builder.addInputSlot(120, 6).addFluidStack(stack.getFluid(), stack.getAmount()).setFluidRenderer(stack.getAmount(), true, 18, 50);
+            builder.addInputSlot(120, 6).addFluidStack(stack.getFluid(), stack.getAmount() / fluidDivider).setBackground(fluidBackground, -2, -2).setFluidRenderer(stack.getAmount() / 81, false, 10, 46);
         }
     }
 }

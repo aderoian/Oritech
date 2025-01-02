@@ -46,7 +46,10 @@
   },
   "grinder_working": {
     "sounds": [
-      "oritech:grinder_working"
+      {
+        "name": "oritech:grinder_working",
+        "volume": 0.7
+      }
     ]
   },
   "lava_bubbles": {
@@ -87,6 +90,26 @@
   "wrench_turn": {
     "sounds": [
       "oritech:wrench_turn"
+    ]
+  },
+  "reactor": {
+    "sounds": [
+      "oritech:reactor"
+    ]
+  },
+  "reactor_loading": {
+    "sounds": [
+      "oritech:reactor_loading"
+    ]
+  },
+  "reactor_warning": {
+    "sounds": [
+      "oritech:reactor_warning"
+    ]
+  },
+  "nuke_explosion": {
+    "sounds": [
+      "oritech:nuke_explosion"
     ]
   },
   "particle_moving": {

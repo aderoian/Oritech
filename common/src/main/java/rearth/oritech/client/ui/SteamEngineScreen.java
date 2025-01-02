@@ -58,7 +58,7 @@ public class SteamEngineScreen extends UpgradableMachineScreen<SteamEngineScreen
         
         speedLabel.text(Text.translatable("title.oritech.machine_speed", speed));
         efficiencyLabel.text(Text.translatable("title.oritech.machine_efficiency", efficiency));
-        productionLabel.text(Text.translatable("title.oritech.steam_production", totalProduction));
+        productionLabel.text(Text.translatable("title.oritech.machine_energy_production", totalProduction));
         steamUsageLabel.text(Text.translatable("title.oritech.steam_consumption", totalSteamUsage));
     }
 }

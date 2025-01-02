@@ -74,7 +74,7 @@ public class TechRebornRecipeGenerator {
     
     public static void addOritechGrinderRecipes(RecipeExporter exporter) {
         offerTRGrinderRecipe(exporter, new SizedIngredient(1, Ingredient.fromTag(TagContent.NICKEL_ORES)), new ItemStack(ItemContent.RAW_NICKEL, 2), 5, 200, "nickel_ore");
-        offerTRGrinderRecipe(exporter, new SizedIngredient(1, Ingredient.fromTag(TagContent.NICKEL_RAW_ORES)), new ItemStack(ItemContent.NICKEL_DUST), 5, 200, "raw_nickel");
+        offerTRGrinderRecipe(exporter, new SizedIngredient(1, Ingredient.fromTag(TagContent.NICKEL_RAW_MATERIALS)), new ItemStack(ItemContent.NICKEL_DUST), 5, 200, "raw_nickel");
         offerTRGrinderRecipe(exporter, new SizedIngredient(1, Ingredient.ofItems(ItemContent.ADAMANT_INGOT)), new ItemStack(ItemContent.ADAMANT_DUST), 5, 200, "adamant_ingot");
         offerTRGrinderRecipe(exporter, new SizedIngredient(1, Ingredient.ofItems(ItemContent.BIOSTEEL_INGOT)), new ItemStack(ItemContent.BIOSTEEL_DUST), 5, 200, "biosteel_ingot");
         offerTRGrinderRecipe(exporter, new SizedIngredient(1, Ingredient.ofItems(ItemContent.DURATIUM_INGOT)), new ItemStack(ItemContent.DURATIUM_DUST), 5, 200, "duratium_ingot");
@@ -84,9 +84,9 @@ public class TechRebornRecipeGenerator {
     
     public static void addOritechIndustrialGrinderRecipes(RecipeExporter exporter) {
         offerTRIndustrialGrinderRecipe(exporter, new SizedIngredient(1, Ingredient.fromTag(TagContent.NICKEL_ORES)), List.of(new ItemStack(ItemContent.RAW_NICKEL, 2), new ItemStack(ItemContent.RAW_PLATINUM)), 5, 200, new FluidInstance(Fluids.WATER, FluidValue.BUCKET), "nickel_ore");
-        offerTRIndustrialGrinderRecipe(exporter, new SizedIngredient(1, Ingredient.fromTag(TagContent.NICKEL_RAW_ORES)), List.of(new ItemStack(ItemContent.NICKEL_DUST), new ItemStack(ItemContent.SMALL_NICKEL_DUST, 3), new ItemStack(ItemContent.SMALL_PLATINUM_DUST, 2)), 5, 200, new FluidInstance(Fluids.WATER, FluidValue.BUCKET), "nickel");
+        offerTRIndustrialGrinderRecipe(exporter, new SizedIngredient(1, Ingredient.fromTag(TagContent.NICKEL_RAW_MATERIALS)), List.of(new ItemStack(ItemContent.NICKEL_DUST), new ItemStack(ItemContent.SMALL_NICKEL_DUST, 3), new ItemStack(ItemContent.SMALL_PLATINUM_DUST, 2)), 5, 200, new FluidInstance(Fluids.WATER, FluidValue.BUCKET), "nickel");
         offerTRIndustrialGrinderRecipe(exporter, new SizedIngredient(1, Ingredient.fromTag(TagContent.PLATINUM_ORES)), List.of(new ItemStack(ItemContent.RAW_PLATINUM, 2)), 5, 200, new FluidInstance(Fluids.WATER, FluidValue.BUCKET), "platinum_ore");
-        offerTRIndustrialGrinderRecipe(exporter, new SizedIngredient(1, Ingredient.fromTag(TagContent.PLATINUM_RAW_ORES)), List.of(new ItemStack(ItemContent.PLATINUM_DUST), new ItemStack(ItemContent.SMALL_PLATINUM_DUST, 3)), 5, 200, new FluidInstance(Fluids.WATER, FluidValue.BUCKET), "platinum");
+        offerTRIndustrialGrinderRecipe(exporter, new SizedIngredient(1, Ingredient.fromTag(TagContent.PLATINUM_RAW_MATERIALS)), List.of(new ItemStack(ItemContent.PLATINUM_DUST), new ItemStack(ItemContent.SMALL_PLATINUM_DUST, 3)), 5, 200, new FluidInstance(Fluids.WATER, FluidValue.BUCKET), "platinum");
     }
     
     public static void addTechRebornPulverizerRecipes(RecipeExporter exporter) {

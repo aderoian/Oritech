@@ -72,7 +72,7 @@ public class DronePortEntity extends BlockEntity implements InventoryProvider, F
     private BaseAddonData addonData = MachineAddonController.DEFAULT_ADDON_DATA;
     
     // storage
-    protected final DynamicEnergyStorage energyStorage = new DynamicEnergyStorage(1024 * 32, 1000, 0, this::markDirty);
+    protected final DynamicEnergyStorage energyStorage = new DynamicEnergyStorage(1024 * 32, 10000, 0, this::markDirty);
     
     public final SimpleInventory inventory = new DronePortItemInventory(15);
 
@@ -701,6 +701,7 @@ public class DronePortEntity extends BlockEntity implements InventoryProvider, F
     @Nullable
     @Override
     public ScreenHandler createMenu(int syncId, PlayerInventory playerInventory, PlayerEntity player) {
+        NetworkContent.MACHINE_CHANNEL.serverHandle(this).send(new NetworkContent.FullEnergySyncPacket(pos, energyStorage.amount, energyStorage.capacity, energyStorage.maxInsert, energyStorage.maxExtract));
         return new DroneScreenHandler(syncId, playerInventory, this, getUiData(), coreQuality);
     }
     
@@ -725,6 +726,11 @@ public class DronePortEntity extends BlockEntity implements InventoryProvider, F
     @Override
     public float getDisplayedEnergyUsage() {
         return calculateEnergyUsage();
+    }
+    
+    @Override
+    public float getDisplayedEnergyTransfer() {
+        return energyStorage.maxInsert;
     }
     
     @Override

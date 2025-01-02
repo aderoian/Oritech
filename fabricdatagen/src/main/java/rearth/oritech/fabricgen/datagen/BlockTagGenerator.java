@@ -2,12 +2,12 @@ package rearth.oritech.fabricgen.datagen;
 
 import net.fabricmc.fabric.api.datagen.v1.FabricDataOutput;
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricTagProvider;
-import net.fabricmc.fabric.api.tag.convention.v1.ConventionalBlockTags;
+import net.fabricmc.fabric.api.tag.convention.v2.ConventionalBlockTags;
 import net.minecraft.block.Blocks;
 import net.minecraft.registry.RegistryWrapper;
 import net.minecraft.registry.tag.BlockTags;
-import rearth.oritech.init.TagContent;
 import rearth.oritech.init.BlockContent;
+import rearth.oritech.init.TagContent;
 
 import java.util.concurrent.CompletableFuture;
 
@@ -26,8 +26,13 @@ public class BlockTagGenerator extends FabricTagProvider.BlockTagProvider {
             pickaxeBuilder.add(block);
         }
         pickaxeBuilder.add(BlockContent.ENERGY_PIPE_CONNECTION);
+        pickaxeBuilder.add(BlockContent.SUPERCONDUCTOR_CONNECTION);
         pickaxeBuilder.add(BlockContent.FLUID_PIPE_CONNECTION);
         pickaxeBuilder.add(BlockContent.ITEM_PIPE_CONNECTION);
+        pickaxeBuilder.add(BlockContent.FRAMED_ENERGY_PIPE_CONNECTION);
+        pickaxeBuilder.add(BlockContent.FRAMED_SUPERCONDUCTOR_CONNECTION);
+        pickaxeBuilder.add(BlockContent.FRAMED_FLUID_PIPE_CONNECTION);
+        pickaxeBuilder.add(BlockContent.FRAMED_ITEM_PIPE_CONNECTION);
         pickaxeBuilder.add(BlockContent.SMALL_TANK_BLOCK);
         pickaxeBuilder.add(BlockContent.SMALL_STORAGE_BLOCK);
         pickaxeBuilder.add(BlockContent.PUMP_TRUNK_BLOCK);
@@ -36,6 +41,8 @@ public class BlockTagGenerator extends FabricTagProvider.BlockTagProvider {
           .add(BlockContent.NICKEL_ORE)
           .add(BlockContent.DEEPSLATE_NICKEL_ORE)
           .add(BlockContent.DEEPSLATE_PLATINUM_ORE)
+          .add(BlockContent.DEEPSLATE_URANIUM_ORE)
+          .add(BlockContent.URANIUM_CRYSTAL)
           .add(BlockContent.ENDSTONE_PLATINUM_ORE);
         
         getOrCreateTagBuilder(BlockTags.AXE_MINEABLE)
@@ -46,6 +53,7 @@ public class BlockTagGenerator extends FabricTagProvider.BlockTagProvider {
           .add(BlockContent.NICKEL_ORE)
           .add(BlockContent.DEEPSLATE_NICKEL_ORE)
           .add(BlockContent.DEEPSLATE_PLATINUM_ORE)
+          .add(BlockContent.DEEPSLATE_URANIUM_ORE)
           .add(BlockContent.ENDSTONE_PLATINUM_ORE);
         
         getOrCreateTagBuilder(BlockTags.NEEDS_STONE_TOOL)
@@ -54,7 +62,15 @@ public class BlockTagGenerator extends FabricTagProvider.BlockTagProvider {
         
         getOrCreateTagBuilder(BlockTags.NEEDS_IRON_TOOL)
           .add(BlockContent.DEEPSLATE_PLATINUM_ORE)
+          .add(BlockContent.DEEPSLATE_URANIUM_ORE)
           .add(BlockContent.ENDSTONE_PLATINUM_ORE);
+        
+        getOrCreateTagBuilder(TagContent.NICKEL_ORE_BLOCKS)
+          .add(BlockContent.NICKEL_ORE, BlockContent.DEEPSLATE_NICKEL_ORE);
+        getOrCreateTagBuilder(TagContent.PLATINUM_ORE_BLOCKS)
+          .add(BlockContent.DEEPSLATE_PLATINUM_ORE, BlockContent.ENDSTONE_PLATINUM_ORE);
+        getOrCreateTagBuilder(TagContent.URANIUM_ORE_BLOCKS)
+          .add(BlockContent.DEEPSLATE_URANIUM_ORE);
         
         getOrCreateTagBuilder(TagContent.DRILL_MINEABLE)
           .addOptionalTag(BlockTags.PICKAXE_MINEABLE)
@@ -70,6 +86,7 @@ public class BlockTagGenerator extends FabricTagProvider.BlockTagProvider {
           .add(BlockContent.RESOURCE_NODE_EMERALD)
           .add(BlockContent.RESOURCE_NODE_DIAMOND)
           .add(BlockContent.RESOURCE_NODE_COAL)
+          .add(BlockContent.RESOURCE_NODE_URANIUM)
           .add(BlockContent.RESOURCE_NODE_PLATINUM);
         
         getOrCreateTagBuilder(TagContent.LASER_PASSTHROUGH)
@@ -96,6 +113,7 @@ public class BlockTagGenerator extends FabricTagProvider.BlockTagProvider {
           .add(BlockContent.REACTOR_ABSORBER_PORT)
           .add(BlockContent.REACTOR_ENERGY_PORT)
           .add(BlockContent.REACTOR_FUEL_PORT)
+          .add(BlockContent.REACTOR_REDSTONE_PORT)
           .add(BlockContent.REACTOR_CONTROLLER);
     }
 }

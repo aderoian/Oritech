@@ -24,6 +24,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.predicate.entity.EntityPredicates;
+import net.minecraft.recipe.RecipeEntry;
 import net.minecraft.registry.RegistryKeys;
 import net.minecraft.registry.RegistryWrapper;
 import net.minecraft.screen.ScreenHandler;
@@ -40,8 +41,8 @@ import org.jetbrains.annotations.Nullable;
 import rearth.oritech.Oritech;
 import rearth.oritech.block.base.entity.MachineBlockEntity;
 import rearth.oritech.block.behavior.LaserArmBlockBehavior;
-import rearth.oritech.block.blocks.processing.MachineCoreBlock;
 import rearth.oritech.block.blocks.interaction.LaserArmBlock;
+import rearth.oritech.block.blocks.processing.MachineCoreBlock;
 import rearth.oritech.block.entity.addons.RedstoneAddonBlockEntity;
 import rearth.oritech.block.entity.processing.MachineCoreEntity;
 import rearth.oritech.client.init.ModScreens;
@@ -49,12 +50,13 @@ import rearth.oritech.client.init.ParticleContent;
 import rearth.oritech.client.ui.UpgradableMachineScreenHandler;
 import rearth.oritech.init.BlockContent;
 import rearth.oritech.init.BlockEntitiesContent;
-import rearth.oritech.init.ItemContent;
 import rearth.oritech.init.TagContent;
+import rearth.oritech.init.recipes.OritechRecipe;
+import rearth.oritech.init.recipes.RecipeContent;
 import rearth.oritech.network.NetworkContent;
 import rearth.oritech.util.*;
-import rearth.oritech.util.energy.containers.DynamicEnergyStorage;
 import rearth.oritech.util.energy.EnergyApi;
+import rearth.oritech.util.energy.containers.DynamicEnergyStorage;
 import software.bernie.geckolib.animatable.GeoBlockEntity;
 import software.bernie.geckolib.animatable.instance.AnimatableInstanceCache;
 import software.bernie.geckolib.animation.AnimatableManager;
@@ -67,29 +69,29 @@ import java.util.stream.Collectors;
 import static rearth.oritech.block.base.block.MultiblockMachine.ASSEMBLED;
 
 public class LaserArmBlockEntity extends BlockEntity implements GeoBlockEntity, BlockEntityTicker<LaserArmBlockEntity>, EnergyApi.BlockProvider, ScreenProvider, ExtendedScreenHandlerFactory, MultiblockMachineController, MachineAddonController, InventoryProvider, RedstoneAddonBlockEntity.RedstoneControllable {
-    
+
     public static final String LASER_PLAYER_NAME = "oritech_laser";
     private static final int BLOCK_BREAK_ENERGY = Oritech.CONFIG.laserArmConfig.blockBreakEnergyBase();
-    
+
     // storage
     protected final DynamicEnergyStorage energyStorage = new DynamicEnergyStorage(getDefaultCapacity(), getDefaultInsertRate(), 0, this::markDirty);
-    
+
     public final SimpleInventory inventory = new SimpleInventory(3) {
         @Override
         public void markDirty() {
             LaserArmBlockEntity.this.markDirty();
         }
     };
-    
+
     protected final InventoryStorage inventoryStorage = InventoryStorage.of(inventory, null);
-    
+
     // animation
     protected final AnimatableInstanceCache animatableInstanceCache = GeckoLibUtil.createInstanceCache(this);
     private final AnimationController<LaserArmBlockEntity> animationController = getAnimationController();
-    
+
     // multiblock
     private final ArrayList<BlockPos> coreBlocksConnected = new ArrayList<>();
-    
+
     // addons
     private final List<BlockPos> connectedAddons = new ArrayList<>();
     private final List<BlockPos> openSlots = new ArrayList<>();
@@ -99,12 +101,12 @@ public class LaserArmBlockEntity extends BlockEntity implements GeoBlockEntity, 
     public int yieldAddons = 0;
     public int hunterAddons = 0;
     public boolean hasCropFilterAddon = false;
-    
+
     // config
     private final int range = Oritech.CONFIG.laserArmConfig.range();
 
     private Vec3d laserHead;
-    
+
     // working data
     private BlockPos targetDirection;
     private BlockPos currentTarget;
@@ -117,21 +119,21 @@ public class LaserArmBlockEntity extends BlockEntity implements GeoBlockEntity, 
     private boolean redstonePowered;
     private ArrayDeque<BlockPos> pendingArea;
     private final ArrayDeque<LivingEntity> pendingLivingTargets = new ArrayDeque<>();
-    
+
     // needed only on client
     public Vec3d lastRenderPosition;
     private PlayerEntity laserPlayerEntity = null;
-    
+
     public LaserArmBlockEntity(BlockPos pos, BlockState state) {
         super(BlockEntitiesContent.LASER_ARM_ENTITY, pos, state);
         laserHead = Vec3d.of(pos.up()).add(0.5, 0.55, 0.5);
     }
-    
+
     @Override
     public void tick(World world, BlockPos pos, BlockState state, LaserArmBlockEntity blockEntity) {
         if (world.isClient() || !isActive(state))
             return;
-        
+
         if (!redstonePowered && energyStorage.getAmount() >= energyRequiredToFire()) {
             if (hunterAddons > 0) {
                 fireAtLivingEntities(world, pos, state, blockEntity);
@@ -143,7 +145,7 @@ public class LaserArmBlockEntity extends BlockEntity implements GeoBlockEntity, 
                 findNextBlockBreakTarget();
             }
         }
-    
+
         if (networkDirty)
             updateNetwork();
     }
@@ -186,7 +188,7 @@ public class LaserArmBlockEntity extends BlockEntity implements GeoBlockEntity, 
         }
 
     }
-    
+
     public void setRedstonePowered(boolean redstonePowered) {
         this.redstonePowered = redstonePowered;
     }
@@ -202,29 +204,34 @@ public class LaserArmBlockEntity extends BlockEntity implements GeoBlockEntity, 
     public int getTargetBlockEnergyNeeded() {
         return targetBlockEnergyNeeded;
     }
-    
+
     public void finishBlockBreaking(BlockPos targetPos, BlockState targetBlockState) {
         progress -= targetBlockEnergyNeeded;
-        
+
         var targetEntity = world.getBlockEntity(targetPos);
         List<ItemStack> dropped;
+        // added getLaserPlayerEntity() to make ae2 certus quartz drop from certus
+        // quartz clusters because it's expecting an entity in
+        // LootContextParameters.THIS_ENTITY
         if (yieldAddons > 0) {
-            dropped = DestroyerBlockEntity.getLootDrops(targetBlockState, (ServerWorld) world, targetPos, targetEntity, yieldAddons);
+            dropped = DestroyerBlockEntity.getLootDrops(targetBlockState, (ServerWorld) world, targetPos, targetEntity, yieldAddons, getLaserPlayerEntity());
         } else {
-            dropped = net.minecraft.block.Block.getDroppedStacks(targetBlockState, (ServerWorld) world, targetPos, targetEntity);
+            dropped = net.minecraft.block.Block.getDroppedStacks(targetBlockState, (ServerWorld) world, targetPos, targetEntity, getLaserPlayerEntity(), ItemStack.EMPTY);
         }
         
-        if (targetBlockState.getBlock().equals(Blocks.AMETHYST_CLUSTER)) {
+        var blockRecipe = tryGetRecipeOfBlock(targetBlockState);
+        if (blockRecipe != null) {
+            var recipe = blockRecipe.value();
             var farmedCount = 1 + yieldAddons;
-            dropped = List.of(new ItemStack(ItemContent.FLUXITE, farmedCount));
+            dropped = List.of(new ItemStack(recipe.getResults().get(0).getItem(), farmedCount));
             ParticleContent.CHARGING.spawn(world, Vec3d.of(targetPos), 1);
         }
-        
+
         // yes, this will discard items that wont fit anymore
         for (var stack : dropped) {
             this.inventory.addStack(stack);
         }
-        
+
         try {
             targetBlockState.getBlock().onBreak(world, targetPos, targetBlockState, getLaserPlayerEntity());
         } catch (Exception exception) {
@@ -233,8 +240,15 @@ public class LaserArmBlockEntity extends BlockEntity implements GeoBlockEntity, 
         world.addBlockBreakParticles(targetPos, world.getBlockState(targetPos));
         world.playSound(null, targetPos, targetBlockState.getSoundGroup().getBreakSound(), SoundCategory.BLOCKS, 1f, 1f);
         world.breakBlock(targetPos, false);
-        
+
         findNextBlockBreakTarget();
+    }
+  
+    private RecipeEntry<OritechRecipe> tryGetRecipeOfBlock(BlockState destroyed) {
+        var inputItem = destroyed.getBlock().asItem();
+        var inputInv = new SimpleCraftingInventory(new ItemStack(inputItem));
+        var candidate = world.getRecipeManager().getFirstMatch(RecipeContent.LASER, inputInv, world);
+        return candidate.orElse(null);
     }
     
     public PlayerEntity getLaserPlayerEntity() {
@@ -861,6 +875,11 @@ public class LaserArmBlockEntity extends BlockEntity implements GeoBlockEntity, 
     }
     
     @Override
+    public float getDisplayedEnergyTransfer() {
+        return energyStorage.maxInsert;
+    }
+    
+    @Override
     public ScreenHandlerType<?> getScreenHandlerType() {
         return ModScreens.LASER_SCREEN;
     }
@@ -879,6 +898,7 @@ public class LaserArmBlockEntity extends BlockEntity implements GeoBlockEntity, 
     @Nullable
     @Override
     public ScreenHandler createMenu(int syncId, PlayerInventory playerInventory, PlayerEntity player) {
+        NetworkContent.MACHINE_CHANNEL.serverHandle(this).send(new NetworkContent.FullEnergySyncPacket(pos, energyStorage.amount, energyStorage.capacity, energyStorage.maxInsert, energyStorage.maxExtract));
         return new UpgradableMachineScreenHandler(syncId, playerInventory, this, getUiData(), getCoreQuality());
     }
     

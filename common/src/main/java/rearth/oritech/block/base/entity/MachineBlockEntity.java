@@ -121,7 +121,15 @@ public abstract class MachineBlockEntity extends BlockEntity
         }
     }
     
+    // returns true if input items match
     protected boolean canProceed(OritechRecipe value) {
+        
+        var inputInv = getInputInventory();
+        for (int i = 0; i < value.getInputs().size(); i++) {
+            var input = value.getInputs().get(i);
+            if (!input.test(inputInv.getStackInSlot(i))) return false;
+        }
+        
         return true;
     }
     
@@ -161,7 +169,7 @@ public abstract class MachineBlockEntity extends BlockEntity
     }
     
     protected void sendNetworkEntry() {
-        NetworkContent.MACHINE_CHANNEL.serverHandle(this).send(new NetworkContent.MachineSyncPacket(getPos(), energyStorage.amount, energyStorage.capacity, energyStorage.maxInsert, progress, currentRecipe, inventoryInputMode, lastWorkedAt, disabledViaRedstone));
+        NetworkContent.MACHINE_CHANNEL.serverHandle(this).send(new NetworkContent.MachineSyncPacket(getPos(), energyStorage.amount, energyStorage.capacity, energyStorage.maxInsert, energyStorage.maxExtract, progress, currentRecipe, inventoryInputMode, lastWorkedAt, disabledViaRedstone));
         networkDirty = false;
     }
     
@@ -171,6 +179,7 @@ public abstract class MachineBlockEntity extends BlockEntity
         this.setProgress(message.progress());
         this.setEnergyStored(message.energy());
         this.energyStorage.maxInsert = message.maxInsert();
+        this.energyStorage.maxExtract = message.maxExtract();
         this.energyStorage.capacity = message.maxEnergy();
         this.setCurrentRecipe(message.activeRecipe());
         this.setInventoryInputMode(message.inputMode());
@@ -221,7 +230,7 @@ public abstract class MachineBlockEntity extends BlockEntity
     }
     
     // check if output slots are valid, meaning: each slot is either empty, or of the same type and can add the target amount without overfilling
-    private boolean canOutputRecipe(OritechRecipe recipe) {
+    public boolean canOutputRecipe(OritechRecipe recipe) {
         
         var outInv = getOutputInventory();
         
@@ -553,6 +562,11 @@ public abstract class MachineBlockEntity extends BlockEntity
     
     public long getDefaultInsertRate() {
         return 1024;
+    }
+    
+    @Override
+    public float getDisplayedEnergyTransfer() {
+        return energyStorage.maxInsert;
     }
     
     public long getDefaultExtractionRate() {
