@@ -427,6 +427,11 @@ public abstract class GenericPipeBlock extends AbstractPipeBlock implements Wren
 		GenericPipeInterfaceEntity.removeNode(world, pos, false, oldState, getNetworkData(world));
 	}
 
+	@Override
+	protected float getAmbientOcclusionLightLevel(BlockState state, BlockView world, BlockPos pos) {
+		return 1.0f;
+	}
+
 	/*
 	 * The following is a hacky implementation to allow child classes to modify the connection properties
 	 */

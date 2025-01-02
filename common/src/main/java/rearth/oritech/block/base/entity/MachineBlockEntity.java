@@ -426,7 +426,7 @@ public abstract class MachineBlockEntity extends BlockEntity
     }
     
     public boolean isActivelyWorking() {
-        return world.getTime() - lastWorkedAt < 5;
+        return world.getTime() - lastWorkedAt < 15;
     }
     
     public void playSetupAnimation() {

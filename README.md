@@ -141,8 +141,9 @@ In detail, these are the following items that are from the above-mentioned sourc
 * BBoldt and BLOKBUSTR, for providing most of the metal item variant textures
 * jshipley, for a lot of contributions with new features, block, mechanics and bugfixes
 * CrazyMiner34, for improvements to item rendering in 3rd person & the wrench texture
-* NovaKatt, for creating most of the metal / compacted block textures
-* Armen, for making the pipes configurable with the wrench and ton of additional improvements
+* NovaKatt, for creating most of the metal / compacted block textures, as well as the pipe duct textures
+* The_Dvil, for creating the initial framed pipe concepts and models
+* Armen, for making pipes configurable, adding pipe ducts/framed variants, and a ton of additional stuff
 * VasariRulez, for improving compatibility of the enderic laser with AE2 quartz clusters
 
 ## Sound Credits

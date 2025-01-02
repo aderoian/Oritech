@@ -2,9 +2,12 @@ package rearth.oritech.block.entity.processing;
 
 import net.minecraft.block.BlockState;
 import net.minecraft.item.ItemStack;
+import net.minecraft.particle.ItemStackParticleEffect;
+import net.minecraft.particle.ParticleTypes;
 import net.minecraft.recipe.RecipeType;
 import net.minecraft.recipe.input.CraftingRecipeInput;
 import net.minecraft.screen.ScreenHandlerType;
+import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.math.Vec3i;
@@ -110,8 +113,17 @@ public class PulverizerBlockEntity extends UpgradableMachineBlockEntity {
     @Override
     protected void useEnergy() {
         super.useEnergy();
-        if (world.random.nextFloat() > 0.5)
-            ParticleContent.PULVERIZER_WORKING.spawn(world, Vec3d.of(pos), 1);
+        
+        if (world.random.nextFloat() > 0.7 && !inventory.getStack(0).isEmpty()) {
+            var effect = new ItemStackParticleEffect(ParticleTypes.ITEM, inventory.getStack(0));
+            var spawnAt = pos.toCenterPos().add(0, 0.3, 0);
+            var offsetX = (world.random.nextFloat() - 0.5) * 0.1;
+            var offsetY = (world.random.nextFloat()) * 0.1;
+            var offsetZ = (world.random.nextFloat() - 0.5) * 0.1;
+            ((ServerWorld) world).spawnParticles(effect, spawnAt.getX(), spawnAt.getY(), spawnAt.getZ(), 3, offsetX, offsetY, offsetZ, 0.08);
+        }
+        
+        
     }
     
     @Override

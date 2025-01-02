@@ -5,6 +5,7 @@ import net.minecraft.recipe.RecipeType;
 import net.minecraft.recipe.SmeltingRecipe;
 import net.minecraft.recipe.input.SingleStackRecipeInput;
 import net.minecraft.screen.ScreenHandlerType;
+import net.minecraft.state.property.Properties;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.math.Vec3i;
@@ -81,9 +82,22 @@ public class PoweredFurnaceBlockEntity extends MultiblockMachineEntity {
             if (progress > 0) resetProgress();
         }
         
+        if (world.getTime() % 18 == 0)
+            updateFurnaceState(state);
+        
         if (networkDirty) {
             updateNetwork();
         }
+    }
+    
+    private void updateFurnaceState(BlockState state) {
+        var wasLit = state.get(Properties.LIT);
+        var isLit = isActivelyWorking();
+        
+        if (wasLit != isLit) {
+            world.setBlockState(pos, state.with(Properties.LIT, isLit));
+        }
+        
     }
     
     private void craftFurnaceItem(SmeltingRecipe activeRecipe) {
