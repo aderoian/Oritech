@@ -181,7 +181,7 @@ public class PumpBlockEntity extends BlockEntity implements BlockEntityTicker<Pu
     }
     
     private void useEnergy() {
-        energyStorage.extract(ENERGY_USAGE, false);
+        energyStorage.extractIgnoringLimit(ENERGY_USAGE, false);
     }
     
     private boolean tankIsFull() {
