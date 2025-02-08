@@ -8,11 +8,14 @@ import net.minecraft.block.entity.BlockEntityType;
 import net.minecraft.registry.Registry;
 import net.minecraft.registry.RegistryKey;
 import net.minecraft.registry.RegistryKeys;
+import rearth.oritech.block.entity.MachineCoreEntity;
 import rearth.oritech.block.entity.accelerator.*;
 import rearth.oritech.block.entity.addons.*;
 import rearth.oritech.block.entity.arcane.EnchanterBlockEntity;
 import rearth.oritech.block.entity.arcane.EnchantmentCatalystBlockEntity;
 import rearth.oritech.block.entity.arcane.SpawnerControllerBlockEntity;
+import rearth.oritech.block.entity.augmenter.AugmentApplicationEntity;
+import rearth.oritech.block.entity.augmenter.AugmentResearchStationBlockEntity;
 import rearth.oritech.block.entity.decorative.TechDoorBlockEntity;
 import rearth.oritech.block.entity.generators.*;
 import rearth.oritech.block.entity.interaction.*;
@@ -118,7 +121,7 @@ public class BlockEntitiesContent implements ArchitecturyRegistryContainer<Block
     
     @AssignSidedEnergy
     public static final BlockEntityType<EnergyAcceptorAddonBlockEntity> ENERGY_ACCEPTOR_ADDON_ENTITY = FabricBlockEntityTypeBuilder.create(EnergyAcceptorAddonBlockEntity::new, BlockContent.MACHINE_ACCEPTOR_ADDON).build();
-
+    
     public static final BlockEntityType<RedstoneAddonBlockEntity> REDSTONE_ADDON_ENTITY = FabricBlockEntityTypeBuilder.create(RedstoneAddonBlockEntity::new, BlockContent.MACHINE_REDSTONE_ADDON).build();
     
     @AssignSidedFluid
@@ -163,6 +166,12 @@ public class BlockEntitiesContent implements ArchitecturyRegistryContainer<Block
     public static final BlockEntityType<NuclearExplosionEntity> REACTOR_EXPLOSION_ENTITY = FabricBlockEntityTypeBuilder.create(NuclearExplosionEntity::new, BlockContent.REACTOR_EXPLOSION_SMALL, BlockContent.REACTOR_EXPLOSION_MEDIUM, BlockContent.REACTOR_EXPLOSION_LARGE).build();
     
     @AssignSidedInventory
+    @AssignSidedEnergy
+    public static final BlockEntityType<AugmentApplicationEntity> PLAYER_MODIFIER_BLOCK_ENTITY = FabricBlockEntityTypeBuilder.create(AugmentApplicationEntity::new, BlockContent.AUGMENT_APPLICATION_BLOCK).build();
+    public static final BlockEntityType<AugmentResearchStationBlockEntity> AUGMENTER_RESEARCH_STATION_ENTITY = FabricBlockEntityTypeBuilder.create(AugmentResearchStationBlockEntity::new, BlockContent.SIMPLE_AUGMENT_STATION, BlockContent.ADVANCED_AUGMENT_STATION, BlockContent.ARCANE_AUGMENT_STATION).build();
+    
+    
+    @AssignSidedInventory
     public static final BlockEntityType<AcceleratorControllerBlockEntity> ACCELERATOR_CONTROLLER_BLOCK_ENTITY = FabricBlockEntityTypeBuilder.create(AcceleratorControllerBlockEntity::new, BlockContent.ACCELERATOR_CONTROLLER).build();
     public static final BlockEntityType<AcceleratorSensorBlockEntity> ACCELERATOR_SENSOR_BLOCK_ENTITY = FabricBlockEntityTypeBuilder.create(AcceleratorSensorBlockEntity::new, BlockContent.ACCELERATOR_SENSOR).build();
     @AssignSidedEnergy
@@ -186,16 +195,16 @@ public class BlockEntitiesContent implements ArchitecturyRegistryContainer<Block
     @AssignSidedInventory
     @AssignSidedFluid
     public static final BlockEntityType<SmallFluidTankEntity> SMALL_TANK_ENTITY = FabricBlockEntityTypeBuilder.create((pos, state) -> new SmallFluidTankEntity(pos, state, false), BlockContent.SMALL_TANK_BLOCK).build();
-
+    
     @AssignSidedInventory
     @AssignSidedFluid
     public static final BlockEntityType<SmallFluidTankEntity> CREATIVE_TANK_ENTITY = FabricBlockEntityTypeBuilder.create((pos, state) -> new SmallFluidTankEntity(pos, state, true), BlockContent.CREATIVE_TANK_BLOCK).build();
     
     @AssignSidedFluid
-	public static final BlockEntityType<FluidPipeInterfaceEntity> FLUID_PIPE_ENTITY = FabricBlockEntityTypeBuilder.create(FluidPipeInterfaceEntity::new, BlockContent.FLUID_PIPE_CONNECTION, BlockContent.FRAMED_FLUID_PIPE_CONNECTION).build();
+    public static final BlockEntityType<FluidPipeInterfaceEntity> FLUID_PIPE_ENTITY = FabricBlockEntityTypeBuilder.create(FluidPipeInterfaceEntity::new, BlockContent.FLUID_PIPE_CONNECTION, BlockContent.FRAMED_FLUID_PIPE_CONNECTION).build();
     @AssignSidedEnergy
-	public static final BlockEntityType<EnergyPipeInterfaceEntity> ENERGY_PIPE_ENTITY = FabricBlockEntityTypeBuilder.create(EnergyPipeInterfaceEntity::new, BlockContent.ENERGY_PIPE_CONNECTION, BlockContent.SUPERCONDUCTOR_CONNECTION, BlockContent.FRAMED_ENERGY_PIPE_CONNECTION, BlockContent.FRAMED_SUPERCONDUCTOR_CONNECTION).build();
-	public static final BlockEntityType<ItemPipeInterfaceEntity> ITEM_PIPE_ENTITY = FabricBlockEntityTypeBuilder.create(ItemPipeInterfaceEntity::new, BlockContent.ITEM_PIPE_CONNECTION, BlockContent.FRAMED_ITEM_PIPE_CONNECTION).build();
+    public static final BlockEntityType<EnergyPipeInterfaceEntity> ENERGY_PIPE_ENTITY = FabricBlockEntityTypeBuilder.create(EnergyPipeInterfaceEntity::new, BlockContent.ENERGY_PIPE_CONNECTION, BlockContent.SUPERCONDUCTOR_CONNECTION, BlockContent.FRAMED_ENERGY_PIPE_CONNECTION, BlockContent.FRAMED_SUPERCONDUCTOR_CONNECTION).build();
+    public static final BlockEntityType<ItemPipeInterfaceEntity> ITEM_PIPE_ENTITY = FabricBlockEntityTypeBuilder.create(ItemPipeInterfaceEntity::new, BlockContent.ITEM_PIPE_CONNECTION, BlockContent.FRAMED_ITEM_PIPE_CONNECTION).build();
     @AssignSidedInventory
     public static final BlockEntityType<ItemFilterBlockEntity> ITEM_FILTER_ENTITY = FabricBlockEntityTypeBuilder.create(ItemFilterBlockEntity::new, BlockContent.ITEM_FILTER_BLOCK).build();
     
@@ -204,6 +213,7 @@ public class BlockEntitiesContent implements ArchitecturyRegistryContainer<Block
       BlockContent.MACHINE_SPEED_ADDON,
       BlockContent.MACHINE_PROCESSING_ADDON,
       BlockContent.MACHINE_EFFICIENCY_ADDON,
+      BlockContent.MACHINE_ULTIMATE_ADDON,
       BlockContent.MACHINE_FLUID_ADDON,
       BlockContent.MACHINE_HUNTER_ADDON,
       BlockContent.MACHINE_YIELD_ADDON,

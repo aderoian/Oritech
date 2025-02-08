@@ -12,7 +12,6 @@ import net.fabricmc.fabric.api.transfer.v1.transaction.TransactionContext;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.block.entity.BlockEntityTicker;
-import net.minecraft.client.resource.language.I18n;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.inventory.Inventories;
@@ -38,17 +37,17 @@ import rearth.oritech.Oritech;
 import rearth.oritech.block.blocks.interaction.DronePortBlock;
 import rearth.oritech.block.blocks.processing.MachineCoreBlock;
 import rearth.oritech.block.entity.addons.RedstoneAddonBlockEntity;
-import rearth.oritech.block.entity.processing.MachineCoreEntity;
+import rearth.oritech.block.entity.MachineCoreEntity;
 import rearth.oritech.client.init.ModScreens;
 import rearth.oritech.client.ui.DroneScreenHandler;
 import rearth.oritech.init.BlockContent;
 import rearth.oritech.init.BlockEntitiesContent;
 import rearth.oritech.init.ComponentContent;
-import rearth.oritech.init.ItemContent;
 import rearth.oritech.network.NetworkContent;
 import rearth.oritech.util.*;
 import rearth.oritech.util.energy.EnergyApi;
 import rearth.oritech.util.energy.containers.DynamicEnergyStorage;
+import rearth.oritech.item.tools.LaserTargetDesignator;
 import software.bernie.geckolib.animatable.GeoBlockEntity;
 import software.bernie.geckolib.animatable.instance.AnimatableInstanceCache;
 import software.bernie.geckolib.animation.AnimatableManager;
@@ -87,7 +86,7 @@ public class DronePortEntity extends BlockEntity implements InventoryProvider, F
 
         @Override
         public boolean canInsert(ItemStack stack) {
-            return stack.getItem().equals(ItemContent.TARGET_DESIGNATOR);
+            return stack.getItem() instanceof LaserTargetDesignator;
         }
     };
     
@@ -155,7 +154,7 @@ public class DronePortEntity extends BlockEntity implements InventoryProvider, F
     private void checkPositionCard() {
         
         var source = cardInventory.heldStacks.get(0);
-        if (source.getItem().equals(ItemContent.TARGET_DESIGNATOR) && source.contains(ComponentContent.TARGET_POSITION.get())) {
+        if (source.getItem() instanceof LaserTargetDesignator && source.contains(ComponentContent.TARGET_POSITION.get())) {
             var target = source.get(ComponentContent.TARGET_POSITION.get());
             setTargetFromDesignator(target);
         } else {
@@ -419,7 +418,7 @@ public class DronePortEntity extends BlockEntity implements InventoryProvider, F
     }
     
     @Override
-    public InventoryStorage getInventory(Direction direction) {
+    public Storage<ItemVariant> getInventory(Direction direction) {
         return InventoryStorage.of(inventory, direction);
     }
     

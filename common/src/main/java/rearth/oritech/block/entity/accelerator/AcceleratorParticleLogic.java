@@ -95,9 +95,9 @@ public class AcceleratorParticleLogic {
                 var wasBend = !lastDirection.equals(nextDirection);
                 if (wasBend) {
                     
-                    var combinedDist = particle.lastBendDistance + particle.lastBendDistance2;
-                    
+                    var combinedDist = getParticleBendDist(particle.lastBendDistance, particle.lastBendDistance2);
                     var requiredDist = getRequiredBendDist(particle.velocity);
+                    
                     if (combinedDist <= requiredDist) {
                         exitParticle(particle, Vec3d.of(particle.nextGate.subtract(particle.lastGate)), AcceleratorControllerBlockEntity.ParticleEvent.EXITED_FAST);
                         return;
@@ -146,7 +146,7 @@ public class AcceleratorParticleLogic {
         var exitFrom = particle.position;
         
         var distance = Math.max(Math.sqrt(particle.velocity), 0.4) * 0.9;
-        var exitTo = exitFrom.add(direction.multiply(distance));
+        var exitTo = exitFrom.add(direction.normalize().multiply(distance));
         
         entity.onParticleExited(exitFrom, exitTo, particle.lastGate, direction, reason);
         
@@ -259,6 +259,13 @@ public class AcceleratorParticleLogic {
     
     public static float getRequiredBendDist(float speed) {
         return (float) (Math.sqrt(speed) / Oritech.CONFIG.bendFactor());
+    }
+    
+    public static float getParticleBendDist(float distA, float distB) {
+        var combinedDist = distA + distB;
+        var smallerDist = Math.min(distA, distB);
+        combinedDist += smallerDist;
+        return combinedDist;
     }
     
     @Nullable
