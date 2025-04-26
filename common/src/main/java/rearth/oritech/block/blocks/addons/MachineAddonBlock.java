@@ -5,6 +5,7 @@ import net.minecraft.block.*;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.block.enums.BlockFace;
 import net.minecraft.client.gui.screen.Screen;
+import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.BlockItem;
 import net.minecraft.item.Item;
@@ -42,11 +43,11 @@ import java.util.Objects;
 public class MachineAddonBlock extends WallMountedBlock implements BlockEntityProvider {
     
     public static final Boolean USE_ACCURATE_OUTLINES = Oritech.CONFIG.tightMachineAddonHitboxes();
-
+    
     public static final BooleanProperty ADDON_USED = BooleanProperty.of("addon_used");
     
     protected final AddonSettings addonSettings;
-
+    
     // Bounding shapes for each type of addon, with rotations for all of their facing/face combinations
     // This is intended to work for "needsSupport" addon blocks, which have the FACING and FACE state properties
     // If any block does not have a boundingShape set, this will default to a full cube
@@ -90,6 +91,36 @@ public class MachineAddonBlock extends WallMountedBlock implements BlockEntityPr
     }
     
     @Override
+    public void onPlaced(World world, BlockPos pos, BlockState state, @Nullable LivingEntity placer, ItemStack itemStack) {
+        super.onPlaced(world, pos, state, placer, itemStack);
+        
+        // search for addon extender or machine at neighbor
+        // if addon extender, check if its connected to a machine, if so then init it
+        // if machine then init it
+        
+        if (world.isClient) return;
+        
+        for (var direction : Direction.values()) {
+            var checkPos = pos.add(direction.getVector());
+            var checkEntity = world.getBlockEntity(checkPos);
+            if (checkEntity instanceof MachineAddonController machineEntity) {
+                AddonBlockEntity.pendingInits.add(machineEntity);
+                break;
+            } else if (checkEntity instanceof AddonBlockEntity addonEntity) {
+                var addonState = addonEntity.getCachedState();
+                var addonConnected = addonState.get(ADDON_USED);
+                if (!addonConnected) continue;
+                var controllerPos = addonEntity.getControllerPos();
+                if (world.getBlockEntity(controllerPos) instanceof MachineAddonController controllerEntity) {
+                    AddonBlockEntity.pendingInits.add(controllerEntity);
+                    break;
+                }
+            }
+        }
+        
+    }
+    
+    @Override
     protected void appendProperties(StateManager.Builder<Block, BlockState> builder) {
         builder.add(ADDON_USED);
         if (constructorAssignmentSupportWorkaround) {
@@ -100,13 +131,13 @@ public class MachineAddonBlock extends WallMountedBlock implements BlockEntityPr
     
     @Override
     protected BlockState rotate(BlockState state, BlockRotation rotation) {
-        if (!constructorAssignmentSupportWorkaround) return state;
+        if (!state.contains(FACING)) return state;
         return super.rotate(state, rotation);
     }
     
     @Override
     protected BlockState mirror(BlockState state, BlockMirror mirror) {
-        if (!constructorAssignmentSupportWorkaround) return state;
+        if (!state.contains(FACING)) return state;
         return super.mirror(state, mirror);
     }
     
@@ -144,15 +175,15 @@ public class MachineAddonBlock extends WallMountedBlock implements BlockEntityPr
     public BlockRenderType getRenderType(BlockState state) {
         return BlockRenderType.MODEL;
     }
-
+    
     @Override
     public VoxelShape getOutlineShape(BlockState state, BlockView world, BlockPos pos, ShapeContext context) {
         if (!USE_ACCURATE_OUTLINES || !addonSettings.needsSupport() || addonSettings.boundingShape() == null)
             return super.getOutlineShape(state, world, pos, context);
-
+        
         return addonSettings.boundingShape()[state.get(FACING).ordinal()][state.get(FACE).ordinal()];
     }
-
+    
     @Override
     public VoxelShape getCollisionShape(BlockState state, BlockView world, BlockPos pos, ShapeContext context) {
         return getOutlineShape(state, world, pos, context);
@@ -185,13 +216,13 @@ public class MachineAddonBlock extends WallMountedBlock implements BlockEntityPr
             var controllerEntity = world.getBlockEntity(Objects.requireNonNull(ownEntity).getControllerPos());
             
             if (controllerEntity instanceof MachineAddonController machineEntity) {
-                machineEntity.resetAddons();
+                machineEntity.initAddons(pos);
             }
         }
         
         return super.onBreak(world, pos, state, player);
     }
-
+    
     public AddonSettings getAddonSettings() {
         return addonSettings;
     }
@@ -205,23 +236,23 @@ public class MachineAddonBlock extends WallMountedBlock implements BlockEntityPr
         if (showExtra) {
             
             if (addonSettings.speedMultiplier() != 1) {
-                var displayedNumber = (int) ((1 - addonSettings.speedMultiplier()) * 100);
+                var displayedNumber = Math.round((1 - addonSettings.speedMultiplier()) * 100);
                 tooltip.add(Text.translatable("tooltip.oritech.addon_speed_desc").formatted(Formatting.DARK_GRAY)
                               .append(TooltipHelper.getFormattedValueChangeTooltip(displayedNumber)));
             }
             
             if (addonSettings.efficiencyMultiplier() != 1) {
-                var displayedNumber = (int) ((1 - addonSettings.efficiencyMultiplier()) * 100);
+                var displayedNumber = Math.round((1 - addonSettings.efficiencyMultiplier()) * 100);
                 tooltip.add(Text.translatable("tooltip.oritech.addon_efficiency_desc").formatted(Formatting.DARK_GRAY)
                               .append(TooltipHelper.getFormattedValueChangeTooltip(displayedNumber)));
             }
-
+            
             if (addonSettings.addedCapacity() != 0) {
                 tooltip.add(
                   Text.translatable("tooltip.oritech.addon_capacity_desc").formatted(Formatting.DARK_GRAY)
                     .append(TooltipHelper.getFormattedEnergyChangeTooltip(addonSettings.addedCapacity(), " RF")));
             }
-
+            
             if (addonSettings.addedInsert() != 0) {
                 tooltip.add(Text.translatable("tooltip.oritech.addon_transfer_desc").formatted(Formatting.DARK_GRAY)
                               .append(TooltipHelper.getFormattedEnergyChangeTooltip(addonSettings.addedInsert(), " RF/t")));
@@ -260,7 +291,7 @@ public class MachineAddonBlock extends WallMountedBlock implements BlockEntityPr
         }
         
     }
-
+    
     static {
         MACHINE_ACCEPTOR_ADDON_SHAPE = new VoxelShape[Direction.values().length][BlockFace.values().length];
         MACHINE_CAPACITOR_ADDON_SHAPE = new VoxelShape[Direction.values().length][BlockFace.values().length];
@@ -280,44 +311,44 @@ public class MachineAddonBlock extends WallMountedBlock implements BlockEntityPr
             if (!facing.getAxis().isHorizontal()) continue;
             for (var face : BlockFace.values()) {
                 MACHINE_ACCEPTOR_ADDON_SHAPE[facing.ordinal()][face.ordinal()] = VoxelShapes.union(
-                    Geometry.rotateVoxelShape(VoxelShapes.cuboid(0.25, 0.625, 0.25, 0.75, 0.75, 0.75), facing, face),
-                    Geometry.rotateVoxelShape(VoxelShapes.cuboid(0.125, 0.25, 0.125, 0.875, 0.375, 0.875), facing, face),
-                    Geometry.rotateVoxelShape(VoxelShapes.cuboid(0.125, 0.375, 0.125, 0.875, 0.5, 0.875), facing, face),
-                    Geometry.rotateVoxelShape(VoxelShapes.cuboid(0.125, 0.5, 0.125, 0.875, 0.625, 0.875), facing, face),
-                    Geometry.rotateVoxelShape(VoxelShapes.cuboid(0, 0.75, 0, 1, 0.875, 1), facing, face),
-                    Geometry.rotateVoxelShape(VoxelShapes.cuboid(0, 0, 0, 1, 0.125, 1), facing, face),
-                    Geometry.rotateVoxelShape(VoxelShapes.cuboid(0.125, 0.875, 0.125, 0.875, 1, 0.875), facing, face),
-                    Geometry.rotateVoxelShape(VoxelShapes.cuboid(0.1875, 0.625, 0.1875, 0.8125, 0.75, 0.8125), facing, face),
-                    Geometry.rotateVoxelShape(VoxelShapes.cuboid(0.1875, 0.125, 0.1875, 0.8125, 0.25, 0.8125), facing, face),
-                    Geometry.rotateVoxelShape(VoxelShapes.cuboid(0.3125, 0.0625, 0.0625, 0.6875, 0.8125, 0.1875), facing, face));
+                  Geometry.rotateVoxelShape(VoxelShapes.cuboid(0.25, 0.625, 0.25, 0.75, 0.75, 0.75), facing, face),
+                  Geometry.rotateVoxelShape(VoxelShapes.cuboid(0.125, 0.25, 0.125, 0.875, 0.375, 0.875), facing, face),
+                  Geometry.rotateVoxelShape(VoxelShapes.cuboid(0.125, 0.375, 0.125, 0.875, 0.5, 0.875), facing, face),
+                  Geometry.rotateVoxelShape(VoxelShapes.cuboid(0.125, 0.5, 0.125, 0.875, 0.625, 0.875), facing, face),
+                  Geometry.rotateVoxelShape(VoxelShapes.cuboid(0, 0.75, 0, 1, 0.875, 1), facing, face),
+                  Geometry.rotateVoxelShape(VoxelShapes.cuboid(0, 0, 0, 1, 0.125, 1), facing, face),
+                  Geometry.rotateVoxelShape(VoxelShapes.cuboid(0.125, 0.875, 0.125, 0.875, 1, 0.875), facing, face),
+                  Geometry.rotateVoxelShape(VoxelShapes.cuboid(0.1875, 0.625, 0.1875, 0.8125, 0.75, 0.8125), facing, face),
+                  Geometry.rotateVoxelShape(VoxelShapes.cuboid(0.1875, 0.125, 0.1875, 0.8125, 0.25, 0.8125), facing, face),
+                  Geometry.rotateVoxelShape(VoxelShapes.cuboid(0.3125, 0.0625, 0.0625, 0.6875, 0.8125, 0.1875), facing, face));
                 MACHINE_CAPACITOR_ADDON_SHAPE[facing.ordinal()][face.ordinal()] = VoxelShapes.union(
-                    Geometry.rotateVoxelShape(VoxelShapes.cuboid(0.0625, 0, 0.0625, 0.9375, 0.125, 0.9375), facing, face),
-                    Geometry.rotateVoxelShape(VoxelShapes.cuboid(0.1875, 0.1875, 0.3125, 0.25, 0.375, 0.6875), facing, face),
-                    Geometry.rotateVoxelShape(VoxelShapes.cuboid(0.25, 0.125, 0.25, 0.75, 0.4375, 0.75), facing, face),
-                    Geometry.rotateVoxelShape(VoxelShapes.cuboid(0.75, 0.125, 0.1875, 0.8125, 0.5, 0.8125), facing, face),
-                    Geometry.rotateVoxelShape(VoxelShapes.cuboid(0.5625, 0.4375, 0.25, 0.625, 0.5, 0.75), facing, face),
-                    Geometry.rotateVoxelShape(VoxelShapes.cuboid(0.6875, 0.4375, 0.25, 0.75, 0.5, 0.75), facing, face),
-                    Geometry.rotateVoxelShape(VoxelShapes.cuboid(0.3125, 0.4375, 0.25, 0.375, 0.5, 0.75), facing, face),
-                    Geometry.rotateVoxelShape(VoxelShapes.cuboid(0.4375, 0.4375, 0.25, 0.5, 0.5, 0.75), facing, face),
-                    Geometry.rotateVoxelShape(VoxelShapes.cuboid(0.5625, 0.125, 0.1875, 0.625, 0.5, 0.25), facing, face),
-                    Geometry.rotateVoxelShape(VoxelShapes.cuboid(0.6875, 0.125, 0.1875, 0.75, 0.5, 0.25), facing, face),
-                    Geometry.rotateVoxelShape(VoxelShapes.cuboid(0.3125, 0.125, 0.1875, 0.375, 0.5, 0.25), facing, face),
-                    Geometry.rotateVoxelShape(VoxelShapes.cuboid(0.4375, 0.125, 0.1875, 0.5, 0.5, 0.25), facing, face),
-                    Geometry.rotateVoxelShape(VoxelShapes.cuboid(0.25, 0.125, 0.75, 0.75, 0.5, 0.8125), facing, face),
-                    Geometry.rotateVoxelShape(VoxelShapes.cuboid(0.8125, 0.25, 0.5625, 0.875, 0.4375, 0.6875), facing, face),
-                    Geometry.rotateVoxelShape(VoxelShapes.cuboid(0.8125, 0.25, 0.3125, 0.875, 0.4375, 0.4375), facing, face));
+                  Geometry.rotateVoxelShape(VoxelShapes.cuboid(0.0625, 0, 0.0625, 0.9375, 0.125, 0.9375), facing, face),
+                  Geometry.rotateVoxelShape(VoxelShapes.cuboid(0.1875, 0.1875, 0.3125, 0.25, 0.375, 0.6875), facing, face),
+                  Geometry.rotateVoxelShape(VoxelShapes.cuboid(0.25, 0.125, 0.25, 0.75, 0.4375, 0.75), facing, face),
+                  Geometry.rotateVoxelShape(VoxelShapes.cuboid(0.75, 0.125, 0.1875, 0.8125, 0.5, 0.8125), facing, face),
+                  Geometry.rotateVoxelShape(VoxelShapes.cuboid(0.5625, 0.4375, 0.25, 0.625, 0.5, 0.75), facing, face),
+                  Geometry.rotateVoxelShape(VoxelShapes.cuboid(0.6875, 0.4375, 0.25, 0.75, 0.5, 0.75), facing, face),
+                  Geometry.rotateVoxelShape(VoxelShapes.cuboid(0.3125, 0.4375, 0.25, 0.375, 0.5, 0.75), facing, face),
+                  Geometry.rotateVoxelShape(VoxelShapes.cuboid(0.4375, 0.4375, 0.25, 0.5, 0.5, 0.75), facing, face),
+                  Geometry.rotateVoxelShape(VoxelShapes.cuboid(0.5625, 0.125, 0.1875, 0.625, 0.5, 0.25), facing, face),
+                  Geometry.rotateVoxelShape(VoxelShapes.cuboid(0.6875, 0.125, 0.1875, 0.75, 0.5, 0.25), facing, face),
+                  Geometry.rotateVoxelShape(VoxelShapes.cuboid(0.3125, 0.125, 0.1875, 0.375, 0.5, 0.25), facing, face),
+                  Geometry.rotateVoxelShape(VoxelShapes.cuboid(0.4375, 0.125, 0.1875, 0.5, 0.5, 0.25), facing, face),
+                  Geometry.rotateVoxelShape(VoxelShapes.cuboid(0.25, 0.125, 0.75, 0.75, 0.5, 0.8125), facing, face),
+                  Geometry.rotateVoxelShape(VoxelShapes.cuboid(0.8125, 0.25, 0.5625, 0.875, 0.4375, 0.6875), facing, face),
+                  Geometry.rotateVoxelShape(VoxelShapes.cuboid(0.8125, 0.25, 0.3125, 0.875, 0.4375, 0.4375), facing, face));
                 CROP_FILTER_ADDON_SHAPE[facing.ordinal()][face.ordinal()] = VoxelShapes.union(
-                    Geometry.rotateVoxelShape(VoxelShapes.cuboid(0.0625, 0, 0.0625, 0.9375, 0.125, 0.9375), facing, face),
-                    Geometry.rotateVoxelShape(VoxelShapes.cuboid(0.4375, 0.125, 0.1875, 0.875, 0.25, 0.6875), facing, face),
-                    Geometry.rotateVoxelShape(VoxelShapes.cuboid(0.4375, 0.25, 0.1875, 0.875, 0.5625, 0.6875), facing, face),
-                    Geometry.rotateVoxelShape(VoxelShapes.cuboid(0.5625, 0.3125, 0.1875, 0.75, 0.4375, 0.8125), facing, face),
-                    Geometry.rotateVoxelShape(VoxelShapes.cuboid(0.5625, 0.125, 0.8125, 0.75, 0.4375, 0.9375), facing, face),
-                    Geometry.rotateVoxelShape(VoxelShapes.cuboid(0.125, 0.125, 0.125, 0.375, 0.25, 0.875), facing, face));
+                  Geometry.rotateVoxelShape(VoxelShapes.cuboid(0.0625, 0, 0.0625, 0.9375, 0.125, 0.9375), facing, face),
+                  Geometry.rotateVoxelShape(VoxelShapes.cuboid(0.4375, 0.125, 0.1875, 0.875, 0.25, 0.6875), facing, face),
+                  Geometry.rotateVoxelShape(VoxelShapes.cuboid(0.4375, 0.25, 0.1875, 0.875, 0.5625, 0.6875), facing, face),
+                  Geometry.rotateVoxelShape(VoxelShapes.cuboid(0.5625, 0.3125, 0.1875, 0.75, 0.4375, 0.8125), facing, face),
+                  Geometry.rotateVoxelShape(VoxelShapes.cuboid(0.5625, 0.125, 0.8125, 0.75, 0.4375, 0.9375), facing, face),
+                  Geometry.rotateVoxelShape(VoxelShapes.cuboid(0.125, 0.125, 0.125, 0.375, 0.25, 0.875), facing, face));
                 MACHINE_EFFICIENCY_ADDON_SHAPE[facing.ordinal()][face.ordinal()] = VoxelShapes.union(
-                    Geometry.rotateVoxelShape(VoxelShapes.cuboid(0.0625, 0, 0.0625, 0.9375, 0.125, 0.9375), facing, face),
-                    Geometry.rotateVoxelShape(VoxelShapes.cuboid(0.25, 0.125, 0.1875, 0.75, 0.4375, 0.8125), facing, face),
-                    Geometry.rotateVoxelShape(VoxelShapes.cuboid(0.75, 0.125, 0.125, 0.875, 0.5, 0.875), facing, face),
-                    Geometry.rotateVoxelShape(VoxelShapes.cuboid(0.125, 0.125, 0.125, 0.25, 0.5, 0.875), facing, face));
+                  Geometry.rotateVoxelShape(VoxelShapes.cuboid(0.0625, 0, 0.0625, 0.9375, 0.125, 0.9375), facing, face),
+                  Geometry.rotateVoxelShape(VoxelShapes.cuboid(0.25, 0.125, 0.1875, 0.75, 0.4375, 0.8125), facing, face),
+                  Geometry.rotateVoxelShape(VoxelShapes.cuboid(0.75, 0.125, 0.125, 0.875, 0.5, 0.875), facing, face),
+                  Geometry.rotateVoxelShape(VoxelShapes.cuboid(0.125, 0.125, 0.125, 0.25, 0.5, 0.875), facing, face));
                 MACHINE_PROCESSING_ADDON_SHAPE[facing.ordinal()][face.ordinal()] = VoxelShapes.union(
                   Geometry.rotateVoxelShape(VoxelShapes.cuboid(0.0625, 0, 0.0625, 0.9375, 0.125, 0.9375), facing, face),
                   Geometry.rotateVoxelShape(VoxelShapes.cuboid(0.125, 0.25, 0.25, 0.875, 0.75, 0.75), facing, face));
@@ -325,105 +356,107 @@ public class MachineAddonBlock extends WallMountedBlock implements BlockEntityPr
                   Geometry.rotateVoxelShape(VoxelShapes.cuboid(0.0625, 0, 0.0625, 0.9375, 0.125, 0.9375), facing, face),
                   Geometry.rotateVoxelShape(VoxelShapes.cuboid(0.1875, 0.125, 0.1875, 0.875, 1, 0.75), facing, face));
                 MACHINE_FLUID_ADDON_SHAPE[facing.ordinal()][face.ordinal()] = VoxelShapes.union(
-                    Geometry.rotateVoxelShape(VoxelShapes.cuboid(0.125, 0, 0.125, 0.875, 0.125, 0.875), facing, face),
-                    Geometry.rotateVoxelShape(VoxelShapes.cuboid(0.0625, 0.3125, 0.1875, 0.375, 0.625, 0.5625), facing, face),
-                    Geometry.rotateVoxelShape(VoxelShapes.cuboid(0.625, 0.3125, 0.1875, 1, 0.625, 0.5625), facing, face),
-                    Geometry.rotateVoxelShape(VoxelShapes.cuboid(0.4375, 0.5, 0.6875, 0.5625, 1, 0.8125), facing, face),
-                    Geometry.rotateVoxelShape(VoxelShapes.cuboid(0.4375, 0.375, 0.6875, 0.875, 0.5, 0.8125), facing, face),
-                    Geometry.rotateVoxelShape(VoxelShapes.cuboid(0.75, 0.375, 0.5625, 0.875, 0.5, 0.6875), facing, face),
-                    Geometry.rotateVoxelShape(VoxelShapes.cuboid(0.46875, 0.125, 0.71875, 0.59375, 0.375, 0.78125), facing, face),
-                    Geometry.rotateVoxelShape(VoxelShapes.cuboid(0.734375, 0.125, 0.625, 0.859375, 0.375, 0.8125), facing, face), // angled post
-                    Geometry.rotateVoxelShape(VoxelShapes.cuboid(0.125, 0.125, 0.25, 0.3125, 0.3125, 0.5), facing, face),
-                    Geometry.rotateVoxelShape(VoxelShapes.cuboid(0.375, 0.375, 0.25, 0.625, 0.5625, 0.5), facing, face),
-                    Geometry.rotateVoxelShape(VoxelShapes.cuboid(0.6875, 0.125, 0.25, 0.875, 0.3125, 0.5), facing, face));
+                  Geometry.rotateVoxelShape(VoxelShapes.cuboid(0.125, 0, 0.125, 0.875, 0.125, 0.875), facing, face),
+                  Geometry.rotateVoxelShape(VoxelShapes.cuboid(0.0625, 0.3125, 0.1875, 0.375, 0.625, 0.5625), facing, face),
+                  Geometry.rotateVoxelShape(VoxelShapes.cuboid(0.625, 0.3125, 0.1875, 1, 0.625, 0.5625), facing, face),
+                  Geometry.rotateVoxelShape(VoxelShapes.cuboid(0.4375, 0.5, 0.6875, 0.5625, 1, 0.8125), facing, face),
+                  Geometry.rotateVoxelShape(VoxelShapes.cuboid(0.4375, 0.375, 0.6875, 0.875, 0.5, 0.8125), facing, face),
+                  Geometry.rotateVoxelShape(VoxelShapes.cuboid(0.75, 0.375, 0.5625, 0.875, 0.5, 0.6875), facing, face),
+                  Geometry.rotateVoxelShape(VoxelShapes.cuboid(0.46875, 0.125, 0.71875, 0.59375, 0.375, 0.78125), facing, face),
+                  Geometry.rotateVoxelShape(VoxelShapes.cuboid(0.734375, 0.125, 0.625, 0.859375, 0.375, 0.8125), facing, face), // angled post
+                  Geometry.rotateVoxelShape(VoxelShapes.cuboid(0.125, 0.125, 0.25, 0.3125, 0.3125, 0.5), facing, face),
+                  Geometry.rotateVoxelShape(VoxelShapes.cuboid(0.375, 0.375, 0.25, 0.625, 0.5625, 0.5), facing, face),
+                  Geometry.rotateVoxelShape(VoxelShapes.cuboid(0.6875, 0.125, 0.25, 0.875, 0.3125, 0.5), facing, face));
                 MACHINE_INVENTORY_PROXY_ADDON_SHAPE[facing.ordinal()][face.ordinal()] = VoxelShapes.union(
-                    Geometry.rotateVoxelShape(VoxelShapes.cuboid(0.0625, 0, 0.0625, 0.9375, 0.125, 0.9375), facing, face),
-                    Geometry.rotateVoxelShape(VoxelShapes.cuboid(0.125, 0.125, 0.125, 0.875, 0.875, 0.875), facing, face),
-                    Geometry.rotateVoxelShape(VoxelShapes.cuboid(0.875, 0.375, 0.375, 1, 0.625, 0.625), facing, face),
-                    Geometry.rotateVoxelShape(VoxelShapes.cuboid(0, 0.375, 0.375, 0.125, 0.625, 0.625), facing, face),
-                    Geometry.rotateVoxelShape(VoxelShapes.cuboid(0.375, 0.375, 0, 0.625, 0.625, 0.125), facing, face),
-                    Geometry.rotateVoxelShape(VoxelShapes.cuboid(0.375, 0.375, 0.875, 0.625, 0.625, 1), facing, face),
-                    Geometry.rotateVoxelShape(VoxelShapes.cuboid(0.375, 0.8125, 0.375, 0.625, 1, 0.625), facing, face),
-                    Geometry.rotateVoxelShape(VoxelShapes.cuboid(0, 0.00125, 0.3125, 1, 0.93875, 0.375), facing, face),
-                    Geometry.rotateVoxelShape(VoxelShapes.cuboid(0, 0.00125, 0.625, 1, 0.93875, 0.6875), facing, face),
-                    Geometry.rotateVoxelShape(VoxelShapes.cuboid(0.3125, 0.000625, 0, 0.375, 0.938125, 1), facing, face),
-                    Geometry.rotateVoxelShape(VoxelShapes.cuboid(0.625, 0.000625, 0, 0.6875, 0.938125, 1), facing, face));
+                  Geometry.rotateVoxelShape(VoxelShapes.cuboid(0.0625, 0, 0.0625, 0.9375, 0.125, 0.9375), facing, face),
+                  Geometry.rotateVoxelShape(VoxelShapes.cuboid(0.125, 0.125, 0.125, 0.875, 0.875, 0.875), facing, face),
+                  Geometry.rotateVoxelShape(VoxelShapes.cuboid(0.875, 0.375, 0.375, 1, 0.625, 0.625), facing, face),
+                  Geometry.rotateVoxelShape(VoxelShapes.cuboid(0, 0.375, 0.375, 0.125, 0.625, 0.625), facing, face),
+                  Geometry.rotateVoxelShape(VoxelShapes.cuboid(0.375, 0.375, 0, 0.625, 0.625, 0.125), facing, face),
+                  Geometry.rotateVoxelShape(VoxelShapes.cuboid(0.375, 0.375, 0.875, 0.625, 0.625, 1), facing, face),
+                  Geometry.rotateVoxelShape(VoxelShapes.cuboid(0.375, 0.8125, 0.375, 0.625, 1, 0.625), facing, face),
+                  Geometry.rotateVoxelShape(VoxelShapes.cuboid(0, 0.00125, 0.3125, 1, 0.93875, 0.375), facing, face),
+                  Geometry.rotateVoxelShape(VoxelShapes.cuboid(0, 0.00125, 0.625, 1, 0.93875, 0.6875), facing, face),
+                  Geometry.rotateVoxelShape(VoxelShapes.cuboid(0.3125, 0.000625, 0, 0.375, 0.938125, 1), facing, face),
+                  Geometry.rotateVoxelShape(VoxelShapes.cuboid(0.625, 0.000625, 0, 0.6875, 0.938125, 1), facing, face));
                 QUARRY_ADDON_SHAPE[facing.ordinal()][face.ordinal()] = VoxelShapes.union(
-                    Geometry.rotateVoxelShape(VoxelShapes.cuboid(0.0625, 0, 0.0625, 0.9375, 0.125, 0.9375), facing, face), // base
-                    Geometry.rotateVoxelShape(VoxelShapes.cuboid(0.125, 0.125, 0.125, 0.375, 0.25, 0.875), facing, face), // status bar
-                    Geometry.rotateVoxelShape(VoxelShapes.cuboid(0.625, 0.125, 0.3125, 0.6875, 0.1875, 0.8125), facing, face), // pickaxe handle
-                    Geometry.rotateVoxelShape(VoxelShapes.cuboid(0.4375, 0.125, 0.25, 0.875, 0.1875, 0.4375), facing, face)); // pickaxe head
+                  Geometry.rotateVoxelShape(VoxelShapes.cuboid(0.0625, 0, 0.0625, 0.9375, 0.125, 0.9375), facing, face), // base
+                  Geometry.rotateVoxelShape(VoxelShapes.cuboid(0.125, 0.125, 0.125, 0.375, 0.25, 0.875), facing, face), // status bar
+                  Geometry.rotateVoxelShape(VoxelShapes.cuboid(0.625, 0.125, 0.3125, 0.6875, 0.1875, 0.8125), facing, face), // pickaxe handle
+                  Geometry.rotateVoxelShape(VoxelShapes.cuboid(0.4375, 0.125, 0.25, 0.875, 0.1875, 0.4375), facing, face)); // pickaxe head
                 MACHINE_HUNTER_ADDON_SHAPE[facing.ordinal()][face.ordinal()] = VoxelShapes.union(
-		            Geometry.rotateVoxelShape(VoxelShapes.cuboid(0.0625, 0, 0.0625, 0.9375, 0.125, 0.9375), facing, face),
-                    Geometry.rotateVoxelShape(VoxelShapes.cuboid(0.125, 0.125, 0.125, 0.375, 0.25, 0.875), facing, face),
-                    Geometry.rotateVoxelShape(VoxelShapes.cuboid(0.5, 0.1875, 0.4375, 0.75, 0.25, 0.5625), facing, face),
-                    Geometry.rotateVoxelShape(VoxelShapes.cuboid(0.4375, 0.125, 0.375, 0.8125, 0.1875, 0.625), facing, face),
-                    Geometry.rotateVoxelShape(VoxelShapes.cuboid(0.5625, 0.1875, 0.375, 0.6875, 0.25, 0.4375), facing, face),
-                    Geometry.rotateVoxelShape(VoxelShapes.cuboid(0.5, 0.125, 0.3125, 0.75, 0.1875, 0.375), facing, face),
-                    Geometry.rotateVoxelShape(VoxelShapes.cuboid(0.5, 0.125, 0.625, 0.75, 0.1875, 0.6875), facing, face),
-                    Geometry.rotateVoxelShape(VoxelShapes.cuboid(0.5625, 0.1875, 0.5625, 0.6875, 0.25, 0.625), facing, face));
+                  Geometry.rotateVoxelShape(VoxelShapes.cuboid(0.0625, 0, 0.0625, 0.9375, 0.125, 0.9375), facing, face),
+                  Geometry.rotateVoxelShape(VoxelShapes.cuboid(0.125, 0.125, 0.125, 0.375, 0.25, 0.875), facing, face),
+                  Geometry.rotateVoxelShape(VoxelShapes.cuboid(0.5, 0.1875, 0.4375, 0.75, 0.25, 0.5625), facing, face),
+                  Geometry.rotateVoxelShape(VoxelShapes.cuboid(0.4375, 0.125, 0.375, 0.8125, 0.1875, 0.625), facing, face),
+                  Geometry.rotateVoxelShape(VoxelShapes.cuboid(0.5625, 0.1875, 0.375, 0.6875, 0.25, 0.4375), facing, face),
+                  Geometry.rotateVoxelShape(VoxelShapes.cuboid(0.5, 0.125, 0.3125, 0.75, 0.1875, 0.375), facing, face),
+                  Geometry.rotateVoxelShape(VoxelShapes.cuboid(0.5, 0.125, 0.625, 0.75, 0.1875, 0.6875), facing, face),
+                  Geometry.rotateVoxelShape(VoxelShapes.cuboid(0.5625, 0.1875, 0.5625, 0.6875, 0.25, 0.625), facing, face));
                 MACHINE_REDSTONE_ADDON_SHAPE[facing.ordinal()][face.ordinal()] = VoxelShapes.union(
-                    Geometry.rotateVoxelShape(VoxelShapes.cuboid(0.0625, 0, 0.0625, 0.9375, 0.125, 0.9375), facing, face),
-                    Geometry.rotateVoxelShape(VoxelShapes.cuboid(0.1875, 0.125, 0, 0.4375, 0.25, 0.8125), facing, face),
-                    Geometry.rotateVoxelShape(VoxelShapes.cuboid(0.1875, 0, 0.0015625, 0.6875, 0.1875, 0.0640625), facing, face),
-                    Geometry.rotateVoxelShape(VoxelShapes.cuboid(0.625, 0.125, 0.1875, 0.75, 0.25, 0.3125), facing, face),
-                    Geometry.rotateVoxelShape(VoxelShapes.cuboid(0.625, 0.125, 0.5, 0.75, 0.25, 0.625), facing, face));
+                  Geometry.rotateVoxelShape(VoxelShapes.cuboid(0.0625, 0, 0.0625, 0.9375, 0.125, 0.9375), facing, face),
+                  Geometry.rotateVoxelShape(VoxelShapes.cuboid(0.1875, 0.125, 0, 0.4375, 0.25, 0.8125), facing, face),
+                  Geometry.rotateVoxelShape(VoxelShapes.cuboid(0.1875, 0, 0.0015625, 0.6875, 0.1875, 0.0640625), facing, face),
+                  Geometry.rotateVoxelShape(VoxelShapes.cuboid(0.625, 0.125, 0.1875, 0.75, 0.25, 0.3125), facing, face),
+                  Geometry.rotateVoxelShape(VoxelShapes.cuboid(0.625, 0.125, 0.5, 0.75, 0.25, 0.625), facing, face));
                 MACHINE_SPEED_ADDON_SHAPE[facing.ordinal()][face.ordinal()] = VoxelShapes.union(
-                    Geometry.rotateVoxelShape(VoxelShapes.cuboid(0.0625, 0, 0.0625, 0.9375, 0.125, 0.9375), facing, face),
-                    Geometry.rotateVoxelShape(VoxelShapes.cuboid(0.3125, 0.125, 0.6875, 0.8125, 0.25, 0.8125), facing, face),
-                    Geometry.rotateVoxelShape(VoxelShapes.cuboid(0.1875, 0.125, 0.1875, 0.3125, 0.25, 0.8125), facing, face),
-                    Geometry.rotateVoxelShape(VoxelShapes.cuboid(0.125, 0.125, 0.3125, 0.1875, 0.25, 0.4375), facing, face),
-                    Geometry.rotateVoxelShape(VoxelShapes.cuboid(0.125, 0.125, 0.5625, 0.1875, 0.25, 0.6875), facing, face),
-                    Geometry.rotateVoxelShape(VoxelShapes.cuboid(0.5625, 0.125, 0.8125, 0.6875, 0.25, 0.875), facing, face),
-                    Geometry.rotateVoxelShape(VoxelShapes.cuboid(0.3125, 0.125, 0.8125, 0.4375, 0.25, 0.875), facing, face),
-                    Geometry.rotateVoxelShape(VoxelShapes.cuboid(0.3125, 0.125, 0.25, 0.75, 0.1875, 0.6875), facing, face),
-                    Geometry.rotateVoxelShape(VoxelShapes.cuboid(0.4375, 0.1875, 0.375, 0.625, 0.625, 0.5625), facing, face),
-                    Geometry.rotateVoxelShape(VoxelShapes.cuboid(0.375, 0.1875, 0.4375, 0.6875, 0.5625, 0.5), facing, face));
+                  Geometry.rotateVoxelShape(VoxelShapes.cuboid(0.0625, 0, 0.0625, 0.9375, 0.125, 0.9375), facing, face),
+                  Geometry.rotateVoxelShape(VoxelShapes.cuboid(0.3125, 0.125, 0.6875, 0.8125, 0.25, 0.8125), facing, face),
+                  Geometry.rotateVoxelShape(VoxelShapes.cuboid(0.1875, 0.125, 0.1875, 0.3125, 0.25, 0.8125), facing, face),
+                  Geometry.rotateVoxelShape(VoxelShapes.cuboid(0.125, 0.125, 0.3125, 0.1875, 0.25, 0.4375), facing, face),
+                  Geometry.rotateVoxelShape(VoxelShapes.cuboid(0.125, 0.125, 0.5625, 0.1875, 0.25, 0.6875), facing, face),
+                  Geometry.rotateVoxelShape(VoxelShapes.cuboid(0.5625, 0.125, 0.8125, 0.6875, 0.25, 0.875), facing, face),
+                  Geometry.rotateVoxelShape(VoxelShapes.cuboid(0.3125, 0.125, 0.8125, 0.4375, 0.25, 0.875), facing, face),
+                  Geometry.rotateVoxelShape(VoxelShapes.cuboid(0.3125, 0.125, 0.25, 0.75, 0.1875, 0.6875), facing, face),
+                  Geometry.rotateVoxelShape(VoxelShapes.cuboid(0.4375, 0.1875, 0.375, 0.625, 0.625, 0.5625), facing, face),
+                  Geometry.rotateVoxelShape(VoxelShapes.cuboid(0.375, 0.1875, 0.4375, 0.6875, 0.5625, 0.5), facing, face));
                 STEAM_BOILER_ADDON_SHAPE[facing.ordinal()][face.ordinal()] = VoxelShapes.union(
-                    Geometry.rotateVoxelShape(VoxelShapes.cuboid(0.125, 0, 0.125, 0.875, 0.125, 0.875), facing, face),
-                    Geometry.rotateVoxelShape(VoxelShapes.cuboid(0.125, 0.125, 0.3125, 0.25, 0.25, 0.4375), facing, face),
-                    Geometry.rotateVoxelShape(VoxelShapes.cuboid(0.75, 0.125, 0.3125, 0.875, 0.25, 0.4375), facing, face),
-                    Geometry.rotateVoxelShape(VoxelShapes.cuboid(0.4375, 0.125, 0.5625, 0.5625, 0.25, 0.6875), facing, face),
-                    Geometry.rotateVoxelShape(VoxelShapes.cuboid(0.0000625, 0.25, 0.3125, 1.000125, 0.625, 0.6875), facing, face),
-                    Geometry.rotateVoxelShape(VoxelShapes.cuboid(0, 0.1875, 0.375, 1, 0.6875, 0.625), facing, face),
-                    Geometry.rotateVoxelShape(VoxelShapes.cuboid(0.000125, 0.3125, 0.25, 1.00025, 0.5625, 0.75), facing, face));
+                  Geometry.rotateVoxelShape(VoxelShapes.cuboid(0.125, 0, 0.125, 0.875, 0.125, 0.875), facing, face),
+                  Geometry.rotateVoxelShape(VoxelShapes.cuboid(0.125, 0.125, 0.3125, 0.25, 0.25, 0.4375), facing, face),
+                  Geometry.rotateVoxelShape(VoxelShapes.cuboid(0.75, 0.125, 0.3125, 0.875, 0.25, 0.4375), facing, face),
+                  Geometry.rotateVoxelShape(VoxelShapes.cuboid(0.4375, 0.125, 0.5625, 0.5625, 0.25, 0.6875), facing, face),
+                  Geometry.rotateVoxelShape(VoxelShapes.cuboid(0.0000625, 0.25, 0.3125, 1.000125, 0.625, 0.6875), facing, face),
+                  Geometry.rotateVoxelShape(VoxelShapes.cuboid(0, 0.1875, 0.375, 1, 0.6875, 0.625), facing, face),
+                  Geometry.rotateVoxelShape(VoxelShapes.cuboid(0.000125, 0.3125, 0.25, 1.00025, 0.5625, 0.75), facing, face));
                 MACHINE_YIELD_ADDON_SHAPE[facing.ordinal()][face.ordinal()] = VoxelShapes.union(
-                    Geometry.rotateVoxelShape(VoxelShapes.cuboid(0.0625, 0, 0.0625, 0.9375, 0.125, 0.9375), facing, face), // base
-                    Geometry.rotateVoxelShape(VoxelShapes.cuboid(0.125, 0.125, 0.125, 0.25, 0.375, 0.875), facing, face),
-                    Geometry.rotateVoxelShape(VoxelShapes.cuboid(0.75, 0.125, 0.125, 0.875, 0.375, 0.875), facing, face),
-                    Geometry.rotateVoxelShape(VoxelShapes.cuboid(0.25, 0.125, 0.125, 0.75, 0.375, 0.25), facing, face),
-                    Geometry.rotateVoxelShape(VoxelShapes.cuboid(0.3125, 0.125, 0.3125, 0.6875, 0.25, 0.8125), facing, face),
-                    Geometry.rotateVoxelShape(VoxelShapes.cuboid(0.0625, 0.125, 0.5625, 0.3125, 0.4375, 0.6875), facing, face),
-                    Geometry.rotateVoxelShape(VoxelShapes.cuboid(0.6875, 0.125, 0.5625, 0.9375, 0.4375, 0.6875), facing, face),
-                    Geometry.rotateVoxelShape(VoxelShapes.cuboid(0.0625, 0.125, 0.3125, 0.3125, 0.4375, 0.4375), facing, face),
-                    Geometry.rotateVoxelShape(VoxelShapes.cuboid(0.6875, 0.125, 0.3125, 0.9375, 0.4375, 0.4375), facing, face));
+                  Geometry.rotateVoxelShape(VoxelShapes.cuboid(0.0625, 0, 0.0625, 0.9375, 0.125, 0.9375), facing, face), // base
+                  Geometry.rotateVoxelShape(VoxelShapes.cuboid(0.125, 0.125, 0.125, 0.25, 0.375, 0.875), facing, face),
+                  Geometry.rotateVoxelShape(VoxelShapes.cuboid(0.75, 0.125, 0.125, 0.875, 0.375, 0.875), facing, face),
+                  Geometry.rotateVoxelShape(VoxelShapes.cuboid(0.25, 0.125, 0.125, 0.75, 0.375, 0.25), facing, face),
+                  Geometry.rotateVoxelShape(VoxelShapes.cuboid(0.3125, 0.125, 0.3125, 0.6875, 0.25, 0.8125), facing, face),
+                  Geometry.rotateVoxelShape(VoxelShapes.cuboid(0.0625, 0.125, 0.5625, 0.3125, 0.4375, 0.6875), facing, face),
+                  Geometry.rotateVoxelShape(VoxelShapes.cuboid(0.6875, 0.125, 0.5625, 0.9375, 0.4375, 0.6875), facing, face),
+                  Geometry.rotateVoxelShape(VoxelShapes.cuboid(0.0625, 0.125, 0.3125, 0.3125, 0.4375, 0.4375), facing, face),
+                  Geometry.rotateVoxelShape(VoxelShapes.cuboid(0.6875, 0.125, 0.3125, 0.9375, 0.4375, 0.4375), facing, face));
             }
         }
     }
     
     // AddonSettings is an immutable configuration record for a machine addon, and should be constructed in BlockContent
-    public record AddonSettings(boolean extender, float speedMultiplier, float efficiencyMultiplier, long addedCapacity, long addedInsert, boolean acceptEnergy, boolean needsSupport, int chamberCount, VoxelShape[][] boundingShape) {
+    public record AddonSettings(boolean extender, float speedMultiplier, float efficiencyMultiplier, long addedCapacity,
+                                long addedInsert, boolean acceptEnergy, boolean needsSupport, int chamberCount,
+                                VoxelShape[][] boundingShape) {
         public static AddonSettings getDefaultSettings() {
             return new AddonSettings(false, 1.0f, 1.0f, 0, 0, false, true, 0, null);
         }
-
+        
         // extender and needsSupport aren't strictly exclusive, but are unlikely to be used together
         public AddonSettings withExtender(boolean newExtender) {
             return new AddonSettings(newExtender, speedMultiplier, efficiencyMultiplier, addedCapacity, addedInsert, acceptEnergy, needsSupport, chamberCount, boundingShape);
         }
-
+        
         public AddonSettings withSpeedMultiplier(float newMultiplier) {
             return new AddonSettings(extender, newMultiplier, efficiencyMultiplier, addedCapacity, addedInsert, acceptEnergy, needsSupport, chamberCount, boundingShape);
         }
-
+        
         public AddonSettings withEfficiencyMultiplier(float newMultiplier) {
             return new AddonSettings(extender, speedMultiplier, newMultiplier, addedCapacity, addedInsert, acceptEnergy, needsSupport, chamberCount, boundingShape);
         }
-
+        
         public AddonSettings withAddedCapacity(long newCapacity) {
             return new AddonSettings(extender, speedMultiplier, efficiencyMultiplier, newCapacity, addedInsert, acceptEnergy, needsSupport, chamberCount, boundingShape);
         }
-
+        
         public AddonSettings withAddedInsert(long newInsert) {
             return new AddonSettings(extender, speedMultiplier, efficiencyMultiplier, addedCapacity, newInsert, acceptEnergy, needsSupport, chamberCount, boundingShape);
         }
@@ -431,15 +464,15 @@ public class MachineAddonBlock extends WallMountedBlock implements BlockEntityPr
         public AddonSettings withAcceptEnergy(boolean newAccept) {
             return new AddonSettings(extender, speedMultiplier, efficiencyMultiplier, addedCapacity, addedInsert, newAccept, needsSupport, chamberCount, boundingShape);
         }
-
+        
         public AddonSettings withNeedsSupport(boolean newSupport) {
             return new AddonSettings(extender, speedMultiplier, efficiencyMultiplier, addedCapacity, addedInsert, acceptEnergy, newSupport, chamberCount, boundingShape);
         }
-
+        
         public AddonSettings withChambers(int chambers) {
             return new AddonSettings(extender, speedMultiplier, efficiencyMultiplier, addedCapacity, addedInsert, acceptEnergy, needsSupport, chambers, boundingShape);
         }
-
+        
         // boundingShape should only be set if needsSupport is also set
         public AddonSettings withBoundingShape(VoxelShape[][] newShape) {
             return new AddonSettings(extender, speedMultiplier, efficiencyMultiplier, addedCapacity, addedInsert, acceptEnergy, needsSupport, chamberCount, newShape);

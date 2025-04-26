@@ -1,9 +1,6 @@
 package rearth.oritech.block.entity.augmenter;
 
-import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory;
-import net.fabricmc.fabric.api.transfer.v1.item.InventoryStorage;
-import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
-import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
+import dev.architectury.registry.menu.ExtendedMenuProvider;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.entity.BlockEntity;
@@ -12,16 +9,15 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.inventory.Inventories;
 import net.minecraft.inventory.Inventory;
-import net.minecraft.inventory.SimpleInventory;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtElement;
 import net.minecraft.nbt.NbtList;
 import net.minecraft.nbt.NbtString;
+import net.minecraft.network.PacketByteBuf;
 import net.minecraft.registry.Registries;
 import net.minecraft.registry.RegistryWrapper;
 import net.minecraft.screen.ScreenHandler;
 import net.minecraft.screen.ScreenHandlerType;
-import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.state.property.Properties;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
@@ -31,6 +27,10 @@ import net.minecraft.util.math.Vec3i;
 import net.minecraft.world.World;
 import org.jetbrains.annotations.Nullable;
 import rearth.oritech.Oritech;
+import rearth.oritech.api.energy.EnergyApi;
+import rearth.oritech.api.energy.containers.SimpleEnergyStorage;
+import rearth.oritech.api.item.ItemApi;
+import rearth.oritech.api.item.containers.SimpleInventoryStorage;
 import rearth.oritech.block.base.block.MultiblockMachine;
 import rearth.oritech.block.base.entity.MachineBlockEntity;
 import rearth.oritech.block.blocks.augmenter.AugmentResearchStationBlock;
@@ -41,8 +41,6 @@ import rearth.oritech.init.BlockEntitiesContent;
 import rearth.oritech.init.recipes.AugmentRecipe;
 import rearth.oritech.network.NetworkContent;
 import rearth.oritech.util.*;
-import rearth.oritech.util.energy.EnergyApi;
-import rearth.oritech.util.energy.containers.SimpleEnergyStorage;
 import software.bernie.geckolib.animatable.GeoBlockEntity;
 import software.bernie.geckolib.animatable.instance.AnimatableInstanceCache;
 import software.bernie.geckolib.animation.AnimatableManager;
@@ -51,13 +49,14 @@ import software.bernie.geckolib.util.GeckoLibUtil;
 
 import java.util.*;
 
-public class AugmentApplicationEntity extends BlockEntity implements BlockEntityTicker<AugmentApplicationEntity>, MultiblockMachineController, GeoBlockEntity, ExtendedScreenHandlerFactory, InventoryProvider, EnergyApi.BlockProvider, ScreenProvider {
+public class AugmentApplicationEntity extends BlockEntity implements BlockEntityTicker<AugmentApplicationEntity>, MultiblockMachineController, GeoBlockEntity,
+                                                                       ExtendedMenuProvider, ItemApi.BlockProvider, EnergyApi.BlockProvider, ScreenProvider {
     
     public final Set<Identifier> researchedAugments = new HashSet<>();
     
     // config
-    public static long maxEnergyTransfer = 50_000_000;
-    public static long maxEnergyStored = 500_000_000L;
+    public static long maxEnergyTransfer = Oritech.CONFIG.augmenterMaxEnergy() / 10;
+    public static long maxEnergyStored = Oritech.CONFIG.augmenterMaxEnergy();
     
     // multiblock
     private final ArrayList<BlockPos> coreBlocksConnected = new ArrayList<>();
@@ -71,16 +70,9 @@ public class AugmentApplicationEntity extends BlockEntity implements BlockEntity
     public final HashMap<Integer, ResearchState> availableStations = new HashMap<>();
     public boolean screenInvOverride = false;
     
-    public final SimpleInventory inventory = new SimpleInventory(5) {
-        @Override
-        public void markDirty() {
-            super.markDirty();
-            AugmentApplicationEntity.this.markDirty();
-        }
-    };
-    private final InventoryStorage inventoryStorage = InventoryStorage.of(inventory, null);
+    public final SimpleInventoryStorage inventory = new SimpleInventoryStorage(5, this::markDirty);
     
-    private final EnergyApi.EnergyContainer energyStorage = new SimpleEnergyStorage(maxEnergyTransfer, 0, maxEnergyStored, this::markDirty);
+    private final EnergyApi.EnergyStorage energyStorage = new SimpleEnergyStorage(maxEnergyTransfer, maxEnergyStored, maxEnergyStored, this::markDirty);
     private AnimationController<AugmentApplicationEntity> animationController;
     
     
@@ -155,7 +147,7 @@ public class AugmentApplicationEntity extends BlockEntity implements BlockEntity
         
     }
     
-    public void researchAugment(Identifier augment) {
+    public void researchAugment(Identifier augment, boolean creative, PlayerEntity player) {
         
         if (!PlayerAugments.allAugments.containsKey(augment)) {
             Oritech.LOGGER.error("Player augment with id" + augment + " not found. This should never happen");
@@ -169,7 +161,7 @@ public class AugmentApplicationEntity extends BlockEntity implements BlockEntity
         
         var recipe = (AugmentRecipe) world.getRecipeManager().get(augment).get().value();
         
-        energyStorage.setAmount(energyStorage.getAmount() - recipe.getRfCost());
+        var extracted = energyStorage.extract(recipe.getRfCost(), false);
         
         // remove available resources
         for (var wantedInput : recipe.getResearchCost()) {
@@ -177,6 +169,15 @@ public class AugmentApplicationEntity extends BlockEntity implements BlockEntity
             var missingCount = wantedInput.count();
             
             for (var stack : this.inventory.heldStacks) {
+                if (type.test(stack)) {
+                    var takeAmount = Math.min(stack.getCount(), missingCount);
+                    missingCount -= takeAmount;
+                    stack.decrement(takeAmount);
+                    
+                    if (missingCount <= 0) break;
+                }
+            }
+            for (var stack : player.getInventory().main) {
                 if (type.test(stack)) {
                     var takeAmount = Math.min(stack.getCount(), missingCount);
                     missingCount -= takeAmount;
@@ -193,14 +194,13 @@ public class AugmentApplicationEntity extends BlockEntity implements BlockEntity
             if (station == null) continue;
             if (station.working) continue;
             
-            var augmentAssets = PlayerAugments.augmentAssets.get(augment);
             
-            if (!Registries.BLOCK.getId(station.type).equals(augmentAssets.requiredStation())) continue;
+            if (!Registries.BLOCK.getId(station.type).equals(recipe.getRequiredStation())) continue;
             
             station.selectedResearch = augment;
             station.working = true;
             station.researchStartedAt = world.getTime();
-            station.workTime = recipe.getTime();
+            station.workTime = creative ? 5 : recipe.getTime();
             
             break;
             
@@ -228,6 +228,16 @@ public class AugmentApplicationEntity extends BlockEntity implements BlockEntity
             var missingCount = wantedInput.count();
             
             for (var stack : this.inventory.heldStacks) {
+                if (type.test(stack)) {
+                    var takeAmount = Math.min(stack.getCount(), missingCount);
+                    missingCount -= takeAmount;
+                    stack.decrement(takeAmount);
+                    
+                    if (missingCount <= 0) break;
+                }
+            }
+            
+            for (var stack : player.getInventory().main) {
                 if (type.test(stack)) {
                     var takeAmount = Math.min(stack.getCount(), missingCount);
                     missingCount -= takeAmount;
@@ -395,12 +405,12 @@ public class AugmentApplicationEntity extends BlockEntity implements BlockEntity
     }
     
     @Override
-    public BlockPos getMachinePos() {
+    public BlockPos getPosForMultiblock() {
         return pos;
     }
     
     @Override
-    public World getMachineWorld() {
+    public World getWorldForMultiblock() {
         return world;
     }
     
@@ -420,12 +430,12 @@ public class AugmentApplicationEntity extends BlockEntity implements BlockEntity
     }
     
     @Override
-    public InventoryProvider getInventoryForLink() {
-        return this;
+    public ItemApi.InventoryStorage getInventoryForMultiblock() {
+        return inventory;
     }
     
     @Override
-    public EnergyApi.EnergyContainer getEnergyStorageForLink() {
+    public EnergyApi.EnergyStorage getEnergyStorageForMultiblock(Direction direction) {
         return energyStorage;
     }
     
@@ -472,8 +482,8 @@ public class AugmentApplicationEntity extends BlockEntity implements BlockEntity
     }
     
     @Override
-    public Object getScreenOpeningData(ServerPlayerEntity player) {
-        return new ModScreens.BasicData(pos);
+    public void saveExtraData(PacketByteBuf buf) {
+        buf.writeBlockPos(pos);
     }
     
     @Override
@@ -494,13 +504,13 @@ public class AugmentApplicationEntity extends BlockEntity implements BlockEntity
     }
     
     @Override
-    public EnergyApi.EnergyContainer getStorage(Direction direction) {
+    public EnergyApi.EnergyStorage getEnergyStorage(Direction direction) {
         return energyStorage;
     }
     
     @Override
-    public Storage<ItemVariant> getInventory(Direction direction) {
-        return inventoryStorage;
+    public ItemApi.InventoryStorage getInventoryStorage(Direction direction) {
+        return inventory;
     }
     
     @Override
@@ -546,7 +556,7 @@ public class AugmentApplicationEntity extends BlockEntity implements BlockEntity
     
     @Override
     public ScreenHandlerType<?> getScreenHandlerType() {
-        return ModScreens.MODIFIED_INV_SCREEN;
+        return ModScreens.AUGMENTER_INV_SCREEN;
     }
     
     public static class ResearchState {

@@ -1,8 +1,8 @@
 package rearth.oritech.init;
 
+import dev.architectury.hooks.fluid.FluidStackHooks;
 import io.wispforest.owo.config.Option;
 import io.wispforest.owo.config.annotation.*;
-import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants;
 
 // thank gpt for being able to translate the language keys for all this. It would be horror to type these all out
 @io.wispforest.owo.config.annotation.Config(name = "oritech-config", wrapperName = "OritechConfig")
@@ -47,19 +47,20 @@ public class Config {
     @Nest
     public BasicEnergyMachineData charger = new BasicEnergyMachineData(500_000, 10_000, 5_000, 0);
     @Nest
-    public JetpackData basicJetpack = new JetpackData(100_000, 4 * FluidConstants.BUCKET, 128, (int) (10 * (FluidConstants.BUCKET / 1000)), 1024, 0.4f);
+    public JetpackData basicJetpack = new JetpackData(100_000, 4 * FluidStackHooks.bucketAmount(), 128, (int) (10 * (FluidStackHooks.bucketAmount() / 1000)), 1024, 0.4f);
     @Nest
-    public JetpackData exoJetpack = new JetpackData(5_000_000, 32 * FluidConstants.BUCKET, 256, (int) (15 * (FluidConstants.BUCKET / 1000)), 10_000, 1.5f);
+    public JetpackData exoJetpack = new JetpackData(5_000_000, 32 * FluidStackHooks.bucketAmount(), 256, (int) (15 * (FluidStackHooks.bucketAmount() / 1000)), 10_000, 1.5f);
     @Nest
-    public JetpackData elytraJetpack = new JetpackData(100_000, 4 * FluidConstants.BUCKET, 128, (int) (10 * (FluidConstants.BUCKET / 1000)), 1024, 0.6f);
+    public JetpackData elytraJetpack = new JetpackData(100_000, 4 * FluidStackHooks.bucketAmount(), 128, (int) (10 * (FluidStackHooks.bucketAmount() / 1000)), 1024, 0.6f);
     @Nest
-    public JetpackData exoElytraJetpack = new JetpackData(5_000_000, 32 * FluidConstants.BUCKET, 256, (int) (15 * (FluidConstants.BUCKET / 1000)), 10_000, 1.4f);
+    public JetpackData exoElytraJetpack = new JetpackData(5_000_000, 32 * FluidStackHooks.bucketAmount(), 256, (int) (15 * (FluidStackHooks.bucketAmount() / 1000)), 10_000, 1.4f);
     @Nest
     public ToolData exoChestplate = new ToolData(5_000_000, 10_000, 10_000);
     @Nest
     public ToolData basicDrill = new ToolData(10_000, 10, 512);
     @Nest
     public ToolData chainSaw = new ToolData(10_000, 10, 512);
+    public boolean chainsawTreeCutting = true;
     
     @SectionHeader("worldGeneration")
     public boolean generateOres = true;
@@ -77,6 +78,7 @@ public class Config {
     public int ventRelativeRate = 100;
     public int maxHeat = 2000;
     public int maxUnstableTicks = 400;
+    public boolean boringNukes = false;
     
     @SectionHeader("arcane")
     public int enchanterCostMultiplier = 5;
@@ -90,6 +92,7 @@ public class Config {
     public int maxGateDist = 10;
     public float bendFactor = 2.5f;
     public int accelerationRFCost = 10;
+    public long acceleratorMotorRFCapacity = 5_000_000L;
     public int endPortalRequiredSpeed = 10000;
     public int netherPortalRequiredSpeed = 5000;
     public int blackHoleRequiredSpeed = 15000;
@@ -101,6 +104,10 @@ public class Config {
     public int pullRange = 16;
     public int idleWaitTicks = 200;
     public int blackHoleTachyonEnergy = 50_000;
+    public long unstableContainerBaseCapacity = 20_000_000;
+    
+    @SectionHeader("augments")
+    public long augmenterMaxEnergy = 500_000_000L;
     
     @SectionHeader("clientSettings")
     @Sync(Option.SyncMode.NONE)
@@ -114,6 +121,10 @@ public class Config {
     public boolean tightCableHitboxes = true;
     @Sync(Option.SyncMode.NONE)
     public float machineVolumeMultiplier = 1f;
+    @Sync(Option.SyncMode.NONE)
+    public boolean showMachinePreview = true;
+    @Sync(Option.SyncMode.NONE)
+    public boolean enableHelpButton = true;
     
     public static class ProcessingMachines {
         
@@ -140,7 +151,6 @@ public class Config {
     public static class Generators {
         
         public float animationSpeedMultiplier = 10;
-        public float rfToSteamRation = 2;
         
         @Nest
         public BasicEnergyMachineData basicGeneratorData = new BasicEnergyMachineData(50_000, 0, 32 * 8, 32);
@@ -151,7 +161,7 @@ public class Config {
         @Nest
         public BasicEnergyMachineData fuelGeneratorData = new BasicEnergyMachineData(250_000, 0, 256 * 8, 256);
         @Nest
-        public BasicEnergyMachineData steamEngineData = new BasicEnergyMachineData(100_000, 0, 10_000, 1);
+        public SteamEngineData steamEngineData = new SteamEngineData(100_000, 50_000, 2, 1, false, true);
         @Nest
         public BasicEnergyMachineData solarGeneratorData = new BasicEnergyMachineData(100_000, 0, 32 * 8, 32);
     }
@@ -204,6 +214,24 @@ public class Config {
             this.maxEnergyInsertion = maxEnergyInsertion;
             this.maxEnergyExtraction = maxEnergyExtraction;
             this.energyPerTick = energyPerTick;
+        }
+    }
+    
+    public static class SteamEngineData {
+        public long energyCapacity;
+        public long maxEnergyExtraction;
+        public float rfToSteamRatio;    // used for generators
+        public int steamToRfRatio;  // used for steam engines
+        public boolean stopOnEnergyFull;
+        public boolean stopOnWaterFull;
+        
+        public SteamEngineData(long energyCapacity, long maxEnergyExtraction, float rfToSteamRatio, int steamToRfRatio, boolean stopOnEnergyFull, boolean stopOnWaterFull) {
+            this.energyCapacity = energyCapacity;
+            this.maxEnergyExtraction = maxEnergyExtraction;
+            this.steamToRfRatio = steamToRfRatio;
+            this.rfToSteamRatio = rfToSteamRatio;
+            this.stopOnEnergyFull = stopOnEnergyFull;
+            this.stopOnWaterFull = stopOnWaterFull;
         }
     }
     

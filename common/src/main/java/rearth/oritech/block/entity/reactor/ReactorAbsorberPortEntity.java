@@ -1,9 +1,6 @@
 package rearth.oritech.block.entity.reactor;
 
-import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory;
-import net.fabricmc.fabric.api.transfer.v1.item.InventoryStorage;
-import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
-import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
+import dev.architectury.registry.menu.ExtendedMenuProvider;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.entity.player.PlayerEntity;
@@ -11,28 +8,31 @@ import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.inventory.Inventories;
 import net.minecraft.inventory.Inventory;
 import net.minecraft.nbt.NbtCompound;
+import net.minecraft.network.PacketByteBuf;
 import net.minecraft.registry.RegistryWrapper;
 import net.minecraft.screen.ScreenHandler;
 import net.minecraft.screen.ScreenHandlerType;
-import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
 import org.jetbrains.annotations.Nullable;
+import rearth.oritech.api.item.ItemApi;
+import rearth.oritech.api.item.containers.InOutInventoryStorage;
 import rearth.oritech.client.init.ModScreens;
 import rearth.oritech.client.init.ParticleContent;
 import rearth.oritech.client.ui.BasicMachineScreenHandler;
 import rearth.oritech.init.BlockEntitiesContent;
 import rearth.oritech.init.TagContent;
 import rearth.oritech.network.NetworkContent;
-import rearth.oritech.util.*;
+import rearth.oritech.util.InventoryInputMode;
+import rearth.oritech.util.InventorySlotAssignment;
+import rearth.oritech.util.ScreenProvider;
 
 import java.util.List;
 
-public class ReactorAbsorberPortEntity extends BlockEntity implements ExtendedScreenHandlerFactory, ScreenProvider, InventoryProvider {
+public class ReactorAbsorberPortEntity extends BlockEntity implements ExtendedMenuProvider, ScreenProvider, ItemApi.BlockProvider {
     
-    private final SimpleSidedInventory inventory = new SimpleSidedInventory(1, new InventorySlotAssignment(0, 1, 1, 0));
-    private final InventoryStorage inventoryStorage = InventoryStorage.of(inventory, null);
+    private final InOutInventoryStorage inventory = new InOutInventoryStorage(1, this::markDirty, new InventorySlotAssignment(0, 1, 1, 0));
     
     public int availableFuel;
     public int currentFuelOriginalCapacity;
@@ -100,8 +100,8 @@ public class ReactorAbsorberPortEntity extends BlockEntity implements ExtendedSc
     }
     
     @Override
-    public Object getScreenOpeningData(ServerPlayerEntity player) {
-        return new ModScreens.BasicData(pos);
+    public void saveExtraData(PacketByteBuf buf) {
+        buf.writeBlockPos(pos);
     }
     
     @Override
@@ -166,7 +166,7 @@ public class ReactorAbsorberPortEntity extends BlockEntity implements ExtendedSc
     }
     
     @Override
-    public Storage<ItemVariant> getInventory(Direction direction) {
-        return inventoryStorage;
+    public ItemApi.InventoryStorage getInventoryStorage(Direction direction) {
+        return inventory;
     }
 }

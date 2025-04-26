@@ -1,6 +1,7 @@
 package rearth.oritech.init.recipes;
 
 import dev.architectury.fluid.FluidStack;
+import dev.architectury.platform.Platform;
 import net.minecraft.fluid.Fluid;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
@@ -13,17 +14,20 @@ import net.minecraft.registry.RegistryWrapper;
 import net.minecraft.util.collection.DefaultedList;
 import net.minecraft.world.World;
 import org.jetbrains.annotations.Nullable;
+import rearth.oritech.util.SimpleCraftingInventory;
 
 import java.util.List;
 
 public class OritechRecipe implements Recipe<RecipeInput> {
     
-    private final OritechRecipeType type;
-    private final List<Ingredient> inputs;
-    private final List<ItemStack> results;
-    private final FluidStack fluidInput;
-    private final FluidStack fluidOutput;
-    private final int time;
+    public static final int fluidDivider = Platform.isNeoForge() ? 81 : 1;  // dirty hack because bucket amounts are 81000 in neo, and 1000 in fabric, but datagen/recipes are on fabric
+    
+    protected final OritechRecipeType type;
+    protected final List<Ingredient> inputs;
+    protected final List<ItemStack> results;
+    protected final FluidStack fluidInput;
+    protected final FluidStack fluidOutput;
+    protected final int time;
 
     public static final OritechRecipe DUMMY = new OritechRecipe(-1, DefaultedList.ofSize(1, Ingredient.ofStacks(Items.IRON_INGOT.getDefaultStack())), DefaultedList.ofSize(1, Items.IRON_BLOCK.getDefaultStack()), RecipeContent.PULVERIZER, FluidStack.empty(), FluidStack.empty());
     
@@ -39,15 +43,17 @@ public class OritechRecipe implements Recipe<RecipeInput> {
     }
     
     public OritechRecipe(int time, List<Ingredient> inputs, List<ItemStack> results, OritechRecipeType type, Fluid inVariant, long inAmount, Fluid outVariant, long outAmount) {
-        this(time, inputs, results, type, FluidStack.create(inVariant, inAmount), FluidStack.create(outVariant, outAmount));
+        this(time, inputs, results, type, FluidStack.create(inVariant, inAmount / fluidDivider), FluidStack.create(outVariant, outAmount / fluidDivider));
     }
-    
-    
     
     @Override
     public boolean matches(RecipeInput input, World world) {
         
         if (world.isClient) return false;
+        
+        if (inputs.size() > 1) {
+            return complexMatch(input);
+        }
         
         if (input.getSize() < inputs.size()) return false;
         
@@ -57,6 +63,32 @@ public class OritechRecipe implements Recipe<RecipeInput> {
             if (!entry.test(input.getStackInSlot(i))) {
                 return false;
             }
+        }
+        
+        return true;
+    }
+    
+    private boolean complexMatch(RecipeInput input) {
+        
+        if (!(input instanceof SimpleCraftingInventory simpleInventory)) return false;
+        
+        // Input does not need to be in the correct slots / split into different slots.
+        // We just check if we can remove all ingredients from the inventory, and fail is any input is not able to be removed.
+        var copiedInv = simpleInventory.heldStacks.stream().map(ItemStack::copy).toArray(ItemStack[]::new);
+        
+        for (var ingredient : getInputs()) {
+            
+            var found = false;
+            
+            for (var heldStack : copiedInv) {
+                if (ingredient.test(heldStack)) {
+                    heldStack.decrement(1);
+                    found = true;
+                    break;
+                }
+            }
+            
+            if (!found) return false;
         }
         
         return true;

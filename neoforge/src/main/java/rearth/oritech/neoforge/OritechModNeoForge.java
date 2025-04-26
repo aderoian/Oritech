@@ -9,24 +9,40 @@ import net.minecraft.registry.RegistryKeys;
 import net.minecraft.util.math.BlockPos;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
+import net.neoforged.neoforge.event.entity.living.LivingEquipmentChangeEvent;
 import net.neoforged.neoforge.registries.DeferredHolder;
 import net.neoforged.neoforge.registries.DeferredRegister;
 import net.neoforged.neoforge.registries.RegisterEvent;
 import rearth.oritech.Oritech;
-import rearth.oritech.util.energy.EnergyApi;
+import rearth.oritech.api.attachment.neoforge.AttachmentApiImpl;
+import rearth.oritech.api.energy.EnergyApi;
+import rearth.oritech.api.fluid.FluidApi;
+import rearth.oritech.api.item.ItemApi;
+import rearth.oritech.item.tools.util.ArmorEventHandler;
 
 @Mod(Oritech.MOD_ID)
 public final class OritechModNeoForge {
     
     private final NeoforgeEnergyApiImpl energyApiInstance;
+    private final NeoforgeFluidApiImpl fluidApiInstance;
+    private final NeoforgeItemApiImpl itemApiInstance;
     
     public OritechModNeoForge(IEventBus eventBus) {
-        // Run our common setup.
         
         eventBus.register(new EventHandler());
         EventHandler.COMPONENT_REGISTRAR.register(eventBus);
+        
+        AttachmentApiImpl.ATTACHMENT_TYPES.register(eventBus);
+        
+        fluidApiInstance = new NeoforgeFluidApiImpl();
+        FluidApi.BLOCK = fluidApiInstance;
+        FluidApi.ITEM = fluidApiInstance;
+        
+        itemApiInstance = new NeoforgeItemApiImpl();
+        ItemApi.BLOCK = itemApiInstance;
         
         energyApiInstance = new NeoforgeEnergyApiImpl();
         EnergyApi.BLOCK = energyApiInstance;
@@ -34,6 +50,16 @@ public final class OritechModNeoForge {
         
         Oritech.initialize();
         
+    }
+    
+    // No idea why this needs to be another class, but oh well.
+    @EventBusSubscriber(modid = Oritech.MOD_ID)
+    static class CustomEvents {
+        
+        @SubscribeEvent
+        public static void onEquipmentChanged(LivingEquipmentChangeEvent event) {
+            ArmorEventHandler.processEvent(event.getEntity(), event.getSlot(), event.getFrom(), event.getTo());
+        }
     }
     
     class EventHandler {
@@ -63,6 +89,8 @@ public final class OritechModNeoForge {
         
         @SubscribeEvent
         public void registerCapabilities(RegisterCapabilitiesEvent event) {
+            itemApiInstance.registerEvent(event);
+            fluidApiInstance.registerEvent(event);
             energyApiInstance.registerEvent(event);
         }
         

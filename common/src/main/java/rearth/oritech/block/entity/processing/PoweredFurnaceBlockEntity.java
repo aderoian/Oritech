@@ -71,6 +71,12 @@ public class PoweredFurnaceBlockEntity extends MultiblockMachineEntity {
                 
                 if (furnaceCraftingFinished(activeRecipe)) {
                     craftFurnaceItem(activeRecipe);
+                    
+                    for (int i = 0; i < this.getBaseAddonData().extraChambers(); i++) {
+                        if (!canAddToSlot(recipeCandidate.get().value().getResult(world.getRegistryManager()), inventory.heldStacks.get(1)) || inventory.heldStacks.get(0).isEmpty()) break;
+                        craftFurnaceItem(activeRecipe);
+                    }
+                    
                     resetProgress();
                 }
                 
@@ -152,7 +158,7 @@ public class PoweredFurnaceBlockEntity extends MultiblockMachineEntity {
     }
     
     @Override
-    public InventorySlotAssignment getSlots() {
+    public InventorySlotAssignment getSlotAssignments() {
         return new InventorySlotAssignment(0, 1, 1, 1);
     }
     

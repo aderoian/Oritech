@@ -11,12 +11,12 @@ import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.Vec3i;
 import net.minecraft.world.LightType;
 import net.minecraft.world.World;
+import rearth.oritech.api.energy.EnergyApi;
+import rearth.oritech.api.item.ItemApi;
 import rearth.oritech.block.base.entity.MachineBlockEntity;
 import rearth.oritech.block.base.entity.PassiveGeneratorBlockEntity;
 import rearth.oritech.block.blocks.generators.BigSolarPanelBlock;
 import rearth.oritech.init.BlockEntitiesContent;
-import rearth.oritech.util.energy.EnergyApi;
-import rearth.oritech.util.InventoryProvider;
 import rearth.oritech.util.MultiblockMachineController;
 import software.bernie.geckolib.animatable.GeoBlockEntity;
 import software.bernie.geckolib.animatable.instance.AnimatableInstanceCache;
@@ -119,12 +119,12 @@ public class BigSolarPanelEntity extends PassiveGeneratorBlockEntity implements 
     }
     
     @Override
-    public InventoryProvider getInventoryForLink() {
+    public ItemApi.InventoryStorage getInventoryForMultiblock() {
         return null;
     }
     
     @Override
-    public EnergyApi.EnergyContainer getEnergyStorageForLink() {
+    public EnergyApi.EnergyStorage getEnergyStorageForMultiblock(Direction direction) {
         return null;
     }
     
@@ -196,12 +196,12 @@ public class BigSolarPanelEntity extends PassiveGeneratorBlockEntity implements 
     }
     
     @Override
-    public BlockPos getMachinePos() {
+    public BlockPos getPosForMultiblock() {
         return getPos();
     }
     
     @Override
-    public World getMachineWorld() {
+    public World getWorldForMultiblock() {
         return getWorld();
     }
     

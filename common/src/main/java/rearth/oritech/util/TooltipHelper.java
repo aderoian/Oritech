@@ -8,13 +8,13 @@ import net.minecraft.registry.Registries;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.math.BlockPos;
+import rearth.oritech.api.energy.EnergyApi;
 import rearth.oritech.block.base.entity.ExpandableEnergyStorageBlockEntity;
 import rearth.oritech.block.base.entity.FrameInteractionBlockEntity;
 import rearth.oritech.block.base.entity.MachineBlockEntity;
 import rearth.oritech.block.base.entity.UpgradableGeneratorBlockEntity;
 import rearth.oritech.block.entity.interaction.DeepDrillEntity;
 import rearth.oritech.block.entity.processing.AtomicForgeBlockEntity;
-import rearth.oritech.util.energy.EnergyApi;
 
 import java.text.NumberFormat;
 import java.util.List;
@@ -29,8 +29,10 @@ public class TooltipHelper {
             return getFormatted(amount / 1_000.0) + I18n.translate("tooltip.oritech.thousand_abbrev");
         } else if (amount < 1_000_000_000) {
             return getFormatted(amount / 1_000_000.0) + I18n.translate("tooltip.oritech.million_abbrev");
-        } else {
+        } else if (amount < 1_000_000_000_000L)  {
             return getFormatted(amount / 1_000_000_000.0) + I18n.translate("tooltip.oritech.billion_abbrev");
+        } else {
+            return getFormatted(amount / 1_000_000_000_000.0) + I18n.translate("tooltip.oritech.trillion_abbrev");
         }
     }
     
@@ -72,7 +74,7 @@ public class TooltipHelper {
             
             
             if (entity instanceof EnergyApi.BlockProvider energyProvider) {
-                var maxStorage = getEnergyText(energyProvider.getStorage(null).getCapacity());
+                var maxStorage = getEnergyText(energyProvider.getEnergyStorage(null).getCapacity());
                 tooltip.add(Text.translatable("tooltip.oritech.machine_capacity_desc").formatted(Formatting.GRAY).append(Text.translatable("tooltip.oritech.energy_capacity", maxStorage).formatted(Formatting.GOLD)));
                 
                 if (energyProvider instanceof AtomicForgeBlockEntity || energyProvider instanceof DeepDrillEntity)

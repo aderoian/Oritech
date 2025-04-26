@@ -1,11 +1,8 @@
 package rearth.oritech.block.entity.interaction;
 
-import net.fabricmc.fabric.api.tag.convention.v2.ConventionalItemTags;
-import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants;
-import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant;
-import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
-import net.fabricmc.fabric.api.transfer.v1.storage.base.SingleVariantStorage;
+import dev.architectury.hooks.fluid.FluidStackHooks;
 import net.minecraft.block.*;
+import net.minecraft.fluid.Fluid;
 import net.minecraft.fluid.Fluids;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.registry.Registries;
@@ -19,61 +16,41 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.math.Vec3i;
-import org.jetbrains.annotations.Nullable;
 import rearth.oritech.Oritech;
+import rearth.oritech.api.fluid.FluidApi;
+import rearth.oritech.api.fluid.containers.SimpleFluidStorage;
 import rearth.oritech.block.base.entity.ItemEnergyFrameInteractionBlockEntity;
 import rearth.oritech.client.init.ModScreens;
 import rearth.oritech.client.init.ParticleContent;
 import rearth.oritech.init.BlockContent;
 import rearth.oritech.init.BlockEntitiesContent;
+import rearth.oritech.init.TagContent;
 import rearth.oritech.network.NetworkContent;
-import rearth.oritech.util.FluidProvider;
 
 import java.util.List;
 import java.util.Objects;
 
-public class FertilizerBlockEntity extends ItemEnergyFrameInteractionBlockEntity implements FluidProvider {
+public class FertilizerBlockEntity extends ItemEnergyFrameInteractionBlockEntity implements FluidApi.BlockProvider {
     
-    public static final long FLUID_USAGE = (long) (Oritech.CONFIG.fertilizerConfig.liquidPerBlockUsage() * FluidConstants.BUCKET);   // per block, tick usage is this divided by work time
+    public static final long FLUID_USAGE = (long) (Oritech.CONFIG.fertilizerConfig.liquidPerBlockUsage() * FluidStackHooks.bucketAmount());   // per block, tick usage is this divided by work time
     
-    private final SingleVariantStorage<FluidVariant> fluidStorage = new SingleVariantStorage<>() {
+    private final SimpleFluidStorage fluidStorage = new SimpleFluidStorage(4 * FluidStackHooks.bucketAmount(), this::markDirty) {
         @Override
-        protected FluidVariant getBlankVariant() {
-            return FluidVariant.blank();
-        }
-        
-        @Override
-        protected long getCapacity(FluidVariant variant) {
-            return (4 * FluidConstants.BUCKET);
-        }
-        
-        @Override
-        public boolean supportsExtraction() {
-            return false;
-        }
-        
-        @Override
-        protected boolean canInsert(FluidVariant variant) {
-            return variant.getFluid().matchesType(Fluids.WATER);
-        }
-        
-        @Override
-        protected void onFinalCommit() {
-            super.onFinalCommit();
-            FertilizerBlockEntity.this.markDirty();
+        public Fluid getEmptyVariant() {
+            return Fluids.WATER;
         }
     };
     
     @Override
     protected void writeNbt(NbtCompound nbt, RegistryWrapper.WrapperLookup registryLookup) {
         super.writeNbt(nbt, registryLookup);
-        SingleVariantStorage.writeNbt(fluidStorage, FluidVariant.CODEC, nbt, registryLookup);
+        fluidStorage.writeNbt(nbt, "");
     }
     
     @Override
     protected void readNbt(NbtCompound nbt, RegistryWrapper.WrapperLookup registryLookup) {
         super.readNbt(nbt, registryLookup);
-        SingleVariantStorage.readNbt(fluidStorage, FluidVariant.CODEC, FluidVariant::blank, nbt, registryLookup);
+        fluidStorage.readNbt(nbt, "");
     }
     
     @Override
@@ -87,11 +64,11 @@ public class FertilizerBlockEntity extends ItemEnergyFrameInteractionBlockEntity
     }
     
     private long getWaterUsagePerTick() {
-        return FLUID_USAGE / getWorkTime();
+        return (long) (FLUID_USAGE / getWorkTime());
     }
     
     private boolean hasEnoughWater() {
-        return fluidStorage.amount >= getWaterUsagePerTick();
+        return fluidStorage.getAmount() >= getWaterUsagePerTick();
     }
     
     @Override
@@ -126,7 +103,7 @@ public class FertilizerBlockEntity extends ItemEnergyFrameInteractionBlockEntity
     public void finishBlockWork(BlockPos processed) {
         
         var inventoryStack = inventory.getStack(0);
-        var fertilizerInInventory = !inventoryStack.isEmpty() && inventoryStack.isIn(ConventionalItemTags.FERTILIZERS);
+        var fertilizerInInventory = !inventoryStack.isEmpty() && inventoryStack.isIn(TagContent.CONVENTIONAL_FERTILIZER);
         var fertilizerStrength = fertilizerInInventory ? 2 : 1;
         var fertilized = false;
         
@@ -182,29 +159,24 @@ public class FertilizerBlockEntity extends ItemEnergyFrameInteractionBlockEntity
     protected void doProgress(boolean moving) {
         super.doProgress(moving);
         if (!moving && hasWorkAvailable(getCurrentTarget())) {
-            fluidStorage.amount -= getWaterUsagePerTick();
+            fluidStorage.setAmount(fluidStorage.getAmount() - getWaterUsagePerTick());
             ParticleContent.WATERING_EFFECT.spawn(world, Vec3d.of(getCurrentTarget().down()), 2);
         }
     }
     
     @Override
-    public void updateNetwork() {
-        super.updateNetwork();
-        NetworkContent.MACHINE_CHANNEL.serverHandle(this).send(new NetworkContent.SingleVariantFluidSyncPacket(pos, Registries.FLUID.getId(fluidStorage.variant.getFluid()).toString(), fluidStorage.amount));
+    public void sendMovementNetworkPacket(BlockPos from) {
+        super.sendMovementNetworkPacket(from);
+        NetworkContent.MACHINE_CHANNEL.serverHandle(this).send(new NetworkContent.SingleVariantFluidSyncPacketAPI(pos, Registries.FLUID.getId(fluidStorage.getFluid()).toString(), fluidStorage.getAmount()));
     }
     
     @Override
-    public @Nullable SingleVariantStorage<FluidVariant> getForDirectFluidAccess() {
-        return fluidStorage;
-    }
-    
-    @Override
-    public int getMoveTime() {
+    public float getMoveTime() {
         return Oritech.CONFIG.fertilizerConfig.moveDuration();
     }
     
     @Override
-    public int getWorkTime() {
+    public float getWorkTime() {
         return Oritech.CONFIG.fertilizerConfig.workDuration();
     }
     
@@ -224,7 +196,7 @@ public class FertilizerBlockEntity extends ItemEnergyFrameInteractionBlockEntity
     }
     
     @Override
-    public Storage<FluidVariant> getFluidStorage(Direction direction) {
+    public FluidApi.FluidStorage getFluidStorage(Direction direction) {
         return fluidStorage;
     }
 }

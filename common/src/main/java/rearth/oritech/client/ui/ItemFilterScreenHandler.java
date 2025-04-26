@@ -6,6 +6,7 @@ import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.item.ItemStack;
+import net.minecraft.network.PacketByteBuf;
 import net.minecraft.screen.ScreenHandler;
 import net.minecraft.util.math.BlockPos;
 import org.jetbrains.annotations.NotNull;
@@ -21,6 +22,10 @@ public class ItemFilterScreenHandler extends ScreenHandler {
     protected final BlockPos blockPos;
     @NotNull
     protected final ItemFilterBlockEntity blockEntity;
+    
+    public ItemFilterScreenHandler(int syncId, PlayerInventory inventory, PacketByteBuf buf) {
+        this(syncId, inventory, Objects.requireNonNull(inventory.player.getWorld().getBlockEntity(buf.readBlockPos())));
+    }
     
     public ItemFilterScreenHandler(int syncId, PlayerInventory playerInventory, BlockEntity blockEntity) {
         super(ModScreens.ITEM_FILTER_SCREEN, syncId);
@@ -47,14 +52,14 @@ public class ItemFilterScreenHandler extends ScreenHandler {
             if (item.isOf(displayStack.getItem())) return ItemStack.EMPTY;
         }
         var newItems = new HashMap<>(data.items());
-        for (int i = 0; i < 8; i++) {
+        for (int i = 0; i < 12; i++) {
             if (!newItems.containsKey(i)) {
                 newItems.put(i, displayStack);
                 break;
             }
         }
         
-        var newData = new ItemFilterBlockEntity.FilterData(data.useNbt(), data.useWhitelist(), newItems);
+        var newData = new ItemFilterBlockEntity.FilterData(data.useNbt(), data.useWhitelist(), data.useComponents(), newItems);
         blockEntity.setFilterSettings(newData);
         if (Objects.requireNonNull(blockEntity.getWorld()).isClient) {
             if (player instanceof ClientPlayerEntity clientPlayer && clientPlayer.client.currentScreen instanceof ItemFilterScreen filterScreen) {

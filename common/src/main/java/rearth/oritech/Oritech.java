@@ -2,9 +2,9 @@ package rearth.oritech;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
-import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
-import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
-import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
+import dev.architectury.event.events.common.LifecycleEvent;
+import dev.architectury.event.events.common.PlayerEvent;
+import dev.architectury.event.events.common.TickEvent;
 import net.minecraft.registry.RegistryKeys;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.Identifier;
@@ -15,6 +15,7 @@ import rearth.oritech.block.blocks.pipes.energy.SuperConductorBlock;
 import rearth.oritech.block.blocks.pipes.fluid.FluidPipeBlock;
 import rearth.oritech.block.blocks.pipes.item.ItemPipeBlock;
 import rearth.oritech.block.entity.accelerator.AcceleratorParticleLogic;
+import rearth.oritech.block.entity.addons.AddonBlockEntity;
 import rearth.oritech.block.entity.augmenter.PlayerAugments;
 import rearth.oritech.block.entity.pipes.GenericPipeInterfaceEntity;
 import rearth.oritech.client.init.ModScreens;
@@ -23,18 +24,17 @@ import rearth.oritech.init.*;
 import rearth.oritech.init.recipes.RecipeContent;
 import rearth.oritech.init.world.FeatureContent;
 import rearth.oritech.network.NetworkContent;
-import rearth.oritech.util.ArchitecturyBlockRegistryContainer;
-import rearth.oritech.util.ArchitecturyRecipeRegistryContainer;
-import rearth.oritech.util.ArchitecturyRegistryContainer;
+import rearth.oritech.util.registry.ArchitecturyBlockRegistryContainer;
+import rearth.oritech.util.registry.ArchitecturyRecipeRegistryContainer;
+import rearth.oritech.util.registry.ArchitecturyRegistryContainer;
 
 public final class Oritech {
     
     public static final String MOD_ID = "oritech";
     public static final Logger LOGGER = LoggerFactory.getLogger("oritech");
     public static final OritechConfig CONFIG = OritechConfig.createAndLoad();
-
+    
     public static final Multimap<Identifier, Runnable> EVENT_MAP = initEventMap();
-    public static Boolean DATAGEN = false;
     
     public static Identifier id(String path) {
         return Identifier.of(MOD_ID, path);
@@ -43,22 +43,24 @@ public final class Oritech {
     public static void initialize() {
         
         LOGGER.info("Begin Oritech initialization");
-        if (!DATAGEN)
-            NetworkContent.registerChannels();  // this seems to break datagen for some reason as it claims its using client code?
+        NetworkContent.registerChannels();  // this seems to break datagen for some reason as it claims its using client code?
         ParticleContent.registerParticles();
         FeatureContent.initialize();
-
+        
         // for pipe data
-        ServerLifecycleEvents.SERVER_STARTED.register(Oritech::onServerStarted);
+        LifecycleEvent.SERVER_STARTED.register(Oritech::onServerStarted);
         
         // for particle collisions
-        ServerTickEvents.END_SERVER_TICK.register(elem -> AcceleratorParticleLogic.onTickEnd());
+        TickEvent.SERVER_POST.register(elem -> AcceleratorParticleLogic.onTickEnd());
+        TickEvent.SERVER_POST.register(elem -> AddonBlockEntity.completeInits());
         
         // for player augment modifiers
-        ServerPlayConnectionEvents.JOIN.register(((handler, sender, server) -> PlayerAugments.refreshPlayerAugments(handler.player)));
+        PlayerEvent.PLAYER_JOIN.register(PlayerAugments::refreshPlayerAugments);
+        PlayerEvent.PLAYER_RESPAWN.register((player, inEnd, removalReason) -> PlayerAugments.refreshPlayerAugments(player));
+        PlayerEvent.CHANGE_DIMENSION.register((player, oldLevel, newLevel) -> PlayerAugments.refreshPlayerAugments(player));
         
         // for player augment ticks
-        ServerTickEvents.START_WORLD_TICK.register(event -> event.getPlayers().forEach(PlayerAugments::serverTickAugments));
+        TickEvent.SERVER_PRE.register(event -> event.getWorlds().forEach(world -> world.getPlayers().forEach(PlayerAugments::serverTickAugments)));
         LOGGER.info("Oritech initialization complete");
     }
     
@@ -103,7 +105,7 @@ public final class Oritech {
         res.put(RegistryKeys.ITEM_GROUP.getValue(), () -> ArchitecturyRegistryContainer.register(ItemGroups.class, MOD_ID, false));
         res.put(RegistryKeys.RECIPE_SERIALIZER.getValue(), ArchitecturyRecipeRegistryContainer::finishSerializerRegister);
         res.put(RegistryKeys.LOOT_FUNCTION_TYPE.getValue(), FluidContent::registerItemsToGroups);
-        res.put(Identifier.of("neoforge", "attachment_types"), PlayerAugments::init);   // this works just fine on fabric aswell, as they key is not really relevant there
+        res.put(Identifier.of("minecraft", "enchantment_provider_type"), PlayerAugments::init);   // this works just fine on fabric aswell, as they key is not really relevant there. Intentionally registered before the real attachments to avoid locking issues on neoforge
         
         return res;
     }

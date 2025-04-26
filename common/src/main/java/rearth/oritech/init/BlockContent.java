@@ -1,5 +1,6 @@
 package rearth.oritech.init;
 
+import dev.architectury.fluid.FluidStack;
 import dev.architectury.registry.registries.RegistrySupplier;
 import io.wispforest.owo.registration.reflect.BlockRegistryContainer.NoBlockItem;
 import net.minecraft.block.*;
@@ -7,12 +8,15 @@ import net.minecraft.block.dispenser.BlockPlacementDispenserBehavior;
 import net.minecraft.block.piston.PistonBehavior;
 import net.minecraft.item.BlockItem;
 import net.minecraft.item.Item;
+import net.minecraft.item.ItemStack;
 import net.minecraft.registry.Registries;
 import net.minecraft.registry.Registry;
 import net.minecraft.sound.BlockSoundGroup;
 import net.minecraft.state.property.Properties;
 import net.minecraft.util.Identifier;
 import rearth.oritech.Oritech;
+import rearth.oritech.api.energy.EnergyApi;
+import rearth.oritech.api.fluid.FluidApi;
 import rearth.oritech.block.blocks.accelerator.*;
 import rearth.oritech.block.blocks.addons.InventoryProxyAddonBlock;
 import rearth.oritech.block.blocks.addons.MachineAddonBlock;
@@ -36,9 +40,11 @@ import rearth.oritech.block.blocks.pipes.item.ItemPipeDuctBlock;
 import rearth.oritech.block.blocks.processing.*;
 import rearth.oritech.block.blocks.reactor.*;
 import rearth.oritech.block.blocks.storage.*;
+import rearth.oritech.init.ItemContent.Compostable;
+import rearth.oritech.item.OritechGeoItem;
+import rearth.oritech.item.other.SmallEnergyStorageBlockItem;
 import rearth.oritech.item.other.SmallFluidTankBlockItem;
-import rearth.oritech.util.ArchitecturyBlockRegistryContainer;
-import rearth.oritech.util.item.OritechGeoItem;
+import rearth.oritech.util.registry.ArchitecturyBlockRegistryContainer;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -66,6 +72,7 @@ public class BlockContent implements ArchitecturyBlockRegistryContainer {
     public static final Block FRAMED_SUPERCONDUCTOR = new SuperConductorBlock.FramedSuperConductorBlock(AbstractBlock.Settings.copy(Blocks.IRON_BARS).strength(1.0f, 2.0f));
     public static final Block SUPERCONDUCTOR_DUCT_BLOCK = new SuperConductorDuctBlock(AbstractBlock.Settings.copy(Blocks.IRON_BLOCK));
     public static final Block ITEM_PIPE = new ItemPipeBlock(AbstractBlock.Settings.copy(Blocks.IRON_BARS).strength(1.0f, 2.0f));
+    public static final Block TRANSPARENT_ITEM_PIPE = new ItemPipeBlock.TransparentItemPipe(AbstractBlock.Settings.copy(Blocks.IRON_BARS).strength(1.0f, 2.0f));
     public static final Block FRAMED_ITEM_PIPE = new ItemPipeBlock.FramedItemPipeBlock(AbstractBlock.Settings.copy(Blocks.IRON_BARS).strength(1.0f, 2.0f));
     public static final Block ITEM_PIPE_DUCT_BLOCK = new ItemPipeDuctBlock(AbstractBlock.Settings.copy(Blocks.IRON_BLOCK));
     public static final Block ITEM_FILTER_BLOCK = new ItemFilterBlock(AbstractBlock.Settings.copy(Blocks.IRON_BARS).strength(1.0f, 2.0f));
@@ -86,6 +93,8 @@ public class BlockContent implements ArchitecturyBlockRegistryContainer {
     public static final Block ITEM_PIPE_CONNECTION = new ItemPipeConnectionBlock(AbstractBlock.Settings.copy(Blocks.IRON_BARS).strength(1.0f, 2.0f));
     @NoBlockItem
     public static final Block FRAMED_ITEM_PIPE_CONNECTION = new ItemPipeConnectionBlock.FramedItemPipeConnectionBlock(AbstractBlock.Settings.copy(Blocks.IRON_BARS).strength(1.0f, 2.0f));
+    @NoBlockItem
+    public static final Block TRANSPARENT_ITEM_PIPE_CONNECTION = new ItemPipeConnectionBlock.TransparentItemPipeConnectionBlock(AbstractBlock.Settings.copy(Blocks.IRON_BARS).strength(1.0f, 2.0f));
     
     @NoBlockItem
     public static final Block FRAME_GANTRY_ARM = new Block(AbstractBlock.Settings.copy(Blocks.CHAIN).nonOpaque());
@@ -146,7 +155,7 @@ public class BlockContent implements ArchitecturyBlockRegistryContainer {
     @UseGeoBlockItem(scale = 0.7f)
     public static final Block BIG_SOLAR_PANEL_BLOCK = new BigSolarPanelBlock(AbstractBlock.Settings.copy(Blocks.IRON_BLOCK).nonOpaque(), Oritech.CONFIG.generators.solarGeneratorData.energyPerTick());
     @UseGeoBlockItem(scale = 0.7f)
-    public static final Block POWERED_FURNACE_BLOCK = new PoweredFurnaceBlock(AbstractBlock.Settings.copy(Blocks.IRON_BLOCK).nonOpaque().luminance(Blocks.createLightLevelFromLitBlockState(15)));
+    public static final Block POWERED_FURNACE_BLOCK = new PoweredFurnaceBlock(AbstractBlock.Settings.copy(Blocks.IRON_BLOCK).nonOpaque().luminance(state -> state.get(Properties.LIT) ? 15 : 0));
     @UseGeoBlockItem(scale = 0.5f)
     public static final Block LASER_ARM_BLOCK = new LaserArmBlock(AbstractBlock.Settings.copy(Blocks.IRON_BLOCK).nonOpaque());
     @UseGeoBlockItem(scale = 0.25f)
@@ -163,11 +172,11 @@ public class BlockContent implements ArchitecturyBlockRegistryContainer {
     
     @NoAutoDrop
     @DispenserPlace
-    public static final Block SMALL_TANK_BLOCK = new SmallFluidTank(AbstractBlock.Settings.copy(Blocks.IRON_BLOCK).nonOpaque().pistonBehavior(PistonBehavior.DESTROY).luminance(Blocks.createLightLevelFromLitBlockState(15)));
+    public static final Block SMALL_TANK_BLOCK = new SmallFluidTank(AbstractBlock.Settings.copy(Blocks.IRON_BLOCK).nonOpaque().pistonBehavior(PistonBehavior.DESTROY).luminance(state -> state.get(Properties.LIT) ? 15 : 0));
     
     @NoAutoDrop
     @DispenserPlace
-    public static final Block CREATIVE_TANK_BLOCK = new CreativeFluidTank(AbstractBlock.Settings.copy(Blocks.IRON_BLOCK).nonOpaque().pistonBehavior(PistonBehavior.BLOCK).luminance(Blocks.createLightLevelFromLitBlockState(15)).hardness(-1.0F));
+    public static final Block CREATIVE_TANK_BLOCK = new CreativeFluidTank(AbstractBlock.Settings.copy(Blocks.IRON_BLOCK).nonOpaque().pistonBehavior(PistonBehavior.BLOCK).luminance(state -> state.get(Properties.LIT) ? 15 : 0).hardness(-1.0F));
     
     @UseGeoBlockItem(scale = 0.7f)
     public static final Block AUGMENT_APPLICATION_BLOCK = new AugmentApplicationBlock(AbstractBlock.Settings.copy(Blocks.IRON_BLOCK).nonOpaque());
@@ -191,6 +200,9 @@ public class BlockContent implements ArchitecturyBlockRegistryContainer {
     @NoAutoDrop
     public static final Block WITHER_CROP_BLOCK = new WitheredCropBlock(AbstractBlock.Settings.copy(Blocks.WHEAT));
     
+    @NoBlockItem
+    public static final Block UNSTABLE_CONTAINER = new UnstableContainerBlock(AbstractBlock.Settings.copy(Blocks.OBSIDIAN).strength(80, 1900f).nonOpaque());
+    
     public static final Block ACCELERATOR_RING = new AcceleratorRingBlock(AbstractBlock.Settings.copy(Blocks.IRON_BLOCK).nonOpaque());
     public static final Block ACCELERATOR_MOTOR = new AcceleratorMotorBlock(AbstractBlock.Settings.copy(Blocks.IRON_BLOCK).nonOpaque().luminance(item -> 5));
     public static final Block ACCELERATOR_CONTROLLER = new AcceleratorControllerBlock(AbstractBlock.Settings.copy(Blocks.IRON_BLOCK).nonOpaque());
@@ -211,13 +223,15 @@ public class BlockContent implements ArchitecturyBlockRegistryContainer {
     public static final Block MACHINE_CORE_5 = new MachineCoreBlock(AbstractBlock.Settings.copy(Blocks.IRON_BLOCK).nonOpaque(), 5);
     public static final Block MACHINE_CORE_6 = new MachineCoreBlock(AbstractBlock.Settings.copy(Blocks.IRON_BLOCK).nonOpaque(), 6);
     public static final Block MACHINE_CORE_7 = new MachineCoreBlock(AbstractBlock.Settings.copy(Blocks.IRON_BLOCK).nonOpaque(), 7);
+    @NoBlockItem
+    public static final Block MACHINE_CORE_HIDDEN = new MachineCoreBlock(AbstractBlock.Settings.copy(Blocks.OBSIDIAN).strength(80, 1900f).nonOpaque(), 1);
     
     public static final Block MACHINE_SPEED_ADDON = new MachineAddonBlock(AbstractBlock.Settings.copy(Blocks.IRON_BLOCK).nonOpaque(), AddonSettings.getDefaultSettings().withSpeedMultiplier(0.9f).withEfficiencyMultiplier(1.05f).withBoundingShape(MachineAddonBlock.MACHINE_SPEED_ADDON_SHAPE));
     public static final Block MACHINE_PROCESSING_ADDON = new MachineAddonBlock(AbstractBlock.Settings.copy(Blocks.IRON_BLOCK).nonOpaque(), AddonSettings.getDefaultSettings().withEfficiencyMultiplier(1.5f).withChambers(1).withBoundingShape(MachineAddonBlock.MACHINE_PROCESSING_ADDON_SHAPE));
     public static final Block MACHINE_FLUID_ADDON = new MachineAddonBlock(AbstractBlock.Settings.copy(Blocks.IRON_BLOCK).nonOpaque(), AddonSettings.getDefaultSettings().withBoundingShape(MachineAddonBlock.MACHINE_FLUID_ADDON_SHAPE));
     public static final Block MACHINE_YIELD_ADDON = new MachineAddonBlock(AbstractBlock.Settings.copy(Blocks.IRON_BLOCK).nonOpaque(), AddonSettings.getDefaultSettings().withBoundingShape(MachineAddonBlock.MACHINE_YIELD_ADDON_SHAPE));
     public static final Block CROP_FILTER_ADDON = new MachineAddonBlock(AbstractBlock.Settings.copy(Blocks.IRON_BLOCK).nonOpaque(), AddonSettings.getDefaultSettings().withBoundingShape(MachineAddonBlock.CROP_FILTER_ADDON_SHAPE));
-    public static final Block QUARRY_ADDON = new MachineAddonBlock(AbstractBlock.Settings.copy(Blocks.IRON_BLOCK).nonOpaque(), AddonSettings.getDefaultSettings().withBoundingShape(MachineAddonBlock.QUARRY_ADDON_SHAPE));
+    public static final Block QUARRY_ADDON = new MachineAddonBlock(AbstractBlock.Settings.copy(Blocks.IRON_BLOCK).nonOpaque(), AddonSettings.getDefaultSettings().withSpeedMultiplier(0.7f).withEfficiencyMultiplier(1.4f).withBoundingShape(MachineAddonBlock.QUARRY_ADDON_SHAPE));
     public static final Block MACHINE_HUNTER_ADDON = new MachineAddonBlock(AbstractBlock.Settings.copy(Blocks.IRON_BLOCK).nonOpaque(), AddonSettings.getDefaultSettings().withBoundingShape(MachineAddonBlock.MACHINE_HUNTER_ADDON_SHAPE));
     public static final Block MACHINE_EFFICIENCY_ADDON = new MachineAddonBlock(AbstractBlock.Settings.copy(Blocks.IRON_BLOCK).nonOpaque(), AddonSettings.getDefaultSettings().withEfficiencyMultiplier(0.9f).withBoundingShape(MachineAddonBlock.MACHINE_EFFICIENCY_ADDON_SHAPE));
     public static final Block MACHINE_CAPACITOR_ADDON = new MachineAddonBlock(AbstractBlock.Settings.copy(Blocks.IRON_BLOCK).nonOpaque(), AddonSettings.getDefaultSettings().withAddedCapacity(2_000_000).withAddedInsert(1_000).withBoundingShape(MachineAddonBlock.MACHINE_CAPACITOR_ADDON_SHAPE));
@@ -227,7 +241,7 @@ public class BlockContent implements ArchitecturyBlockRegistryContainer {
     public static final Block CAPACITOR_ADDON_EXTENDER = new MachineAddonBlock(AbstractBlock.Settings.copy(Blocks.IRON_BLOCK).nonOpaque(), AddonSettings.getDefaultSettings().withExtender(true).withNeedsSupport(false).withAddedCapacity(2_500_000).withAddedInsert(500));
     public static final Block STEAM_BOILER_ADDON = new SteamBoilerAddonBlock(AbstractBlock.Settings.copy(Blocks.IRON_BLOCK).nonOpaque(), AddonSettings.getDefaultSettings().withBoundingShape(MachineAddonBlock.STEAM_BOILER_ADDON_SHAPE));
     public static final Block MACHINE_REDSTONE_ADDON = new RedstoneAddonBlock(AbstractBlock.Settings.copy(Blocks.IRON_BLOCK).nonOpaque(), AddonSettings.getDefaultSettings().withBoundingShape(MachineAddonBlock.MACHINE_REDSTONE_ADDON_SHAPE));
-    public static final Block MACHINE_ULTIMATE_ADDON = new MachineAddonBlock(AbstractBlock.Settings.copy(Blocks.IRON_BLOCK).nonOpaque(), AddonSettings.getDefaultSettings().withSpeedMultiplier(0.83f).withEfficiencyMultiplier(0.9f).withBoundingShape(MachineAddonBlock.MACHINE_ULTIMATE_ADDON_SHAPE));
+    public static final Block MACHINE_ULTIMATE_ADDON = new MachineAddonBlock(AbstractBlock.Settings.copy(Blocks.IRON_BLOCK).nonOpaque(), AddonSettings.getDefaultSettings().withSpeedMultiplier(0.82f).withEfficiencyMultiplier(0.94f).withBoundingShape(MachineAddonBlock.MACHINE_ULTIMATE_ADDON_SHAPE));
     
     //region reactor
     public static final Block REACTOR_CONTROLLER = new ReactorControllerBlock(AbstractBlock.Settings.copy(Blocks.IRON_BLOCK).luminance(state -> 5));
@@ -377,6 +391,7 @@ public class BlockContent implements ArchitecturyBlockRegistryContainer {
     @ItemContent.ItemGroupTarget(ItemContent.Groups.decorative)
     public static final Block DURATIUM_BLOCK = new Block(AbstractBlock.Settings.copy(Blocks.NETHERITE_BLOCK));
     @ItemContent.ItemGroupTarget(ItemContent.Groups.decorative)
+    @Compostable(1.0f)
     public static final Block BIOMASS_BLOCK = new Block(AbstractBlock.Settings.copy(Blocks.IRON_BLOCK).sounds(BlockSoundGroup.MOSS_BLOCK));
     @ItemContent.ItemGroupTarget(ItemContent.Groups.decorative)
     public static final Block PLASTIC_BLOCK = new Block(AbstractBlock.Settings.copy(Blocks.IRON_BLOCK).sounds(BlockSoundGroup.SHROOMLIGHT));
@@ -395,17 +410,28 @@ public class BlockContent implements ArchitecturyBlockRegistryContainer {
         
         if (field.isAnnotationPresent(NoBlockItem.class)) return;
         
-        if (field.isAnnotationPresent(UseGeoBlockItem.class)) {
-            Registry.register(Registries.ITEM, Identifier.of(namespace, identifier), getGeoBlockItem(value, identifier, field.getAnnotation(UseGeoBlockItem.class).scale()));
-        } else if (value.equals(BlockContent.SMALL_TANK_BLOCK) || value.equals(BlockContent.CREATIVE_TANK_BLOCK)) {
-            Registry.register(Registries.ITEM, Identifier.of(namespace, identifier), new SmallFluidTankBlockItem(value, new Item.Settings()));
-        } else {
-            Registry.register(Registries.ITEM, Identifier.of(namespace, identifier), createBlockItem(value, identifier));
-        }
-        
         var targetGroup = ItemContent.Groups.machines;
         if (field.isAnnotationPresent(ItemContent.ItemGroupTarget.class)) {
             targetGroup = field.getAnnotation(ItemContent.ItemGroupTarget.class).value();
+        }
+        
+        if (field.isAnnotationPresent(UseGeoBlockItem.class)) {
+            Registry.register(Registries.ITEM, Identifier.of(namespace, identifier), getGeoBlockItem(value, identifier, field.getAnnotation(UseGeoBlockItem.class).scale()));
+        } else if ((value.equals(BlockContent.SMALL_TANK_BLOCK) || value.equals(BlockContent.CREATIVE_TANK_BLOCK)) && FluidApi.ITEM != null) {
+            var item = new SmallFluidTankBlockItem(value, new Item.Settings().component(FluidApi.ITEM.getFluidComponent(), FluidStack.empty()));
+            Registry.register(Registries.ITEM, Identifier.of(namespace, identifier), item);
+            FluidApi.ITEM.registerForItem(() -> item);
+        } else if (value.equals(BlockContent.SMALL_STORAGE_BLOCK) && EnergyApi.ITEM != null) {
+            var item = new SmallEnergyStorageBlockItem(value, new Item.Settings().component(EnergyApi.ITEM.getEnergyComponent(), 0L));
+            Registry.register(Registries.ITEM, Identifier.of(namespace, identifier), item);
+            EnergyApi.ITEM.registerForItem(() -> item);
+            
+            var variantStack = new ItemStack(item);
+            variantStack.set(EnergyApi.ITEM.getEnergyComponent(), Oritech.CONFIG.smallEnergyStorage.energyCapacity());
+            ItemGroups.add(targetGroup, variantStack);
+            
+        } else {
+            Registry.register(Registries.ITEM, Identifier.of(namespace, identifier), createBlockItem(value, identifier));
         }
         
         if (!field.isAnnotationPresent(NoAutoDrop.class)) {
@@ -414,6 +440,10 @@ public class BlockContent implements ArchitecturyBlockRegistryContainer {
         
         if (field.isAnnotationPresent(DispenserPlace.class)) {
             DispenserBlock.registerBehavior(value, new BlockPlacementDispenserBehavior());
+        }
+
+        if (field.isAnnotationPresent(Compostable.class)) {
+            ComposterBlock.registerCompostableItem(field.getAnnotation(Compostable.class).value(), value.asItem());
         }
         
         ItemGroups.add(targetGroup, value);

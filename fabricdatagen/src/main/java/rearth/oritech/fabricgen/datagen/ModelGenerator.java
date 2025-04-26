@@ -29,10 +29,12 @@ public class ModelGenerator extends FabricModelProvider {
         blockStateModelGenerator.registerSimpleState(BlockContent.ENERGY_PIPE);
         blockStateModelGenerator.registerSimpleState(BlockContent.SUPERCONDUCTOR);
         blockStateModelGenerator.registerSimpleState(BlockContent.ITEM_PIPE);
+        blockStateModelGenerator.registerSimpleState(BlockContent.TRANSPARENT_ITEM_PIPE);
         blockStateModelGenerator.registerSimpleState(BlockContent.FLUID_PIPE_CONNECTION);
         blockStateModelGenerator.registerSimpleState(BlockContent.ENERGY_PIPE_CONNECTION);
         blockStateModelGenerator.registerSimpleState(BlockContent.SUPERCONDUCTOR_CONNECTION);
         blockStateModelGenerator.registerSimpleState(BlockContent.ITEM_PIPE_CONNECTION);
+        blockStateModelGenerator.registerSimpleState(BlockContent.TRANSPARENT_ITEM_PIPE_CONNECTION);
         blockStateModelGenerator.registerSimpleState(BlockContent.FRAMED_FLUID_PIPE);
         blockStateModelGenerator.registerSimpleState(BlockContent.FRAMED_ENERGY_PIPE);
         blockStateModelGenerator.registerSimpleState(BlockContent.FRAMED_SUPERCONDUCTOR);
@@ -132,6 +134,7 @@ public class ModelGenerator extends FabricModelProvider {
         blockStateModelGenerator.registerSimpleCubeAll(BlockContent.MACHINE_CORE_5);
         blockStateModelGenerator.registerSimpleCubeAll(BlockContent.MACHINE_CORE_6);
         blockStateModelGenerator.registerSimpleCubeAll(BlockContent.MACHINE_CORE_7);
+        blockStateModelGenerator.registerStateWithModelReference(BlockContent.MACHINE_CORE_HIDDEN, Blocks.AIR);   // never visible
         
         blockStateModelGenerator.registerSimpleCubeAll(BlockContent.MACHINE_EXTENDER);
         
@@ -140,6 +143,7 @@ public class ModelGenerator extends FabricModelProvider {
         blockStateModelGenerator.registerSimpleState(BlockContent.SPAWNER_CONTROLLER_BLOCK);
         blockStateModelGenerator.registerCrop(BlockContent.WITHER_CROP_BLOCK, CropBlock.AGE, 0, 0, 1, 2, 3, 3, 4, 5);
         blockStateModelGenerator.registerStateWithModelReference(BlockContent.ENCHANTER_BLOCK, BlockContent.MACHINE_SPEED_ADDON);   // uses geckolib
+        blockStateModelGenerator.registerStateWithModelReference(BlockContent.UNSTABLE_CONTAINER, BlockContent.MACHINE_SPEED_ADDON);   // uses geckolib
         blockStateModelGenerator.registerStateWithModelReference(BlockContent.ENCHANTMENT_CATALYST_BLOCK, BlockContent.MACHINE_SPEED_ADDON);   // uses geckolib
         
         // particle accelerator

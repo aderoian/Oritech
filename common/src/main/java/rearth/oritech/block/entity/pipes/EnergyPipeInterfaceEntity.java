@@ -7,12 +7,12 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
 import net.minecraft.world.World;
 import rearth.oritech.Oritech;
+import rearth.oritech.api.energy.EnergyApi;
+import rearth.oritech.api.energy.containers.SimpleEnergyStorage;
 import rearth.oritech.block.blocks.pipes.energy.EnergyPipeBlock;
 import rearth.oritech.block.blocks.pipes.energy.SuperConductorBlock;
 import rearth.oritech.init.BlockContent;
 import rearth.oritech.init.BlockEntitiesContent;
-import rearth.oritech.util.energy.EnergyApi;
-import rearth.oritech.util.energy.containers.SimpleEnergyStorage;
 
 import java.util.Collections;
 import java.util.List;
@@ -24,7 +24,7 @@ public class EnergyPipeInterfaceEntity extends GenericPipeInterfaceEntity implem
     private final SimpleEnergyStorage energyStorage;
     private final boolean isSuperConductor;
     
-    private List<EnergyApi.EnergyContainer> cachedTargets = List.of();
+    private List<EnergyApi.EnergyStorage> cachedTargets = List.of();
     private int cacheHash;
     
     public EnergyPipeInterfaceEntity(BlockPos pos, BlockState state) {
@@ -53,7 +53,7 @@ public class EnergyPipeInterfaceEntity extends GenericPipeInterfaceEntity implem
     }
     
     @Override
-    public EnergyApi.EnergyContainer getStorage(Direction direction) {
+    public EnergyApi.EnergyStorage getEnergyStorage(Direction direction) {
         return energyStorage;
     }
     
@@ -75,7 +75,7 @@ public class EnergyPipeInterfaceEntity extends GenericPipeInterfaceEntity implem
         
         var targetHash = targets.hashCode();
         
-        List<EnergyApi.EnergyContainer> energyStorages;
+        List<EnergyApi.EnergyStorage> energyStorages;
         
         if (this.cacheHash == targetHash) {
             energyStorages = this.cachedTargets;

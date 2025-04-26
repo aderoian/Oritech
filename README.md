@@ -44,7 +44,7 @@
 
 An upcoming tech mod for minecraft fabric. Features advanced ore processing, powered tools and armor, and much much more.
 
-Wiki is available online (https://moddedmc.org/en/mod/oritech/docs)
+Wiki is available online (https://moddedmc.org/en/mod/oritech/docs) or via the [Oracle Index](https://www.curseforge.com/minecraft/mc-mods/oracle-index) mod.
 
 Currently in very early access, numerous bugs and issues are to be expected.
 
@@ -52,11 +52,25 @@ If you want to contribute, suggest ideas or just see what's planned, make sure t
 
 Includes JEI, REI and EMI compatibility. Works best with EMI.
 
-Extra mod compatibilities (allowing metals and other components to be processed in Oritech machines, and vice-versa) for the following mode are included:
+Extra mod compatibilities (allowing metals and other components to be processed in Oritech machines, and vice-versa) for the following mods are included:
+### Fabric
 - Alloy Forgery
-- Tech Reborn
+- Clutter
 - Energized Power
 - Mythic Metals
+- Tech Reborn
+### Neoforge
+- Actually Additions
+- Applied Energistics 2
+- Create
+- Ender IO
+- Energized Power
+- Immersive Engineering
+- Industrial Foregoing
+- Mekanism (and Mekanism Generators)
+- PneumaticCraft: Repressurized
+- Powah!
+- Productive Metalworks
 
 The following translations are available:
 - English

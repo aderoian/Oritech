@@ -4,7 +4,6 @@ import io.wispforest.endec.Endec;
 import io.wispforest.endec.impl.StructEndecBuilder;
 import io.wispforest.owo.serialization.endec.MinecraftEndecs;
 import net.minecraft.block.BlockState;
-import net.minecraft.inventory.SimpleInventory;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtElement;
 import net.minecraft.nbt.NbtList;
@@ -12,27 +11,30 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.Vec3i;
 import net.minecraft.world.World;
+import rearth.oritech.api.energy.containers.DynamicEnergyStorage;
+import rearth.oritech.api.item.ItemApi;
 import rearth.oritech.block.blocks.addons.MachineAddonBlock;
 import rearth.oritech.block.entity.addons.AddonBlockEntity;
-import rearth.oritech.util.energy.containers.DynamicEnergyStorage;
 
 import java.util.*;
 
 public interface MachineAddonController {
     
+    // list of where actually connected addons are
     List<BlockPos> getConnectedAddons();
     
-    List<BlockPos> getOpenSlots();
+    // a list of where addons could be placed
+    List<BlockPos> getOpenAddonSlots();
     
-    BlockPos getMachinePos();
+    BlockPos getPosForAddon();
     
-    World getMachineWorld();
+    World getWorldForAddon();
     
     Direction getFacingForAddon();
     
     DynamicEnergyStorage getStorageForAddon();
     
-    SimpleInventory getInventoryForAddon();
+    ItemApi.InventoryStorage getInventoryForAddon();
     
     ScreenProvider getScreenProvider();
     
@@ -51,13 +53,16 @@ public interface MachineAddonController {
     }
     
     // to initialize everything, should be called when right-clicked
-    default void initAddons() {
-        getConnectedAddons().clear();
+    default void initAddons(BlockPos brokenAddon) {
         
-        var foundAddons = getAllAddons();
+        var foundAddons = getAllAddons(brokenAddon);
         
         gatherAddonStats(foundAddons);
         writeAddons(foundAddons);
+        updateEnergyContainer();
+        removeOldAddons(foundAddons);
+        
+        getConnectedAddons().clear();
         updateEnergyContainer();
         
         for (var addon : foundAddons) {
@@ -65,14 +70,31 @@ public interface MachineAddonController {
         }
     }
     
+    private void removeOldAddons(List<AddonBlock> foundAddons) {
+        // remove/reset all old addons that are not connected anymore
+        for (var addon : getConnectedAddons()) {
+            if (foundAddons.stream().noneMatch(newAddon -> newAddon.pos().equals(addon))) {
+                var state = Objects.requireNonNull(getWorldForAddon()).getBlockState(addon);
+                if (state.getBlock() instanceof MachineAddonBlock) {
+                    getWorldForAddon().setBlockState(addon, state.with(MachineAddonBlock.ADDON_USED, false));
+                    getWorldForAddon().updateNeighborsAlways(addon, state.getBlock());
+                }
+            }
+        }
+    }
+    
+    default void initAddons() {
+        initAddons(null);
+    }
+    
     // to be called if controller or one of the addons has been broken
     default void resetAddons() {
         
         for (var addon : getConnectedAddons()) {
-            var state = Objects.requireNonNull(getMachineWorld()).getBlockState(addon);
+            var state = Objects.requireNonNull(getWorldForAddon()).getBlockState(addon);
             if (state.getBlock() instanceof MachineAddonBlock) {
-                getMachineWorld().setBlockState(addon, state.with(MachineAddonBlock.ADDON_USED, false));
-                getMachineWorld().updateNeighborsAlways(addon, state.getBlock());
+                getWorldForAddon().setBlockState(addon, state.with(MachineAddonBlock.ADDON_USED, false));
+                getWorldForAddon().updateNeighborsAlways(addon, state.getBlock());
             }
         }
         
@@ -81,7 +103,7 @@ public interface MachineAddonController {
     }
     
     // addon loading algorithm, called during init
-    default List<AddonBlock> getAllAddons() {
+    default List<AddonBlock> getAllAddons(BlockPos brokenAddon) {
         
         var maxIterationCount = (int) getCoreQuality() + 1;
         
@@ -90,11 +112,11 @@ public interface MachineAddonController {
         //   go through all slots
         //   check if slot is occupied by MachineAddonBlock, check if block is not used
         //   if valid and extender: add all neighboring positions to search set
-        var world = getMachineWorld();
-        var pos = getMachinePos();
+        var world = getWorldForAddon();
+        var pos = getPosForAddon();
         assert world != null;
         
-        var openSlots = getOpenSlots();
+        var openSlots = getOpenAddonSlots();
         openSlots.clear();
         
         var baseSlots = getAddonSlots();    // available addon slots on machine itself (includes multiblocks)
@@ -122,6 +144,12 @@ public interface MachineAddonController {
                 
                 var candidate = world.getBlockState(candidatePos);
                 var candidateEntity = world.getBlockEntity(candidatePos);
+                
+                // if the candidate is the broken addon, skip it
+                if (candidatePos.equals(brokenAddon)) {
+                    openSlots.add(candidatePos);
+                    continue;
+                }
                 
                 // if the candidate is not an addon
                 if (!(candidate.getBlock() instanceof MachineAddonBlock addonBlock) || !(candidateEntity instanceof AddonBlockEntity candidateAddonEntity)) {
@@ -192,8 +220,8 @@ public interface MachineAddonController {
     // update state of the found addons
     default void writeAddons(List<AddonBlock> addons) {
         
-        var world = getMachineWorld();
-        var pos = getMachinePos();
+        var world = getWorldForAddon();
+        var pos = getPosForAddon();
         assert world != null;
         
         for (var addon : addons) {
@@ -253,7 +281,7 @@ public interface MachineAddonController {
     
     default AddonUiData getUiData() {
         var data = getBaseAddonData();
-        return new AddonUiData(getConnectedAddons(), getOpenSlots(), data.efficiency, data.speed, getMachinePos(), data.extraChambers);
+        return new AddonUiData(getConnectedAddons(), getOpenAddonSlots(), data.efficiency, data.speed, getPosForAddon(), data.extraChambers);
     }
     
     private static Set<BlockPos> getNeighbors(BlockPos pos) {

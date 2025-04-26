@@ -18,11 +18,12 @@ import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.math.Vec3i;
 import net.minecraft.world.World;
+import rearth.oritech.api.energy.EnergyApi;
+import rearth.oritech.api.item.ItemApi;
 import rearth.oritech.block.base.block.MultiblockMachine;
 import rearth.oritech.block.blocks.processing.MachineCoreBlock;
 import rearth.oritech.block.entity.MachineCoreEntity;
 import rearth.oritech.client.init.ParticleContent;
-import rearth.oritech.util.energy.EnergyApi;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -31,14 +32,22 @@ import java.util.Objects;
 public interface MultiblockMachineController {
     
     List<Vec3i> getCorePositions();
+    
     Direction getFacingForMultiblock();
-    BlockPos getMachinePos();
-    World getMachineWorld();
+    
+    BlockPos getPosForMultiblock();
+    
+    World getWorldForMultiblock();
+    
     ArrayList<BlockPos> getConnectedCores();
+    
     void setCoreQuality(float quality);
+    
     float getCoreQuality();
-    InventoryProvider getInventoryForLink();
-    EnergyApi.EnergyContainer getEnergyStorageForLink();
+    
+    ItemApi.InventoryStorage getInventoryForMultiblock();
+    
+    EnergyApi.EnergyStorage getEnergyStorageForMultiblock(Direction direction);
     
     default void addMultiblockToNbt(NbtCompound nbt) {
         
@@ -81,7 +90,7 @@ public interface MultiblockMachineController {
         if (blockItem.getBlock() instanceof MachineCoreBlock) {
             var nextPosition = this.getNextMissingCore();
             if (nextPosition != null) {
-                this.getMachineWorld().setBlockState(nextPosition, blockItem.getBlock().getDefaultState());
+                this.getWorldForMultiblock().setBlockState(nextPosition, blockItem.getBlock().getDefaultState());
                 if (!player.isCreative()) {
                     heldStack.decrement(1);
                     if (heldStack.getCount() == 0)
@@ -95,8 +104,8 @@ public interface MultiblockMachineController {
     
     default BlockPos getNextMissingCore() {
         
-        var world = getMachineWorld();
-        var pos = getMachinePos();
+        var world = getWorldForMultiblock();
+        var pos = getPosForMultiblock();
         
         var ownFacing = getFacingForMultiblock();
         var targetMachinePositions = getCorePositions();
@@ -125,8 +134,8 @@ public interface MultiblockMachineController {
         // update all multiblocks state to USED=true, write controller position to block state
         
         if (state.get(MultiblockMachine.ASSEMBLED)) return true;
-        var world = getMachineWorld();
-        var pos = getMachinePos();
+        var world = getWorldForMultiblock();
+        var pos = getPosForMultiblock();
         var coreBlocksConnected = getConnectedCores();
         
         var ownFacing = getFacingForMultiblock();
@@ -173,8 +182,8 @@ public interface MultiblockMachineController {
     
     default void onCoreBroken(BlockPos corePos) {
         
-        var world = getMachineWorld();
-        var pos = getMachinePos();
+        var world = getWorldForMultiblock();
+        var pos = getPosForMultiblock();
         var coreBlocksConnected = getConnectedCores();
         
         Objects.requireNonNull(world).setBlockState(pos, world.getBlockState(pos).with(MultiblockMachine.ASSEMBLED, false));
@@ -193,7 +202,7 @@ public interface MultiblockMachineController {
     
     default void onControllerBroken() {
         
-        var world = getMachineWorld();
+        var world = getWorldForMultiblock();
         var coreBlocksConnected = getConnectedCores();
         
         for (var core : coreBlocksConnected) {
@@ -212,6 +221,7 @@ public interface MultiblockMachineController {
     
     void playSetupAnimation();
     
-    record MultiBlockElement(BlockState state, MachineCoreBlock coreBlock, BlockPos pos) {}
+    record MultiBlockElement(BlockState state, MachineCoreBlock coreBlock, BlockPos pos) {
+    }
     
 }

@@ -1,9 +1,6 @@
 package rearth.oritech.block.base.entity;
 
-import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory;
-import net.fabricmc.fabric.api.transfer.v1.item.InventoryStorage;
-import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
-import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
+import dev.architectury.registry.menu.ExtendedMenuProvider;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.block.entity.BlockEntityTicker;
@@ -15,40 +12,39 @@ import net.minecraft.inventory.Inventory;
 import net.minecraft.inventory.SimpleInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtCompound;
-import net.minecraft.recipe.Ingredient;
+import net.minecraft.network.PacketByteBuf;
 import net.minecraft.recipe.RecipeEntry;
 import net.minecraft.recipe.input.RecipeInput;
 import net.minecraft.registry.RegistryWrapper;
 import net.minecraft.screen.ScreenHandler;
-import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.state.property.Properties;
 import net.minecraft.text.Text;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
 import net.minecraft.world.World;
 import org.jetbrains.annotations.Nullable;
+import rearth.oritech.api.energy.EnergyApi;
+import rearth.oritech.api.energy.containers.DynamicEnergyStorage;
+import rearth.oritech.api.item.ItemApi;
+import rearth.oritech.api.item.containers.InOutInventoryStorage;
 import rearth.oritech.block.entity.addons.RedstoneAddonBlockEntity;
-import rearth.oritech.client.init.ModScreens;
 import rearth.oritech.client.ui.BasicMachineScreenHandler;
 import rearth.oritech.init.recipes.OritechRecipe;
 import rearth.oritech.init.recipes.OritechRecipeType;
 import rearth.oritech.network.NetworkContent;
 import rearth.oritech.util.*;
-import rearth.oritech.util.energy.EnergyApi;
-import rearth.oritech.util.energy.containers.DynamicEnergyStorage;
 import software.bernie.geckolib.animatable.GeoBlockEntity;
 import software.bernie.geckolib.animatable.SingletonGeoAnimatable;
 import software.bernie.geckolib.animatable.instance.AnimatableInstanceCache;
 import software.bernie.geckolib.animation.*;
 import software.bernie.geckolib.util.GeckoLibUtil;
 
-import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
 public abstract class MachineBlockEntity extends BlockEntity
-  implements ExtendedScreenHandlerFactory, GeoBlockEntity, EnergyApi.BlockProvider, ScreenProvider, InventoryProvider, BlockEntityTicker<MachineBlockEntity>, RedstoneAddonBlockEntity.RedstoneControllable {
+  implements ExtendedMenuProvider, GeoBlockEntity, EnergyApi.BlockProvider, ScreenProvider, ItemApi.BlockProvider, BlockEntityTicker<MachineBlockEntity>, RedstoneAddonBlockEntity.RedstoneControllable {
     
     // animations
     public static final RawAnimation PACKAGED = RawAnimation.begin().thenPlayAndHold("packaged");
@@ -57,7 +53,7 @@ public abstract class MachineBlockEntity extends BlockEntity
     public static final RawAnimation WORKING = RawAnimation.begin().thenLoop("working");
     
     protected final AnimatableInstanceCache animatableInstanceCache = GeckoLibUtil.createInstanceCache(this);
-    public final SimpleInventory inventory = new SimpleMachineInventory(getInventorySize());
+    
     // crafting / processing
     public int progress;
     protected int energyPerTick;
@@ -65,9 +61,12 @@ public abstract class MachineBlockEntity extends BlockEntity
     protected InventoryInputMode inventoryInputMode = InventoryInputMode.FILL_LEFT_TO_RIGHT;
     protected boolean disabledViaRedstone = false;
     public long lastWorkedAt;
+    
     // network state
     protected boolean networkDirty = true;
+    
     //own storage
+    public final FilteringInventory inventory = new FilteringInventory(getInventorySize(), this::markDirty, getSlotAssignments());
     public final DynamicEnergyStorage energyStorage = new DynamicEnergyStorage(getDefaultCapacity(), getDefaultInsertRate(), getDefaultExtractionRate(), this::markDirty);
     
     public MachineBlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState state, int energyPerTick) {
@@ -84,12 +83,14 @@ public abstract class MachineBlockEntity extends BlockEntity
         
         if (world.isClient || !isActive(state) || disabledViaRedstone) return;
         
+        // if a recipe is found, this means the input items are all available
         var recipeCandidate = getRecipe();
         if (recipeCandidate.isEmpty())
             currentRecipe = OritechRecipe.DUMMY;     // reset recipe when invalid or no input is given
         
         if (recipeCandidate.isPresent() && canOutputRecipe(recipeCandidate.get().value()) && canProceed(recipeCandidate.get().value())) {
             
+            // reset when recipe was switched while running
             if (currentRecipe != recipeCandidate.get().value()) resetProgress();
             
             // this is separate so that progress is not reset when out of energy
@@ -98,7 +99,6 @@ public abstract class MachineBlockEntity extends BlockEntity
                 currentRecipe = activeRecipe;
                 lastWorkedAt = world.getTime();
                 
-                // check energy
                 useEnergy();
                 
                 // increase progress
@@ -123,15 +123,8 @@ public abstract class MachineBlockEntity extends BlockEntity
         }
     }
     
-    // returns true if input items match
+    // used to do additional checks, if the recipe match is not enough
     protected boolean canProceed(OritechRecipe value) {
-        
-        var inputInv = getInputInventory();
-        for (int i = 0; i < value.getInputs().size(); i++) {
-            var input = value.getInputs().get(i);
-            if (!input.test(inputInv.getStackInSlot(i))) return false;
-        }
-        
         return true;
     }
     
@@ -158,7 +151,7 @@ public abstract class MachineBlockEntity extends BlockEntity
         // a few ticks old (e.g. for rendering), as this does not matter as much.
         // Currently not perfect for multiplayer, as it doesn't track individual players. So all players that match the entity handle will receive the packets while
         // the screen is open
-        if (isActivelyViewed()) updateFrequency = 1;
+        if (isActivelyViewed()) updateFrequency = 2;
         
         if (Objects.requireNonNull(this.world).getTime() % updateFrequency != 0) return;
         
@@ -211,14 +204,25 @@ public abstract class MachineBlockEntity extends BlockEntity
             }
         }
         
-        // remove inputs
-        for (int i = 0; i < inputs.size(); i++) {
-            Inventories.splitStack(inputInventory, i, 1);
+        // remove inputs. Each input is 1 ingredient.
+        var startOffset = 0;    // used so when multiple matching stacks are available, they're drained somewhat evenly
+        for (var removedIng : inputs) {
+            // try to find current ingredient
+            for (int i = 0; i < inputInventory.size(); i++) {
+                var inputStack = inputInventory.get((i + startOffset) % inputInventory.size());
+                if (removedIng.test(inputStack)) {
+                    inputStack.decrement(1);
+                    startOffset++;
+                    break;
+                }
+            }
+            
+            
         }
         
     }
     
-    private boolean checkCraftingFinished(OritechRecipe activeRecipe) {
+    protected boolean checkCraftingFinished(OritechRecipe activeRecipe) {
         return progress >= activeRecipe.getTime() * getSpeedMultiplier();
     }
     
@@ -264,15 +268,15 @@ public abstract class MachineBlockEntity extends BlockEntity
     
     protected abstract OritechRecipeType getOwnRecipeType();
     
-    public abstract InventorySlotAssignment getSlots();
+    public abstract InventorySlotAssignment getSlotAssignments();
     
     protected List<ItemStack> getInputView() {
-        var slots = getSlots();
+        var slots = getSlotAssignments();
         return this.inventory.heldStacks.subList(slots.inputStart(), slots.inputStart() + slots.inputCount());
     }
     
     protected List<ItemStack> getOutputView() {
-        var slots = getSlots();
+        var slots = getSlotAssignments();
         return this.inventory.heldStacks.subList(slots.outputStart(), slots.outputStart() + slots.outputCount());
     }
     
@@ -301,87 +305,6 @@ public abstract class MachineBlockEntity extends BlockEntity
         energyStorage.amount = nbt.getLong("oritech.machine_energy");
         inventoryInputMode = InventoryInputMode.values()[nbt.getShort("oritech.machine_input_mode")];
         disabledViaRedstone = nbt.getBoolean("oritech.redstone");
-    }
-    
-    private int slotRecipeSearch(ItemStack stack, List<ItemStack> inv) {
-        
-        // find matching recipe
-        // check if currently already using a recipe, if so use this one. This means that all slots are used, and we can just top the slots up
-        if (currentRecipe.getTime() != -1) {
-            return findLowestMatchingSlot(stack, inv, false);
-        }
-        
-        // get all recipe types
-        // filter which ones are available based on stack
-        // filter remaining ones based on inventory
-        // select first (if any) remaining
-        // select lowest filled slot matching positions in recipe
-        
-        var availableRecipes = Objects.requireNonNull(world).getRecipeManager().listAllOfType(getOwnRecipeType());
-        var matchingStackRecipes = new HashSet<OritechRecipe>(availableRecipes.size() / 2);
-        
-        for (var recipe : availableRecipes) {
-            if (recipeUsesStack(recipe.value().getInputs(), stack))
-                matchingStackRecipes.add(recipe.value());
-        }
-        
-        OritechRecipe result = null;
-        for (var recipe : matchingStackRecipes) {
-            if (invCouldAllowRecipe(recipe, inv)) {
-                // found valid recipe, use this one
-                result = recipe;
-                break;
-            }
-        }
-        
-        if (result == null) return -1;
-        
-        // find indices of slots matching stack in recipe
-        // find lowest / first empty slot in those indices
-        var searchTargets = new HashSet<Integer>();
-        var inputs = result.getInputs();
-        
-        for (int i = 0; i < inputs.size(); i++) {
-            var ingredient = inputs.get(i);
-            if (ingredient.test(stack)) searchTargets.add(i);
-        }
-        
-        var lowestCount = 64;
-        var lowestIndex = -1;
-        for (var slot : searchTargets) {
-            var slotContent = inv.get(slot);
-            if (slotContent.isEmpty()) return slot;
-            
-            if (slotContent.getCount() < lowestCount) {
-                lowestIndex = slot;
-                lowestCount = slotContent.getCount();
-            }
-        }
-        
-        return lowestIndex;
-    }
-    
-    private boolean recipeUsesStack(List<Ingredient> inputs, ItemStack stack) {
-        for (var ingredient : inputs) {
-            if (ingredient.test(stack)) {
-                // found recipe containing item
-                return true;
-            }
-        }
-        
-        return false;
-    }
-    
-    private boolean invCouldAllowRecipe(OritechRecipe recipe, List<ItemStack> inv) {
-        
-        List<Ingredient> inputs = recipe.getInputs();
-        for (int i = 0; i < inputs.size(); i++) {
-            var ingredient = inputs.get(i);
-            var slot = inv.get(i);
-            if (!slot.isEmpty() && !ingredient.test(slot)) return false;
-        }
-        
-        return true;
     }
     
     private int findLowestMatchingSlot(ItemStack stack, List<ItemStack> inv, boolean allowEmpty) {
@@ -455,9 +378,10 @@ public abstract class MachineBlockEntity extends BlockEntity
     }
     
     @Override
-    public Object getScreenOpeningData(ServerPlayerEntity player) {
+    public void saveExtraData(PacketByteBuf buf) {
         sendNetworkEntry();
-        return new ModScreens.BasicData(pos);
+        buf.writeBlockPos(pos);
+        
     }
     
     protected Direction getFacing() {
@@ -476,7 +400,7 @@ public abstract class MachineBlockEntity extends BlockEntity
     }
     
     @Override
-    public EnergyApi.EnergyContainer getStorage(Direction direction) {
+    public EnergyApi.EnergyStorage getEnergyStorage(Direction direction) {
         return energyStorage;
     }
     
@@ -519,9 +443,6 @@ public abstract class MachineBlockEntity extends BlockEntity
                 inventoryInputMode = InventoryInputMode.FILL_EVENLY;
                 break;
             case FILL_EVENLY:
-                inventoryInputMode = InventoryInputMode.FILL_MATCHING_RECIPE;
-                break;
-            case FILL_MATCHING_RECIPE:
                 inventoryInputMode = InventoryInputMode.FILL_LEFT_TO_RIGHT;
                 break;
         }
@@ -539,11 +460,6 @@ public abstract class MachineBlockEntity extends BlockEntity
     }
     
     public abstract int getInventorySize();
-    
-    @Override
-    public Storage<ItemVariant> getInventory(Direction direction) {
-        return InventoryStorage.of(inventory, direction);
-    }
     
     public boolean isActive(BlockState state) {
         return true;
@@ -581,6 +497,11 @@ public abstract class MachineBlockEntity extends BlockEntity
     
     @Override
     public Inventory getDisplayedInventory() {
+        return inventory;
+    }
+    
+    @Override
+    public ItemApi.InventoryStorage getInventoryStorage(Direction direction) {
         return inventory;
     }
     
@@ -624,42 +545,56 @@ public abstract class MachineBlockEntity extends BlockEntity
         this.disabledViaRedstone = isPowered;
     }
     
-    private class SimpleMachineInventory extends SimpleSidedInventory {
+    public class FilteringInventory extends InOutInventoryStorage {
         
-        public SimpleMachineInventory(int size) {
-            super(size, getSlots());
+        public FilteringInventory(int size, Runnable onUpdate, InventorySlotAssignment slotAssignment) {
+            super(size, onUpdate, slotAssignment);
         }
         
         @Override
-        public void markDirty() {
-            MachineBlockEntity.this.markDirty();
+        public int insert(ItemStack toInsert, boolean simulate) {
+            
+            if (inventoryInputMode.equals(InventoryInputMode.FILL_EVENLY)) {
+                var remaining = toInsert.getCount();
+                var slotCountTarget = toInsert.getCount() / getSlotAssignments().inputCount();
+                slotCountTarget = Math.clamp(slotCountTarget, 1, remaining);
+                
+                // start at slot with fewest items
+                var lowestSlot = 0;
+                var lowestSlotCount = Integer.MAX_VALUE;
+                for (int i = getSlotAssignments().inputStart(); i < getSlotAssignments().inputStart() + getSlotAssignments().inputCount(); i++) {
+                    var content = this.getStack(i);
+                    if (!content.isEmpty() && !content.getItem().equals(toInsert.getItem())) continue;    // skip slots containing other items
+                    if (content.getCount() < lowestSlotCount) {
+                        lowestSlotCount = content.getCount();
+                        lowestSlot = i;
+                    }
+                }
+                
+                for (var slot = 0; slot < size() && remaining > 0; slot++) {
+                    remaining -= customSlotInsert(toInsert.copyWithCount(slotCountTarget), (slot + lowestSlot) % size(), simulate);
+                }
+                
+                return toInsert.getCount() - remaining;
+            }
+            
+            
+            return super.insert(toInsert, simulate);
         }
         
         @Override
-        public boolean canInsert(int slot, ItemStack stack, @Nullable Direction side) {
-            // Check that this is an insert slot, and is being inserted on an accepted side.
-            if (!super.canInsert(slot, stack, side))
-                return false;
+        public int insertToSlot(ItemStack addedStack, int slot, boolean simulate) {
             
-            var mode = inventoryInputMode;
-            var config = getSlots();
+            if (inventoryInputMode.equals(InventoryInputMode.FILL_EVENLY)) {
+                return insert(addedStack, simulate);
+            }
             
-            var inv = getInputView();
-            
-            // fill equally
-            // check all slots, find the one with the lowest (or empty) type
-            return switch (mode) {
-                case FILL_EVENLY -> {
-                    var target = findLowestMatchingSlot(stack, inv, true);
-                    yield target >= 0 && config.inputToRealSlot(target) == slot;
-                }
-                case FILL_LEFT_TO_RIGHT -> // fill left to right
-                  true;
-                case FILL_MATCHING_RECIPE -> {
-                    var recipeTargetSlot = slotRecipeSearch(stack, inv);
-                    yield recipeTargetSlot >= 0 && config.inputToRealSlot(recipeTargetSlot) == slot;
-                }
-            };
+            return customSlotInsert(addedStack, slot, simulate);
+        }
+        
+        private int customSlotInsert(ItemStack toInsert, int slot, boolean simulate) {
+            return super.insertToSlot(toInsert, slot, simulate);
         }
     }
+    
 }

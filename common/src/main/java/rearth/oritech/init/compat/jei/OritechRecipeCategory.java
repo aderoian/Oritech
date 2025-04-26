@@ -1,6 +1,5 @@
 package rearth.oritech.init.compat.jei;
 
-import dev.architectury.platform.Platform;
 import mezz.jei.api.gui.builder.IRecipeLayoutBuilder;
 import mezz.jei.api.gui.drawable.IDrawable;
 import mezz.jei.api.gui.drawable.IDrawableAnimated;
@@ -51,7 +50,7 @@ public class OritechRecipeCategory implements IRecipeCategory<OritechRecipe> {
             var screenProvider = screenProviderSource.getDeclaredConstructor(BlockPos.class, BlockState.class).newInstance(new BlockPos(0, 0, 0), machine.getDefaultState());
             this.isGenerator = screenProvider instanceof UpgradableGeneratorBlockEntity;
             this.slots = screenProvider.getGuiSlots();
-            this.slotOffsets = screenProvider.getSlots();
+            this.slotOffsets = screenProvider.getSlotAssignments();
         } catch (InstantiationException | IllegalAccessException | InvocationTargetException |
                  NoSuchMethodException e) {
             throw new RuntimeException(e);
@@ -114,12 +113,10 @@ public class OritechRecipeCategory implements IRecipeCategory<OritechRecipe> {
     }
     
     @Override
-    public void setRecipe(IRecipeLayoutBuilder builder, OritechRecipe recipe, IFocusGroup focuses) {
+    public void setRecipe(@NotNull IRecipeLayoutBuilder builder, OritechRecipe recipe, @NotNull IFocusGroup focuses) {
         
         var offsetX = 23;
         var offsetY = 17;
-        
-        var fluidDivider = Platform.isNeoForge() ? 81 : 1;  // no idea why this is needed
         
         // inputs
         var inputs = recipe.getInputs();
@@ -134,7 +131,8 @@ public class OritechRecipeCategory implements IRecipeCategory<OritechRecipe> {
         // fluid inputs
         if (!(recipe.getFluidInput() != null && recipe.getFluidInput().isEmpty())) {
             var stack = recipe.getFluidInput();
-            builder.addInputSlot(10, 6).addFluidStack(stack.getFluid(), stack.getAmount() / fluidDivider).setBackground(fluidBackground, -2, -2).setFluidRenderer(stack.getAmount() / 81, false, 10, 46);
+            var shownAmount = Math.max(1, stack.getAmount());
+            builder.addInputSlot(10, 6).addFluidStack(stack.getFluid(), shownAmount).setBackground(fluidBackground, -2, -2).setFluidRenderer(shownAmount, false, 10, 46);
         }
         
         // results
@@ -150,7 +148,7 @@ public class OritechRecipeCategory implements IRecipeCategory<OritechRecipe> {
         // fluid outputs
         if (!(recipe.getFluidOutput() != null && recipe.getFluidOutput().isEmpty())) {
             var stack = recipe.getFluidOutput();
-            builder.addInputSlot(120, 6).addFluidStack(stack.getFluid(), stack.getAmount() / fluidDivider).setBackground(fluidBackground, -2, -2).setFluidRenderer(stack.getAmount() / 81, false, 10, 46);
+            builder.addOutputSlot(120, 6).addFluidStack(stack.getFluid(), stack.getAmount()).setBackground(fluidBackground, -2, -2).setFluidRenderer(stack.getAmount(), false, 10, 46);
         }
     }
 }

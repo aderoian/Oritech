@@ -1,20 +1,25 @@
 ---
 title: Cybernetic Augmentations
-icon: oritech:cybernetics
+icon: oritech:augment_application_block
+related_items: [oritech:augment_application_block, oritech:simple_augment_station, oritech:advanced_augment_station, oritech:arcane_augment_station]
 ---
 
 The Cybernetic Augmentation Center is a facility that allows you to install cybernetic augmentations into your body.
 These augmentations can provide you with a variety of benefits, such as increased strength, speed, and protection.
 They can also grant you new abilities, such as the ability to see in the dark or to automatically keep you fed.
 
+<Callout variant="info">
+    Augmentations are permanent upgrades to the player that don't require any energy or resources to maintain.
+</Callout>
+
 <center>
-<ModAsset location="oritech:cybernetics" width={400} />
+<ModAsset location="oritech:augment_application_block" width={400} />
 </center>
 
 ### Research Requirements
 All augmentations must first be researched in the Cybernetic Augmentation Center:
 1. Walk into the assembled machine to open the Research & Application GUI
-2. Each augmentation has unique energy and resource costs (stored in the center's inventory)
+2. Each augmentation has unique energy and resource costs (stored in the center's or player inventory)
 3. Access the machine inventory via right-clicking the machine or using the GUI's bottom-left button
 4. Many researches require prerequisite augmentations (as shown in the tech tree)
 
@@ -36,7 +41,8 @@ All augmentations must first be researched in the Cybernetic Augmentation Center
 4. Existing player augmentations can be scanned via UI import button (bottom-left)
 
 <Callout variant="info">
-    All research/applications costs and durations are configurable via datapacks
+    Most augmentation data, such as research/apply cost, UI positioning, research stations, and dependencies can be configured via datapacks.
+    Adding / changing the augmentations themselves is not possible (yet).
 </Callout>
 
 ### Augmentation Management

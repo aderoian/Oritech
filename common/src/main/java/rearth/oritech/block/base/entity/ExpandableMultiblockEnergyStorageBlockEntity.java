@@ -6,8 +6,9 @@ import net.minecraft.nbt.NbtCompound;
 import net.minecraft.registry.RegistryWrapper;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
-import rearth.oritech.util.energy.EnergyApi;
-import rearth.oritech.util.InventoryProvider;
+import net.minecraft.world.World;
+import rearth.oritech.api.energy.EnergyApi;
+import rearth.oritech.api.item.ItemApi;
 import rearth.oritech.util.MultiblockMachineController;
 
 import java.util.ArrayList;
@@ -55,13 +56,23 @@ public abstract class ExpandableMultiblockEnergyStorageBlockEntity extends Expan
     }
     
     @Override
-    public InventoryProvider getInventoryForLink() {
-        return this;
+    public ItemApi.InventoryStorage getInventoryForMultiblock() {
+        return inventory;
     }
     
     @Override
-    public EnergyApi.EnergyContainer getEnergyStorageForLink() {
+    public EnergyApi.EnergyStorage getEnergyStorageForMultiblock(Direction direction) {
         return energyStorage;
+    }
+    
+    @Override
+    public BlockPos getPosForMultiblock() {
+        return pos;
+    }
+    
+    @Override
+    public World getWorldForMultiblock() {
+        return world;
     }
     
     @Override

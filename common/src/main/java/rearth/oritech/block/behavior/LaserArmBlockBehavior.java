@@ -1,20 +1,22 @@
 package rearth.oritech.block.behavior;
 
-import net.fabricmc.fabric.api.tag.convention.v1.ConventionalBlockTags;
-import net.minecraft.block.*;
+import net.minecraft.block.Block;
+import net.minecraft.block.BlockState;
+import net.minecraft.block.Blocks;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
+import rearth.oritech.api.energy.EnergyApi;
+import rearth.oritech.api.energy.containers.DynamicEnergyStorage;
 import rearth.oritech.block.blocks.interaction.LaserArmBlock;
+import rearth.oritech.block.entity.interaction.DestroyerBlockEntity;
 import rearth.oritech.block.entity.interaction.LaserArmBlockEntity;
+import rearth.oritech.block.entity.storage.UnstableContainerBlockEntity;
 import rearth.oritech.client.init.ParticleContent;
 import rearth.oritech.init.BlockContent;
 import rearth.oritech.init.TagContent;
-import rearth.oritech.util.energy.EnergyApi;
-import rearth.oritech.util.energy.containers.DynamicEnergyStorage;
 
 public class LaserArmBlockBehavior {
     static private LaserArmBlockBehavior noop;
@@ -25,19 +27,19 @@ public class LaserArmBlockBehavior {
      * Perform laser behavior on block
      */
     public boolean fireAtBlock(World world, LaserArmBlockEntity laserEntity, Block block, BlockPos blockPos, BlockState blockState, BlockEntity blockEntity) {
-        if (laserEntity.hasCropFilterAddon && block instanceof CropBlock crop && !crop.isMature(blockState))
+        if (laserEntity.hasCropFilterAddon && DestroyerBlockEntity.isImmatureCrop(blockState))
             return false;
         
         // has an energy storage, try to transfer power to it
         var storageCandidate = EnergyApi.BLOCK.find(world, blockPos, blockState, blockEntity, null);
         // if the storage is not exposed (e.g. catalyst / deep drill / atomic forge), get it directly
         if (storageCandidate == null && blockEntity instanceof EnergyApi.BlockProvider provider)
-            storageCandidate = provider.getStorage(null);
+            storageCandidate = provider.getEnergyStorage(null);
         if (storageCandidate != null)
             return transferPowerBehavior.fireAtBlock(world, laserEntity, block, blockPos, blockState, blockEntity);
         
         // an unregistered budding block, attempt to energize it
-        if (blockState.isIn(ConventionalBlockTags.BUDDING_BLOCKS))
+        if (blockState.isIn(TagContent.LASER_ACCELERATED))
             return energizeBuddingBehavior.fireAtBlock(world, laserEntity, block, blockPos, blockState, blockEntity);
         
         // passes through, stop targetting this block
@@ -67,17 +69,20 @@ public class LaserArmBlockBehavior {
                 var storageCandidate = EnergyApi.BLOCK.find(world, blockPos, blockState, blockEntity, null);
                 
                 if (storageCandidate == null && blockEntity instanceof EnergyApi.BlockProvider energyProvider)
-                    storageCandidate = energyProvider.getStorage(null);
+                    storageCandidate = energyProvider.getEnergyStorage(null);
+                
+                if (blockEntity instanceof UnstableContainerBlockEntity unstableContainerBlockEntity)
+                    storageCandidate = unstableContainerBlockEntity.laserInputStorage;
                 
                 var insertAmount = storageCandidate.getCapacity() - storageCandidate.getAmount();
-                if (insertAmount < 10)
+                if (insertAmount <= 0)
                     return false;
                 
                 var transferCapacity = Math.min(insertAmount, laserEntity.energyRequiredToFire());
                 
                 if (storageCandidate instanceof DynamicEnergyStorage dynamicStorage) {
                     var inserted = dynamicStorage.insertIgnoringLimit(transferCapacity, true);
-                    if (inserted == transferCapacity) {
+                    if (inserted > 0 && inserted <= transferCapacity) {
                         dynamicStorage.insertIgnoringLimit(transferCapacity, false);
                         dynamicStorage.update();
                         return true;
@@ -85,7 +90,7 @@ public class LaserArmBlockBehavior {
                     return false;
                 } else {
                     var inserted = storageCandidate.insert(transferCapacity, true);
-                    if (inserted == transferCapacity) {
+                    if (inserted > 0 && inserted <= transferCapacity) {
                         storageCandidate.insert(transferCapacity, false);
                         storageCandidate.update();
                         return true;
@@ -101,35 +106,19 @@ public class LaserArmBlockBehavior {
         energizeBuddingBehavior = new LaserArmBlockBehavior() {
             @Override
             public boolean fireAtBlock(World world, LaserArmBlockEntity laserEntity, Block block, BlockPos blockPos, BlockState blockState, BlockEntity blockEntity) {
-                if (buddingAmethystCanGrow(world, blockState, blockPos)) {
-                    blockState.randomTick((ServerWorld) world, blockPos, world.random);
-                    ParticleContent.ACCELERATING.spawn(world, Vec3d.of(blockPos));
-                    return true;
+                
+                if (world.getTime() % 40 == 0) {    // periodically reset target
+                    return false;
                 }
-                return false;
+                if (blockState.isAir() || blockState.getFluidState().isStill()) return false;
+                
+                blockState.randomTick((ServerWorld) world, blockPos, world.random);
+                ParticleContent.ACCELERATING.spawn(world, Vec3d.of(blockPos));
+                
+                return true;
             }
         };
+        
         LaserArmBlock.registerBlockBehavior(Blocks.BUDDING_AMETHYST, energizeBuddingBehavior);
-    }
-    
-    private static boolean buddingAmethystCanGrow(World world, BlockState blockState, BlockPos pos) {
-        if (!blockState.isIn(ConventionalBlockTags.BUDDING_BLOCKS))
-            return true;
-        
-        // returning true means the laser will keep firing at the budding amethyst block
-        // this means that a laser arm will fire at a budding amethyst block for up to 20 ticks even if the clusters are already fully grown
-        // it also means that it will only check the blockstates of the surrounding 6 blocks every 20 ticks instead of every tick
-        if (world.getTime() % 20 != 0) {
-            return true;
-        }
-        
-        for (var direction : Direction.values()) {
-            var growingPos = pos.offset(direction);
-            var growingState = world.getBlockState(growingPos);
-            if (BuddingAmethystBlock.canGrowIn(growingState) || blockState.isIn(ConventionalBlockTags.BUDS))
-                return true;
-        }
-        
-        return false;
     }
 }

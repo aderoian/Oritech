@@ -1,10 +1,7 @@
 package rearth.oritech.block.entity.interaction;
 
 import com.mojang.authlib.GameProfile;
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
-import net.minecraft.block.CropBlock;
+import net.minecraft.block.*;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.component.DataComponentTypes;
 import net.minecraft.component.type.UnbreakableComponent;
@@ -18,6 +15,7 @@ import net.minecraft.nbt.NbtCompound;
 import net.minecraft.registry.RegistryKeys;
 import net.minecraft.registry.RegistryWrapper;
 import net.minecraft.screen.ScreenHandlerType;
+import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.text.Text;
@@ -33,6 +31,7 @@ import rearth.oritech.client.init.ParticleContent;
 import rearth.oritech.init.BlockContent;
 import rearth.oritech.init.BlockEntitiesContent;
 import rearth.oritech.network.NetworkContent;
+import rearth.oritech.util.FakeMachinePlayer;
 
 import java.util.List;
 import java.util.Objects;
@@ -47,7 +46,7 @@ public class DestroyerBlockEntity extends MultiblockFrameInteractionEntity {
     // non-persistent
     public BlockPos quarryTarget = BlockPos.ORIGIN;
     public float targetHardness = 1f;
-    private PlayerEntity destroyerPlayerEntity = null;
+    private ServerPlayerEntity destroyerPlayerEntity = null;
     
     public DestroyerBlockEntity(BlockPos pos, BlockState state) {
         super(BlockEntitiesContent.DESTROYER_BLOCK_ENTITY, pos, state);
@@ -110,7 +109,7 @@ public class DestroyerBlockEntity extends MultiblockFrameInteractionEntity {
         var targetState = Objects.requireNonNull(world).getBlockState(targetPosition);
         
         // skip not grown crops
-        if (hasCropFilterAddon && targetState.getBlock() instanceof CropBlock cropBlock && !cropBlock.isMature(targetState)) {
+        if (hasCropFilterAddon && isImmatureCrop(targetState)) {
             return false;
         }
         
@@ -118,18 +117,8 @@ public class DestroyerBlockEntity extends MultiblockFrameInteractionEntity {
     }
     
     private PlayerEntity getDestroyerPlayerEntity() {
-        if (destroyerPlayerEntity == null) {
-            destroyerPlayerEntity = new PlayerEntity(world, pos, 0, new GameProfile(UUID.randomUUID(), "laser")) {
-                @Override
-                public boolean isSpectator() {
-                    return false;
-                }
-                
-                @Override
-                public boolean isCreative() {
-                    return false;
-                }
-            };
+        if (destroyerPlayerEntity == null && world instanceof ServerWorld serverWorld) {
+            destroyerPlayerEntity = FakeMachinePlayer.create(serverWorld, new GameProfile(UUID.randomUUID(), "oritech_destroyer"), inventory);
         }
         
         return destroyerPlayerEntity;
@@ -138,14 +127,21 @@ public class DestroyerBlockEntity extends MultiblockFrameInteractionEntity {
     private boolean hasQuarryTarget(BlockPos toolPosition) {
         return getQuarryDownwardState(toolPosition) != null;
     }
+
+    public static boolean isImmatureCrop(BlockState targetState) {
+        Block targetBlock = targetState.getBlock();
+        return (targetBlock instanceof CropBlock cropBlock && !cropBlock.isMature(targetState))
+            || (targetBlock instanceof NetherWartBlock && targetState.get(NetherWartBlock.AGE) < NetherWartBlock.MAX_AGE)
+            || (targetBlock instanceof CocoaBlock && targetState.get(CocoaBlock.AGE) < CocoaBlock.MAX_AGE);
+    }
     
     private Pair<BlockPos, BlockState> getQuarryDownwardState(BlockPos toolPosition) {
         for (int i = 1; i <= range; i++) {
             var checkPos = toolPosition.down(i);
             var targetState = world.getBlockState(checkPos);
-            if (!targetState.isAir() && !targetState.isLiquid()) {  // pass through both air and liquid
+            if (!targetState.isAir() && !targetState.getFluidState().isStill()) {  // pass through both air and liquid
                 quarryTarget = checkPos;
-                targetHardness = targetState.getHardness(world, checkPos);
+                targetHardness = Math.clamp(targetState.getHardness(world, checkPos), 0, 100);
                 syncQuarryNetworkData();
                 return new Pair<>(checkPos, targetState);
             }
@@ -162,14 +158,19 @@ public class DestroyerBlockEntity extends MultiblockFrameInteractionEntity {
         var targetState = Objects.requireNonNull(world).getBlockState(targetPosition);
         
         if (range > 1) {
-            var data = getQuarryDownwardState(processed);
-            if (data == null) return;
-            targetPosition = data.getLeft();
-            targetState = data.getRight();
+            if (quarryTarget != BlockPos.ORIGIN) {
+                targetPosition = quarryTarget;
+                targetState = world.getBlockState(targetPosition);
+            } else {
+                var data = getQuarryDownwardState(processed);
+                if (data == null) return;
+                targetPosition = data.getLeft();
+                targetState = data.getRight();
+            }
         }
         
         // remove fluids
-        if (targetState.isLiquid()) {
+        if (targetState.getFluidState().isStill()) {
             world.setBlockState(targetPosition, Blocks.AIR.getDefaultState());
         }
         
@@ -177,7 +178,7 @@ public class DestroyerBlockEntity extends MultiblockFrameInteractionEntity {
         if (targetHardness < 0) return;    // skip undestroyable blocks, such as bedrock
         
         // skip not grown crops
-        if (range == 1 && hasCropFilterAddon && targetState.getBlock() instanceof CropBlock cropBlock && !cropBlock.isMature(targetState)) {
+        if (range == 1 && hasCropFilterAddon && isImmatureCrop(targetState)) {
             return;
         }
         
@@ -198,14 +199,13 @@ public class DestroyerBlockEntity extends MultiblockFrameInteractionEntity {
             
             // only proceed if all stacks fit
             for (var stack : dropped) {
-                if (!this.inventory.canInsert(stack)) return;
+                if (this.inventory.insert(stack, true) != stack.getCount()) return;
             }
             
             for (var stack : dropped) {
-                this.inventory.addStack(stack);
+                this.inventory.insert(stack, false);
             }
             
-            // world.addBlockBreakParticles(targetPosition, world.getBlockState(targetPosition));
             targetState.getBlock().onBreak(world, targetPosition, targetState, getDestroyerPlayerEntity());
             world.playSound(null, targetPosition, targetState.getSoundGroup().getBreakSound(), SoundCategory.BLOCKS, 1f, 1f);
             world.breakBlock(targetPosition, false);
@@ -262,12 +262,13 @@ public class DestroyerBlockEntity extends MultiblockFrameInteractionEntity {
         return List.of(
           new GuiSlot(0, 117, 20, true),
           new GuiSlot(1, 117, 38, true),
-          new GuiSlot(2, 117, 56, true));
+          new GuiSlot(2, 135, 20, true),
+          new GuiSlot(3, 135, 38, true));
     }
     
     @Override
     public int getInventorySize() {
-        return 3;
+        return 4;
     }
     
     @Override
@@ -281,13 +282,13 @@ public class DestroyerBlockEntity extends MultiblockFrameInteractionEntity {
     }
     
     @Override
-    public int getMoveTime() {
-        return Math.max((int) (Oritech.CONFIG.destroyerConfig.moveDuration() * this.getSpeedMultiplier()), 1);
+    public float getMoveTime() {
+        return Oritech.CONFIG.destroyerConfig.moveDuration() * this.getSpeedMultiplier();
     }
     
     @Override
-    public int getWorkTime() {
-        return (int) (Oritech.CONFIG.destroyerConfig.workDuration() * this.getSpeedMultiplier() * Math.pow(targetHardness,  0.3f));
+    public float getWorkTime() {
+        return (float) (Oritech.CONFIG.destroyerConfig.workDuration() * this.getSpeedMultiplier() * Math.pow(targetHardness,  0.5f));
     }
     
     @Override
@@ -314,8 +315,8 @@ public class DestroyerBlockEntity extends MultiblockFrameInteractionEntity {
     }
     
     @Override
-    public void updateNetwork() {
-        super.updateNetwork();
+    public void sendMovementNetworkPacket(BlockPos from) {
+        super.sendMovementNetworkPacket(from);
         syncQuarryNetworkData();
     }
     

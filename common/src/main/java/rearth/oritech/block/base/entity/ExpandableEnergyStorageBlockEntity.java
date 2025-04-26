@@ -1,10 +1,6 @@
 package rearth.oritech.block.base.entity;
 
-import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory;
-import net.fabricmc.fabric.api.transfer.v1.context.ContainerItemContext;
-import net.fabricmc.fabric.api.transfer.v1.item.InventoryStorage;
-import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
-import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
+import dev.architectury.registry.menu.ExtendedMenuProvider;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.block.entity.BlockEntityTicker;
@@ -13,12 +9,11 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.inventory.Inventories;
 import net.minecraft.inventory.Inventory;
-import net.minecraft.inventory.SimpleInventory;
 import net.minecraft.nbt.NbtCompound;
+import net.minecraft.network.PacketByteBuf;
 import net.minecraft.registry.RegistryWrapper;
 import net.minecraft.screen.ScreenHandler;
 import net.minecraft.screen.ScreenHandlerType;
-import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.state.property.Property;
 import net.minecraft.text.Text;
 import net.minecraft.util.Pair;
@@ -28,6 +23,12 @@ import net.minecraft.util.math.Vec3i;
 import net.minecraft.world.World;
 import org.jetbrains.annotations.Nullable;
 import rearth.oritech.Oritech;
+import rearth.oritech.api.energy.EnergyApi;
+import rearth.oritech.api.energy.containers.DelegatingEnergyStorage;
+import rearth.oritech.api.energy.containers.DynamicEnergyStorage;
+import rearth.oritech.api.energy.containers.DynamicStatisticEnergyStorage;
+import rearth.oritech.api.item.ItemApi;
+import rearth.oritech.api.item.containers.SimpleInventoryStorage;
 import rearth.oritech.block.blocks.storage.SmallStorageBlock;
 import rearth.oritech.client.init.ModScreens;
 import rearth.oritech.client.ui.BasicMachineScreenHandler;
@@ -35,15 +36,13 @@ import rearth.oritech.client.ui.UpgradableMachineScreenHandler;
 import rearth.oritech.init.ItemContent;
 import rearth.oritech.network.NetworkContent;
 import rearth.oritech.util.*;
-import rearth.oritech.util.energy.EnergyApi;
-import rearth.oritech.util.energy.containers.DelegatingEnergyStorage;
-import rearth.oritech.util.energy.containers.DynamicEnergyStorage;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-public abstract class ExpandableEnergyStorageBlockEntity extends BlockEntity implements EnergyApi.BlockProvider, InventoryProvider, MachineAddonController, ScreenProvider, ExtendedScreenHandlerFactory, BlockEntityTicker<ExpandableEnergyStorageBlockEntity> {
+public abstract class ExpandableEnergyStorageBlockEntity extends BlockEntity implements EnergyApi.BlockProvider, ItemApi.BlockProvider, MachineAddonController,
+                                                                                          ScreenProvider, ExtendedMenuProvider, BlockEntityTicker<ExpandableEnergyStorageBlockEntity> {
     
     private final List<BlockPos> connectedAddons = new ArrayList<>();
     private final List<BlockPos> openSlots = new ArrayList<>();
@@ -52,26 +51,22 @@ public abstract class ExpandableEnergyStorageBlockEntity extends BlockEntity imp
     private boolean networkDirty = false;
     private boolean redstonePowered;
     
-    public final SimpleInventory inventory = new SimpleInventory(1) {
-        @Override
-        public void markDirty() {
-            ExpandableEnergyStorageBlockEntity.this.markDirty();
-        }
-    };
+    // client only
+    public DynamicStatisticEnergyStorage.EnergyStatistics currentStats;
     
-    protected final InventoryStorage inventoryStorage = InventoryStorage.of(inventory, null);
+    public final SimpleInventoryStorage inventory = new SimpleInventoryStorage(1, this::markDirty);
     
     //own storage
-    protected final DynamicEnergyStorage energyStorage = new DynamicEnergyStorage(getDefaultCapacity(), getDefaultInsertRate(), getDefaultExtractionRate(), this::markDirty);
+    public final DynamicStatisticEnergyStorage energyStorage = new DynamicStatisticEnergyStorage(getDefaultCapacity(), getDefaultInsertRate(), getDefaultExtractionRate(), this::markDirty);
     
-    private final EnergyApi.EnergyContainer outputStorage = new DelegatingEnergyStorage(energyStorage, null) {
+    private final EnergyApi.EnergyStorage outputStorage = new DelegatingEnergyStorage(energyStorage, null) {
         @Override
         public boolean supportsInsertion() {
             return false;
         }
     };
     
-    private final EnergyApi.EnergyContainer inputStorage = new DelegatingEnergyStorage(energyStorage, null) {
+    private final EnergyApi.EnergyStorage inputStorage = new DelegatingEnergyStorage(energyStorage, null) {
         @Override
         public boolean supportsExtraction() {
             return false;
@@ -85,6 +80,8 @@ public abstract class ExpandableEnergyStorageBlockEntity extends BlockEntity imp
     @Override
     public void tick(World world, BlockPos pos, BlockState state, ExpandableEnergyStorageBlockEntity blockEntity) {
         if (world.isClient) return;
+        
+        energyStorage.tick((int) world.getTime());
         
         if (!redstonePowered)
             outputEnergy();
@@ -118,10 +115,10 @@ public abstract class ExpandableEnergyStorageBlockEntity extends BlockEntity imp
     private void chargeItems() {
         
         var heldStack = inventory.heldStacks.get(0);
-        if (heldStack.isEmpty()) return;
+        if (heldStack.isEmpty() || heldStack.getCount() > 1) return;
         
-        var slot = ContainerItemContext.ofSingleSlot(inventoryStorage.getSlot(0));
-        var slotEnergyContainer = EnergyApi.ITEM.find(heldStack, slot);
+        var stackRef = new StackContext(heldStack, updated -> inventory.heldStacks.set(0, updated));
+        var slotEnergyContainer = EnergyApi.ITEM.find(stackRef);
         if (slotEnergyContainer != null) {
             EnergyApi.transfer(energyStorage, slotEnergyContainer, Long.MAX_VALUE, false);
         }
@@ -155,8 +152,8 @@ public abstract class ExpandableEnergyStorageBlockEntity extends BlockEntity imp
     }
     
     @Override
-    public Storage<ItemVariant> getInventory(Direction direction) {
-        return inventoryStorage;
+    public ItemApi.InventoryStorage getInventoryStorage(Direction direction) {
+        return inventory;
     }
     
     public Direction getFacing() {
@@ -165,7 +162,7 @@ public abstract class ExpandableEnergyStorageBlockEntity extends BlockEntity imp
     
     
     @Override
-    public EnergyApi.EnergyContainer getStorage(Direction direction) {
+    public EnergyApi.EnergyStorage getEnergyStorage(Direction direction) {
         
         if (direction == null)
             return energyStorage;
@@ -183,7 +180,7 @@ public abstract class ExpandableEnergyStorageBlockEntity extends BlockEntity imp
     }
     
     @Override
-    public List<BlockPos> getOpenSlots() {
+    public List<BlockPos> getOpenAddonSlots() {
         return openSlots;
     }
     
@@ -203,7 +200,7 @@ public abstract class ExpandableEnergyStorageBlockEntity extends BlockEntity imp
     }
     
     @Override
-    public SimpleInventory getInventoryForAddon() {
+    public ItemApi.InventoryStorage getInventoryForAddon() {
         return inventory;
     }
     
@@ -239,9 +236,10 @@ public abstract class ExpandableEnergyStorageBlockEntity extends BlockEntity imp
     public abstract long getDefaultExtractionRate();
     
     @Override
-    public Object getScreenOpeningData(ServerPlayerEntity player) {
+    public void saveExtraData(PacketByteBuf buf) {
         sendNetworkEntry();
-        return new ModScreens.UpgradableData(pos, getUiData(), getCoreQuality());
+        var data = new ModScreens.UpgradableData(pos, getUiData(), getCoreQuality());
+        ModScreens.UpgradableData.PACKET_CODEC.encode(buf, data);
     }
     
     @Override
@@ -259,7 +257,10 @@ public abstract class ExpandableEnergyStorageBlockEntity extends BlockEntity imp
         
         if (world.getTime() % 15 != 0 && !isActivelyViewed()) return;
         
+        var statistics = energyStorage.getCurrentStatistics(world.getTime());
+        
         NetworkContent.MACHINE_CHANNEL.serverHandle(this).send(new NetworkContent.GenericEnergySyncPacket(pos, energyStorage.amount, energyStorage.capacity));
+        NetworkContent.MACHINE_CHANNEL.serverHandle(this).send(new NetworkContent.EnergyStatisticsPacket(pos, statistics));
         networkDirty = false;
     }
     
@@ -278,7 +279,7 @@ public abstract class ExpandableEnergyStorageBlockEntity extends BlockEntity imp
     
     @Override
     public List<GuiSlot> getGuiSlots() {
-        return List.of(new GuiSlot(0, 80, 35));
+        return List.of(new GuiSlot(0, 30, 42));
     }
     
     @Override
@@ -293,12 +294,12 @@ public abstract class ExpandableEnergyStorageBlockEntity extends BlockEntity imp
     
     
     @Override
-    public BlockPos getMachinePos() {
+    public BlockPos getPosForAddon() {
         return getPos();
     }
     
     @Override
-    public World getMachineWorld() {
+    public World getWorldForAddon() {
         return getWorld();
     }
     

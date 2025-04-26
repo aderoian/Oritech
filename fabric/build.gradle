@@ -41,8 +41,7 @@ dependencies {
     modImplementation "net.fabricmc.fabric-api:fabric-api:$rootProject.fabric_api_version"
 
     // Architectury API. This is optional, and you can comment it out if you don't need it.
-    // modImplementation "dev.architectury:architectury-fabric:$rootProject.architectury_api_version"
-    modImplementation "dev.architectury:architectury-fabric:13.0.6"
+    modImplementation "dev.architectury:architectury-fabric:$rootProject.architectury_api_version"
     // because gradle is stupid and my local setup is broken somewhere but deleting the cache doesnt seem to fix it
 
     common(project(path: ':common', configuration: 'namedElements')) { transitive false }
@@ -53,7 +52,7 @@ dependencies {
         transitive = false
     }
 
-    // yes yes all this needs to be cleaned up, and recipe viewers made conditional, but I'm waiting to clean up the CSL mess first
+    // yes yes all this needs to be cleaned up and properly versioned, but I'm waiting to clean up the CSL mess first
 
     // owo lib
     modImplementation "io.wispforest:owo-lib:0.12.11+1.21"
@@ -79,12 +78,21 @@ dependencies {
     // mod menu
     modImplementation "com.terraformersmc:modmenu:11.0.3"
 
+    // oracle index
+    modRuntimeOnly "curse.maven:oracle-index-1206582:6300146"
+    implementation "org.jsoup:jsoup:1.17.2"
+
     // compat mods for testing
 //    // Tech Reborn
-//    modImplementation "curse.maven:techreborn-233564:5608205"
-//    modImplementation "curse.maven:reborncore-237903:5608204"
+    modImplementation "curse.maven:techreborn-233564:5608205"
+    modImplementation "curse.maven:reborncore-237903:5608204"
 //    // Energized Power
-//    modImplementation "curse.maven:energized-power-782147:5650292"
+    modImplementation "curse.maven:energized-power-782147:5650292"
+
+    // create
+    // modImplementation "net.createmod.ponder:Ponder-Fabric-${minecraft_version}:1.0.45"
+//    modApi "dev.engine-room.flywheel:flywheel-fabric-api-${minecraft_version}:1.0.1-11"
+    // modImplementation "dev.engine-room.flywheel:flywheel-fabric-${minecraft_version}:1.0.1-11"
 
 }
 
@@ -94,6 +102,9 @@ processResources {
     filesMatching('fabric.mod.json') {
         expand version: project.version
     }
+
+    // include the fabric compat recipes that were excluded from the common:main sourceSet
+    from(project(":common").sourceSets.fabric.resources)
 }
 
 shadowJar {
@@ -112,7 +123,7 @@ tasks.remapJar {
 publishMods {
     file = remapJar.archiveFile
     changelog = file("../CHANGELOG.md").getText()
-    type = BETA
+    type = ALPHA
     modLoaders.add("fabric")
 
     modrinth {
@@ -123,7 +134,7 @@ publishMods {
 
         requires("owo-lib")
         requires("geckolib")
-        requires("athena-ctm")
+        requires("stitch")
         requires("fabric-api")
         requires("architectury-api")
 
@@ -138,7 +149,7 @@ publishMods {
 
         requires("owo-lib")
         requires("geckolib")
-        requires("athena")
+        requires("stitch")
         requires("fabric-api")
         requires("architectury-api")
 

@@ -24,8 +24,8 @@ import net.minecraft.util.Pair;
 import org.jetbrains.annotations.NotNull;
 import org.joml.Vector2i;
 import rearth.oritech.Oritech;
-import rearth.oritech.block.entity.augmenter.PlayerAugments;
 import rearth.oritech.block.entity.augmenter.AugmentApplicationEntity;
+import rearth.oritech.block.entity.augmenter.PlayerAugments;
 import rearth.oritech.init.recipes.AugmentRecipe;
 import rearth.oritech.network.NetworkContent;
 import rearth.oritech.util.SizedIngredient;
@@ -34,8 +34,7 @@ import rearth.oritech.util.TooltipHelper;
 import java.util.*;
 import java.util.stream.Stream;
 
-import static rearth.oritech.client.ui.BasicMachineScreen.GUI_COMPONENTS;
-import static rearth.oritech.client.ui.BasicMachineScreen.getEnergyTooltip;
+import static rearth.oritech.client.ui.BasicMachineScreen.*;
 
 public class PlayerModifierScreen extends BaseOwoHandledScreen<FlowLayout, PlayerModifierScreenHandler> {
     
@@ -69,11 +68,16 @@ public class PlayerModifierScreen extends BaseOwoHandledScreen<FlowLayout, Playe
         
         root = rootComponent;
         
+        if (handler.blockEntity == null) {
+            this.close();
+            return;
+        }
+        
         dependencyLines.clear();
         shownAugments.clear();
         
         var outerContainer = Containers.horizontalFlow(Sizing.fill(60), Sizing.fill((int) (panelHeight * 100)));
-        outerContainer.surface(Surface.PANEL);
+        outerContainer.surface(ORITECH_PANEL);
         
         var movedPanel = Containers.horizontalFlow(Sizing.fixed(900), Sizing.fill());
         movedPanel.surface(Surface.tiled(Oritech.id("textures/block/machine_plating_block/empty.png"), 16, 16));
@@ -97,16 +101,18 @@ public class PlayerModifierScreen extends BaseOwoHandledScreen<FlowLayout, Playe
         addResearchPanels(researchContainer, researchWidth);
         
         var energyPanel = Containers.verticalFlow(Sizing.content(3), Sizing.content(3));
-        energyPanel.surface(Surface.PANEL);
+        energyPanel.surface(ORITECH_PANEL);
         energyPanel.alignment(HorizontalAlignment.CENTER, VerticalAlignment.CENTER);
         
         var loadResearchedAugments = Components.button(Text.translatable("\uD83D\uDD2C"), elem -> onLoadAugmentsClick());
         loadResearchedAugments.tooltip(Text.translatable("text.oritech.load_augments.tooltip"));
         loadResearchedAugments.margins(Insets.of(2));
+        loadResearchedAugments.renderer(ORITECH_BUTTON);
         
         var openInvScreen = Components.button(Text.translatable("\uD83E\uDDF0"), elem -> onOpenInvClicked());
         openInvScreen.tooltip(Text.translatable("text.oritech.open_inv.tooltip"));
         openInvScreen.margins(Insets.of(2));
+        openInvScreen.renderer(ORITECH_BUTTON);
         
         var energyPanelX = this.width * 0.2 - 22;
         var energyPanelY = this.height * 0.3;
@@ -126,6 +132,7 @@ public class PlayerModifierScreen extends BaseOwoHandledScreen<FlowLayout, Playe
     @Override
     protected void handledScreenTick() {
         super.handledScreenTick();
+        if (handler.blockEntity == null) return;
         
         // update research panels
         for (int i = 0; i < researchLabels.size(); i++) {
@@ -153,7 +160,7 @@ public class PlayerModifierScreen extends BaseOwoHandledScreen<FlowLayout, Playe
         
         for (var augmentId : shownAugments.keySet()) {
             var augmentState = shownAugments.get(augmentId);
-            var uiData = PlayerAugments.augmentAssets.get(augmentId);
+            var augmentRecipe = (AugmentRecipe) this.handler.player.getWorld().getRecipeManager().get(augmentId).get().value();
             
             var isResearched = this.handler.blockEntity.researchedAugments.contains(augmentId);
             var isResearching = this.handler.blockEntity.availableStations.values().stream().filter(Objects::nonNull).anyMatch(station -> station.selectedResearch.equals(augmentId));
@@ -161,19 +168,19 @@ public class PlayerModifierScreen extends BaseOwoHandledScreen<FlowLayout, Playe
             
             var hasRequirements = true;
             var missingRequirements = new ArrayList<Text>();
-            missingRequirements.add(Text.translatable("oritech.text.augment." + augmentId.getPath()).formatted(Formatting.BOLD));
+            missingRequirements.add(Text.translatable(augmentKey(augmentId).formatted(Formatting.BOLD)));
             missingRequirements.add(Text.translatable("oritech.text.missing_requirements_title"));
-            for (var requirementId : uiData.requirements()) {
+            for (var requirementId : augmentRecipe.getRequirements()) {
                 if (!this.handler.blockEntity.researchedAugments.contains(requirementId)) {
                     hasRequirements = false;
-                    missingRequirements.add(Text.translatable("oritech.text.augment." + requirementId.getPath()).formatted(Formatting.ITALIC, Formatting.RED));
+                    missingRequirements.add(Text.translatable(augmentKey(requirementId)).formatted(Formatting.ITALIC, Formatting.RED));
                 } else {
-                    missingRequirements.add(Text.translatable("oritech.text.augment." + requirementId.getPath()).formatted(Formatting.ITALIC, Formatting.DARK_GREEN));
+                    missingRequirements.add(Text.translatable(augmentKey(requirementId)).formatted(Formatting.ITALIC, Formatting.DARK_GREEN));
                 }
             }
             
             var hasResearchStation = false;
-            var requiredStationBlock = Registries.BLOCK.get(uiData.requiredStation());
+            var requiredStationBlock = Registries.BLOCK.get(augmentRecipe.getRequiredStation());
             
             for (var ownStation : this.handler.blockEntity.availableStations.values()) {
                 if (ownStation == null) continue;
@@ -189,13 +196,13 @@ public class PlayerModifierScreen extends BaseOwoHandledScreen<FlowLayout, Playe
             }
             
             var operation = PlayerAugments.AugmentOperation.RESEARCH;
-            var tooltipTitleText = Text.translatable("oritech.text.augment." + augmentId.getPath()).formatted(Formatting.BOLD);
+            var tooltipTitleText = Text.translatable(augmentKey(augmentId)).formatted(Formatting.BOLD);
             var tooltipOperation = "oritech.text.augment_op.research";
-            var tooltipDesc = Text.translatable("oritech.text.augment." + augmentId.getPath() + ".desc").formatted(Formatting.ITALIC, Formatting.GRAY);
+            var tooltipDesc = Text.translatable(augmentKey(augmentId) + ".desc").formatted(Formatting.ITALIC, Formatting.GRAY);
             
             var extraTooltips = new ArrayList<Text>();
             for (int i = 1; i < 8; i++) {
-                var key = "oritech.text.augment." + augmentId.getPath() + ".desc." + i;
+                var key = augmentKey(augmentId) + ".desc." + i;
                 if (I18n.hasTranslation(key))
                     extraTooltips.add(Text.translatable(key).formatted(Formatting.ITALIC, Formatting.GRAY));
             }
@@ -223,19 +230,18 @@ public class PlayerModifierScreen extends BaseOwoHandledScreen<FlowLayout, Playe
                 
                 extraTooltips.stream().map(elem -> TooltipComponent.of(elem.asOrderedText())).forEach(collectedTooltip::add);
                 
-                var backgroundTexture = Oritech.id("textures/gui/augments/background_open.png");
+                var backgroundTexture = Oritech.id("textures/gui/augment/background_open.png");
                 
                 if (isApplied) {
-                    backgroundTexture = Oritech.id("textures/gui/augments/background_installed.png");
+                    backgroundTexture = Oritech.id("textures/gui/augment/background_installed.png");
                 } else if (isResearched) {
-                    backgroundTexture = Oritech.id("textures/gui/augments/background_completed.png");
+                    backgroundTexture = Oritech.id("textures/gui/augment/background_completed.png");
                 } else if (isResearching) {
-                    backgroundTexture = Oritech.id("textures/gui/augments/background_pending.png");
+                    backgroundTexture = Oritech.id("textures/gui/augment/background_pending.png");
                 } else {
                     // collect requirements / cost
-                    var recipe = (AugmentRecipe) this.handler.player.getWorld().getRecipeManager().get(augmentId).get().value();
-                    var inputs = recipe.getResearchCost();
-                    var time = recipe.getTime() / 20;
+                    var inputs = augmentRecipe.getResearchCost();
+                    var time = augmentRecipe.getTime() / 20;
                     
                     collectedTooltip.add(TooltipComponent.of(Text.translatable("oritech.text.augment_research_time", time).asOrderedText()));
                     var inputsComponent = new SizedIngredientTooltipComponent(inputs);
@@ -304,8 +310,8 @@ public class PlayerModifierScreen extends BaseOwoHandledScreen<FlowLayout, Playe
     
     protected void updateEnergyBar() {
         
-        var capacity = handler.blockEntity.getEnergyStorageForLink().getCapacity();
-        var amount = handler.blockEntity.getEnergyStorageForLink().getAmount();
+        var capacity = handler.blockEntity.getEnergyStorageForMultiblock(null).getCapacity();
+        var amount = handler.blockEntity.getEnergyStorageForMultiblock(null).getAmount();
         
         var fillAmount = (float) amount / capacity;
         var tooltipText = getEnergyTooltip(amount, capacity, 0, (int) AugmentApplicationEntity.maxEnergyTransfer);
@@ -323,14 +329,14 @@ public class PlayerModifierScreen extends BaseOwoHandledScreen<FlowLayout, Playe
             var title = Components.label(researchState.type.getName().formatted(Formatting.BOLD));
             title.horizontalSizing(Sizing.fill());
             title.horizontalTextAlignment(HorizontalAlignment.CENTER);
-            var status = Components.label(Text.literal(""));
+            var status = Components.label(Text.literal(" "));
             
             panel.child(title);
             panel.child(status.margins(Insets.of(4, 2, 0, 0)));
             
             researchLabels.add(status);
             
-            parent.child(panel.surface(Surface.PANEL).padding(Insets.of(6)).margins(Insets.of(0, 10, 0, 0)).zIndex(-1));
+            parent.child(panel.surface(ORITECH_PANEL).padding(Insets.of(6)).margins(Insets.of(0, 10, 0, 0)).zIndex(-1));
         }
         
     }
@@ -341,12 +347,12 @@ public class PlayerModifierScreen extends BaseOwoHandledScreen<FlowLayout, Playe
         var leftOffset = 20;
         
         for (var augmentId : PlayerAugments.allAugments.keySet()) {
-            var uiData = PlayerAugments.augmentAssets.get(augmentId);
+            var augmentRecipe = (AugmentRecipe) this.handler.player.getWorld().getRecipeManager().get(augmentId).get().value();
             
-            var position = new Vector2i(leftOffset + uiData.position().x * 4, (int) (uiData.position().y / 100f * maxHeight));
+            var position = new Vector2i(leftOffset + augmentRecipe.getUiX() * 4, (int) (augmentRecipe.getUiY() / 100f * maxHeight));
             
-            var iconTexture = Oritech.id("textures/gui/augments/" + augmentId.getPath() + ".png");
-            var backgroundTexture = Oritech.id("textures/gui/augments/background_open.png");
+            var iconTexture = Oritech.id("textures/gui/" + augmentId.getPath() + ".png");
+            var backgroundTexture = Oritech.id("textures/gui/augment/background_open.png");
             
             final var augmentOpId = augmentId;
             
@@ -366,9 +372,9 @@ public class PlayerModifierScreen extends BaseOwoHandledScreen<FlowLayout, Playe
             highlight.color(new Color(0.7f, 0.7f, 0.7f, 1f));
             highlight.positioning(Positioning.absolute(position.x - backgroundAugmentFrameSize / 2 - 1, position.y - backgroundAugmentFrameSize / 2 - 1));
             
-            for (var dependencyId : uiData.requirements()) {
-                var dependency = PlayerAugments.augmentAssets.get(dependencyId);
-                var dependencyPos = new Vector2i(leftOffset + dependency.position().x * 4, (int) (dependency.position().y / 100f * maxHeight));
+            for (var dependencyId : augmentRecipe.getRequirements()) {
+                var dependencyRecipe = (AugmentRecipe) this.handler.player.getWorld().getRecipeManager().get(dependencyId).get().value();
+                var dependencyPos = new Vector2i(leftOffset + dependencyRecipe.getUiX() * 4, (int) (dependencyRecipe.getUiY() / 100f * maxHeight));
                 
                 var depId = augmentId.getPath() + "_" + dependencyId.getPath();
                 dependencyLines.put(depId, new Pair<>(position, dependencyPos));
@@ -425,7 +431,6 @@ public class PlayerModifierScreen extends BaseOwoHandledScreen<FlowLayout, Playe
     private void showAugmentDialog(Identifier id, PlayerAugments.AugmentOperation operation) {
         
         var researchRecipe = (AugmentRecipe) this.handler.blockEntity.getWorld().getRecipeManager().get(id).get().value();
-        var uiData = PlayerAugments.augmentAssets.get(id);
         
         var isCreative = this.handler.player.isCreative();
         var hasResources = true;
@@ -433,7 +438,7 @@ public class PlayerModifierScreen extends BaseOwoHandledScreen<FlowLayout, Playe
         
         var panel = Containers.verticalFlow(Sizing.fixed(310), Sizing.content(1));
         panel.padding(Insets.of(5));
-        panel.surface(Surface.PANEL);
+        panel.surface(ORITECH_PANEL);
         panel.horizontalAlignment(HorizontalAlignment.CENTER);
         
         var descriptionPanel = Containers.verticalFlow(Sizing.fill(100), Sizing.content(3));
@@ -443,18 +448,18 @@ public class PlayerModifierScreen extends BaseOwoHandledScreen<FlowLayout, Playe
         
         var overlay = Containers.overlay(panel);
         
-        var titleLabel = Components.label(Text.translatable("oritech.text.augment." + id.getPath()).formatted(Formatting.BOLD, Formatting.BLACK));
+        var titleLabel = Components.label(Text.translatable(augmentKey(id)).formatted(Formatting.BOLD, Formatting.BLACK));
         titleLabel.margins(Insets.of(3, 1, 0, 0));
         
-        descriptionPanel.child(Components.label(Text.translatable("oritech.text.augment." + id.getPath() + ".desc").formatted(Formatting.ITALIC, Formatting.GRAY)));
+        descriptionPanel.child(Components.label(Text.translatable(augmentKey(id) + ".desc").formatted(Formatting.ITALIC, Formatting.GRAY)));
         for (int i = 1; i < 8; i++) {
-            var key = "oritech.text.augment." + id.getPath() + ".desc." + i;
+            var key = augmentKey(id) + ".desc." + i;
             if (I18n.hasTranslation(key))
                 descriptionPanel.child(Components.label(Text.translatable(key).formatted(Formatting.ITALIC, Formatting.GRAY)));
             
         }
         
-        var requiredStationBlock = Registries.BLOCK.get(uiData.requiredStation());
+        var requiredStationBlock = Registries.BLOCK.get(researchRecipe.getRequiredStation());
         var requiredStationLabel = Components.label(Text.translatable("oritech.text.required_station", requiredStationBlock.getName()));
         descriptionPanel.child(requiredStationLabel.margins(Insets.of(4, 2, 0, 0)));
         
@@ -476,7 +481,7 @@ public class PlayerModifierScreen extends BaseOwoHandledScreen<FlowLayout, Playe
                 descriptionPanel.child(Components.label(Text.translatable("oritech.text.augment_research_time", researchRecipe.getTime() / 20).formatted(Formatting.WHITE)).margins(Insets.of(4, 0, 0, 0)));
                 descriptionPanel.child(Components.label(Text.translatable("oritech.text.energy_cost", parsedCost).formatted(Formatting.WHITE)).margins(Insets.of(4, 0, 0, 0)));
                 
-                if (this.handler.blockEntity.getEnergyStorageForLink().getAmount() < rfCost)
+                if (this.handler.blockEntity.getEnergyStorageForMultiblock(null).getAmount() < rfCost)
                     hasEnergy = false;
                 
             }
@@ -493,7 +498,8 @@ public class PlayerModifierScreen extends BaseOwoHandledScreen<FlowLayout, Playe
                 var type = wantedInput.ingredient();
                 var count = wantedInput.count();
                 var matchingIngredients = this.handler.blockEntity.inventory.heldStacks.stream().filter(type).mapToInt(ItemStack::getCount).sum();
-                if (matchingIngredients < count) {
+                var playerMatchingIngredients = this.handler.player.getInventory().main.stream().filter(type).mapToInt(ItemStack::getCount).sum();
+                if (playerMatchingIngredients + matchingIngredients < count) {
                     hasResources = false;
                     break;
                 }
@@ -503,7 +509,18 @@ public class PlayerModifierScreen extends BaseOwoHandledScreen<FlowLayout, Playe
                 var shownItem = Arrays.stream(input.ingredient().getMatchingStacks()).findFirst().get().getItem();
                 var shownStack = new ItemStack(shownItem, input.count());
                 
-                var shown = Components.item(shownStack).showOverlay(true).setTooltipFromStack(true);
+                var allMatchingItems = Arrays.stream(input.ingredient().getMatchingStacks()).map(ItemStack::getName).toList();
+                var combinedList = new ArrayList<Text>();
+                combinedList.add(Text.translatable("oritech.text.augment_ingredient_tip").formatted(Formatting.BOLD, Formatting.GRAY));
+                combinedList.addAll(allMatchingItems);
+                
+                var shown = Components.item(shownStack).showOverlay(true).setTooltipFromStack(false);
+                
+                if (allMatchingItems.size() > 1) {
+                    shown.tooltip(combinedList);
+                } else {
+                    shown.setTooltipFromStack(true);
+                }
                 itemContainer.child(shown.margins(Insets.of(2)));
             }
             descriptionPanel.child(itemContainer);
@@ -522,11 +539,17 @@ public class PlayerModifierScreen extends BaseOwoHandledScreen<FlowLayout, Playe
             confirmKey = "text.oritech.noop";
         }
         
-        var cancelButton = Components.button(Text.translatable("text.oritech.cancel"), component -> overlay.remove());
-        var confirmButton = Components.button(Text.translatable(confirmKey), component -> {
+        var cancelButton = Components.button(Text.translatable("text.oritech.cancel").withColor(GRAY_TEXT_COLOR), component -> overlay.remove());
+        cancelButton.textShadow(false);
+        
+        var confirmButton = Components.button(Text.translatable(confirmKey).withColor(GRAY_TEXT_COLOR), component -> {
             onAugmentClick(id, operation, true);
             overlay.remove();
         });
+        confirmButton.textShadow(false);
+        
+        cancelButton.renderer(ORITECH_BUTTON);
+        confirmButton.renderer(ORITECH_BUTTON);
         
         if ((!hasResources || !hasEnergy) && isCreative) {
             hasResources = true;
@@ -617,6 +640,10 @@ public class PlayerModifierScreen extends BaseOwoHandledScreen<FlowLayout, Playe
         context.draw();
         
         matrices.pop();
+    }
+
+    public static String augmentKey(Identifier id) {
+        return "oritech.text." + id.getPath().replace('/', '.');
     }
     
     private static class CustomFlowRootContainer extends FlowLayout {
